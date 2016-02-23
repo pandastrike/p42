@@ -1,0 +1,48 @@
+#!/bin/bash
+
+token=${DIGITALOCEAN_TOKEN}
+
+case "$1" in
+
+  create)
+    echo Generating token...
+    swarm=$(docker run swarm create)
+
+    echo Creating Swarm Master...
+    docker-machine create \
+      --driver digitalocean \
+      --digitalocean-access-token ${token} \
+      --digitalocean-region=sfo1 \
+      --swarm --swarm-master \
+      --swarm-discovery token://${swarm} \
+      swarm-00
+    ;;
+
+  add)
+    echo Adding Node to Swarm...
+    swarm=$(docker-machine inspect swarm-00 \
+      -f '{{ json .HostOptions.SwarmOptions.Discovery }}')
+    candidates=$(echo swarm-{0..9}{0..9})
+    for name in $candidates; do
+      docker-machine inspect $name &> /dev/null
+      if [ $? -ne 0 ]
+      then
+        echo Creating machine [$name]...
+        docker-machine create \
+          --driver digitalocean \
+          --digitalocean-access-token ${token} \
+          --digitalocean-region=sfo1 \
+          --swarm --swarm-discovery ${swarm} \
+          ${name}
+        break
+      fi
+    done
+    ;;
+
+  *)
+    echo 'Hm...'
+    echo $'I don\'t know how to do that.'
+    exit 1
+    ;;
+
+esac
