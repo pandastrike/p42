@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+token=${DIGITALOCEAN_TOKEN}
+
+docker-machine create default\
+  --driver digitalocean \
+  --digitalocean-access-token ${token} \
+  --digitalocean-region=sfo1 \
+  ;;
