@@ -21,7 +21,7 @@ case "$1" in
   add)
     echo Adding Node to Swarm...
     swarm=$(docker-machine inspect swarm-00 \
-      -f '{{ json .HostOptions.SwarmOptions.Discovery }}')
+      -f '{{ .HostOptions.SwarmOptions.Discovery }}')
     candidates=$(echo swarm-{0..9}{0..9})
     for name in $candidates; do
       docker-machine inspect $name &> /dev/null
