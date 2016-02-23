@@ -27,6 +27,9 @@ default    -        digitalocean   Running   tcp://162.243.156.65:2376          
 swarm-00   -        digitalocean   Running   tcp://192.241.198.149:2376   swarm-00 (master)   v1.10.2
 ```
 
+Next, you can add nodes to the cluster.
+
+```
 $ p42 cluster add
 Adding Node to Swarm...
 Creating machine [swarm-01]...
