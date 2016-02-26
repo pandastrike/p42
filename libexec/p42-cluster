@@ -39,6 +39,13 @@ case "$1" in
     done
     ;;
 
+  stop)
+    echo Stopping Swarm...
+    machines=$(docker-machine ls --format '{{ .Name }}')
+    docker-machine stop $machines
+    docker-machine rm $machines
+    ;;
+
   *)
     echo 'Hm...'
     echo $'I don\'t know how to do that.'
