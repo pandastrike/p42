@@ -13,18 +13,19 @@ if [ $# -gt 0 ]; then
   containers="$@"
 else
   if [ ! -d ./launch ]; then
-    echo p42: nothing to start
+    echo p42: nothing to stop
     exit
   fi
   containers=$(ls ./launch)
 fi
 
+running=$(docker ps)
+
 for container in $containers; do
   label=$name-$container
-  echo Running $label container...
-  # TODO: add error handling for Docker errors?
-  docker run \
-    -P \
-    --restart always \
-    -d pandastrike/$label:latest
+  id=$(echo $running | grep $label | awk '{ print $1 }')
+  if [ $id ]; then
+    echo Stopping $label container ...
+    docker stop $id && docker rm $id
+  fi
 done
