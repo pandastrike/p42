@@ -1,9 +1,30 @@
 #!/usr/bin/env bash
 
-token=${DIGITALOCEAN_TOKEN}
+if [ ! -e ./p42.yaml ]; then
+  echo p42: missing p42.yaml file
+  echo p42: try running: p42 init
+  exit -1
+fi
 
-docker-machine create default\
-  --driver digitalocean \
-  --digitalocean-access-token ${token} \
-  --digitalocean-region=sfo1 \
-  ;;
+name=$(yaml ./p42.yaml name)
+repo=$(yaml ./p42.yaml repo)
+
+if [ $# -gt 0 ]; then
+  containers="$@"
+else
+  if [ ! -d ./launch ]; then
+    echo p42: nothing to start
+    exit
+  fi
+  containers=$(ls ./launch)
+fi
+
+for container in $containers; do
+  label=$name-$container
+  echo 'Running '$label' container...'
+  # TODO: add error handling for Docker errors?
+  docker run \
+    -P \
+    --restart always \
+    -d pandastrike/$label:latest
+done
