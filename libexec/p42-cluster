@@ -4,6 +4,14 @@ token=${DIGITALOCEAN_TOKEN}
 
 case "$1" in
 
+  init)
+    echo Creating default machine...
+    docker-machine create default\
+      --driver digitalocean \
+      --digitalocean-access-token ${token} \
+      --digitalocean-region=sfo1 \
+    ;;
+
   create)
     echo Generating token...
     swarm=$(docker run swarm create)
