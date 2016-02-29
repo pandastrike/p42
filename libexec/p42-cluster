@@ -1,10 +1,31 @@
 #!/usr/bin/env bash
 
+# TODO: we may be able to support multiple
+# (named) clusters by using and filtering
+# by label
+
 token=${DIGITALOCEAN_TOKEN}
+action=$1
+shift
 
-case "$1" in
+# process options...
+# TODO: check for valid options by action (below)
+while [ $# -gt 0 ]; do
+  case $1 in
+    -c|--count)
+      count=$2
+      shift; shift
+      ;;
+    *)
+      # ignore
+      shift
+      ;;
+  esac
+done
 
-  init)
+case "$action" in
+
+  host)
     echo Creating default machine...
     docker-machine create default\
       --driver digitalocean \
@@ -12,11 +33,19 @@ case "$1" in
       --digitalocean-region=sfo1 \
     ;;
 
+  unhost)
+    echo Removing default machine...
+    docker-machine stop default
+    docker-machine rm default
+    ;;
+
   create)
+    eval "$(docker-machine env default)"
+
     echo Generating token...
     swarm=$(docker run swarm create)
 
-    echo Creating Swarm Master...
+    echo "Creating Swarm Master for token://${swarm}..."
     docker-machine create \
       --driver digitalocean \
       --digitalocean-access-token ${token} \
@@ -27,37 +56,53 @@ case "$1" in
     ;;
 
   add)
-    echo Adding Node to Swarm...
+    i=${count:-1}
     swarm=$(docker-machine inspect swarm-00 \
       -f '{{ .HostOptions.SwarmOptions.Discovery }}')
-    candidates=$(echo swarm-{0..9}{0..9})
-    for name in $candidates; do
-      docker-machine inspect $name &> /dev/null
-      if [ $? -ne 0 ]
-      then
-        echo Creating machine [$name]...
-        docker-machine create \
-          --driver digitalocean \
-          --digitalocean-access-token ${token} \
-          --digitalocean-region=sfo1 \
-          --swarm --swarm-discovery ${swarm} \
-          ${name}
-        break
-      fi
+    echo "Adding $i node(s) to Swarm for ${swarm}..."
+    while [ $i -gt 0 ]; do
+      i=$[$i-1]
+      candidates=$(echo swarm-{0..9}{0..9})
+      for name in $candidates; do
+        docker-machine inspect $name &> /dev/null
+        if [ $? -ne 0 ]; then
+          echo Creating machine [$name]...
+          docker-machine create \
+            --driver digitalocean \
+            --digitalocean-access-token ${token} \
+            --digitalocean-region=sfo1 \
+            --swarm --swarm-discovery ${swarm} \
+            ${name}
+          break
+        fi
+      done
     done
     ;;
 
   stop)
     echo Stopping Swarm...
-    machines=$(docker-machine ls --format '{{ .Name }}')
+    machines=$(docker-machine ls --format '{{ .Name }}' | grep swarm)
     docker-machine stop $machines
     docker-machine rm $machines
+    ;;
+
+  ls)
+    docker-machine ls
+    ;;
+
+  env)
+    machine=$(docker-machine ls --format '{{ .Name }}' | grep swarm-00)
+    if [ $machine ]; then
+      docker-machine env --swarm $machine
+    else
+      docker-machine env default
+    fi
     ;;
 
   *)
     echo 'Hm...'
     echo $'I don\'t know how to do that.'
-    exit 1
+    exit -1
     ;;
 
 esac

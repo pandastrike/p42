@@ -10,24 +10,25 @@ name=$(yaml ./p42.yaml name)
 repo=$(yaml ./p42.yaml repo)
 
 if [ $# -gt 0 ]; then
-  containers="$@"
+  images="$@"
 else
   if [ ! -d ./launch ]; then
-    echo p42: nothing to start
+    echo p42: nothing to build
     exit
   fi
-  containers=$(ls ./launch)
+  images=$(ls ./launch)
 fi
 
 # TODO: what if the swarm master dies?
 eval $(docker env --swarm swarm-00)
 
-for container in $containers; do
-  label=$name-$container
-  echo Starting $label container...
-  # TODO: add error handling for Docker errors?
-  docker run \
-    -P \
-    --restart always \
-    -d pandastrike/$label:latest
+for image in $images; do
+  label=$name-$image
+  echo Building $repo/$label image...
+  docker build \
+    -t $repo/$label \
+    -f launch/$2/Dockerfile \
+  echo Pushing $repo/$label image...
+  sleep 2
+  docker push $repo/$label
 done

@@ -19,13 +19,16 @@ else
   containers=$(ls ./launch)
 fi
 
+# TODO: what if the swarm master dies?
+eval $(docker env --swarm swarm-00)
+
 running=$(docker ps)
 
 for container in $containers; do
   label=$name-$container
   id=$(echo $running | grep $label | awk '{ print $1 }')
   if [ $id ]; then
-    echo Stopping $label container ...
+    echo Stopping $label container...
     docker stop $id && docker rm $id
   fi
 done

@@ -1,42 +1,88 @@
 # p42
 
-A CLI for simplifying the use of Docker. Probably a precursor to a Huxley reboot.
+A CLI for simplifying the use of Docker.
 
-## Reference
+## Getting Started
 
-### start
+### Prerequites
 
-The `start` subcommand provisions a Docker host that can be used to create the cluster.
+- Bash version 3 or later
+- Docker version 1.10
+- Docker Machine version 0.6
+- Node version 4 or later
+- NPM version 2 or later
+- `yaml` (via `npm install yaml -g`) version 1 or later
 
-### cluster
+### Installation
 
-The `cluster` subcommand allows you to create a cluster and add nodes.
+To install into `/usr/local/p42`:
 
 ```
+$ curl -L https://github.com/pandastrike/p42/archive/master.tar.gz |\
+    tar -xvs /p42-master/p42/ -C /usr/local
+```
+
+For bash users:
+
+```bash
+echo 'eval "$(/usr/local/bin/p42/bin env -)"' >> ~/.bash_profile
+exec bash
+```
+For zsh users:
+
+```zsh
+echo 'eval "$(/usr/local/bin/p42/bin env -)"' >> ~/.zshenv
+source ~/.zshenv
+```
+
+### Creating A Cluster
+
+#### Create A Docker Host
+
+```bash
+$ p42 cluster host
+```
+
+#### Create A Cluster
+
+This will give you a cluster with a single (master) node.
+
+```bash
 $ p42 cluster create
-Generating token...
-Creating Swarm Master...
 ```
 
-Once that completes, you should see the swarm master:
+#### Add Nodes To The Cluster
 
-```
-$ docker-machine ls
-NAME       ACTIVE   DRIVER         STATE     URL                          SWARM               DOCKER    ERRORS
-default    -        digitalocean   Running   tcp://162.243.156.65:2376                        v1.10.1
-swarm-00   -        digitalocean   Running   tcp://192.241.198.149:2376   swarm-00 (master)   v1.10.2
+To add 3 nodes to your cluster:
+
+```bash
+$ p42 cluster add --size 3
 ```
 
-Next, you can add nodes to the cluster.
+To add just one:
 
-```
+```bash
 $ p42 cluster add
-Adding Node to Swarm...
-Creating machine [swarm-01]...
 ```
+
+#### Using Docker Commands
+
+If you want to use Docker commands directly:
+
+```bash
+$ eval $(p42 cluster env)
+```
+
+which will select the Swarm master, if possible, or the default machine otherwise.
+
+#### Examining Your Cluster
+
+```bash
+p42 cluster ls
+```
+
+### Running An App
 
 ## Status
 
-`p42` is under heavy development and is very likely to change, be replaced, or any number of other horrible fates.
-
-I'm considering moving the `start` command under the `cluster` command. I'd also like to add more cluster-related commands so you don't have to fall back quite as much to the `docker` commands.
+`p42` is under heavy development.
