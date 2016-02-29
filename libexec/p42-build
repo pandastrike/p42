@@ -20,14 +20,15 @@ else
 fi
 
 # TODO: what if the swarm master dies?
-eval $(docker env --swarm swarm-00)
+eval $(docker-machine env --swarm swarm-00)
 
 for image in $images; do
   label=$name-$image
   echo Building $repo/$label image...
   docker build \
     -t $repo/$label \
-    -f launch/$2/Dockerfile \
+    -f launch/$image/Dockerfile \
+    .
   echo Pushing $repo/$label image...
   sleep 2
   docker push $repo/$label

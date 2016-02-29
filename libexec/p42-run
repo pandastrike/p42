@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+
+if [ ! -e ./p42.yaml ]; then
+  echo p42: missing p42.yaml file
+  echo p42: try running: p42 init
+  exit -1
+fi
+
+name=$(yaml ./p42.yaml name)
+repo=$(yaml ./p42.yaml repo)
+
+if [ $# -gt 0 ]; then
+  components="$@"
+else
+  if [ ! -d ./launch ]; then
+    echo p42: nothing to run
+    exit
+  fi
+  components=$(ls ./launch)
+fi
+
+p42 build $components
+p42 start $components

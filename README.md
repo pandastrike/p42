@@ -83,6 +83,87 @@ p42 cluster ls
 
 ### Running An App
 
+#### Initialize Your App
+
+```bash
+$ p42 init
+Application name [blurb9]:
+Organization repository [pandastrike]:
+```
+
+#### Add Mixins
+
+Provide the git cloneable URL for the mixin repo:
+
+```bash
+$ p42 mixin add git@github.com:pandastrike/p42-mixin-nginx.git
+Document root [./www]:
+```
+
+#### Run Your App
+
+The `run` command will build and run all the images described in your `launch` directory.
+
+```
+$ p42 run
+```
+
+## Example
+
+Let's build a simple Web page and deploy it using `p42`.
+
+We'll assume we've already run a cluster (see [Creating A Cluster](#creating-a-cluster)).
+
+Let's create an application directory and initialize it.
+
+```bash
+$ mkdir hello-world
+$ cd hello-world
+$ p42 init
+Application name [hello-world]:
+Organization repository []: pandastrike
+```
+
+Add the Nginx mixin.
+
+```bash
+$ p42 mixin add git@github.com:pandastrike/p42-mixin-nginx.git
+Document root [./www]:
+```
+
+This will create a `launch/www` directory that includes a `Dockerfile` for running Nginx.
+
+Create an index HTML file.
+
+```bash
+$ mkdir www
+$ cat >> www/index.html
+<h1>Hello, World!</h1>
+```
+
+Run your application.
+
+```bash
+$ p42 run
+```
+
+This will take a minute to build and run the image described by `launch/www/Dockerfile`.
+
+Get the IP and port of your Nginx container.
+
+```bash
+$ p42 ls
+www <ip>:<port>
+$ curl <ip>:<port>
+<h1>Hello, World!</h1>
+```
+
+
+
 ## Status
 
 `p42` is under heavy development.
+
+## Reference
+
+Run `p42 help` to get a list of commands and what they do.
