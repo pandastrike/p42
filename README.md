@@ -137,8 +137,8 @@ Get the IP and port of your Nginx container.
 
 ```
 $ p42 ls
-www <ip>:<port>
-$ curl <ip>:<port>
+swarm-01/hello-world-www 159.203.247.225:32769->80/tcp, 159.203.247.225:32768->443/tcp
+$ curl 159.203.247.225:32769
 <h1>Hello, World!</h1>
 ```
 
