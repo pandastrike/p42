@@ -136,7 +136,7 @@ This will take a minute to build and run the image described by `launch/www/Dock
 Get the IP and port of your Nginx container.
 
 ```
-$ p42 ls
+$ p42 ps
 swarm-01/hello-world-www 159.203.247.225:32769->80/tcp, 159.203.247.225:32768->443/tcp
 $ curl 159.203.247.225:32769
 <h1>Hello, World!</h1>
