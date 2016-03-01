@@ -1,0 +1,34 @@
+{
+  "name": "p42",
+  "version": "1.0.0",
+  "description": "CLI wrapper for using Docker with Swarm.",
+  "files": [
+    "completions",
+    "libexec",
+    "lib",
+    "share"
+  ],
+  "bin": {
+    "p42": "libexec/p42"
+  },
+  "scripts": {
+    "test": ": coming soon :",
+    "prepublish": "coffee -o lib/ -c src/*.*coffee",
+    "tag": "(node_modules/.bin/json -f package.json version | xargs -I version git tag -am version version) && git push --tags"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pandastrike/p42.git"
+  },
+  "keywords": [
+    "Docker",
+    "Swarm",
+    "CLI"
+  ],
+  "author": "Dan Yoder",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/pandastrike/p42/issues"
+  },
+  "homepage": "https://github.com/pandastrike/p42#readme"
+}
