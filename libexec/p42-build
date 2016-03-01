@@ -6,30 +6,48 @@ if [ ! -e ./p42.yaml ]; then
   exit -1
 fi
 
-name=$(yaml ./p42.yaml name)
-repo=$(yaml ./p42.yaml repo)
+name=$(yaml get ./p42.yaml name)
+repo=$(yaml get ./p42.yaml repo)
 
 if [ $# -gt 0 ]; then
-  images="$@"
+  components="$@"
 else
   if [ ! -d ./launch ]; then
     echo p42: nothing to build
     exit
   fi
-  images=$(ls ./launch)
+  components=$(ls ./launch)
 fi
 
 # TODO: what if the swarm master dies?
 eval $(docker-machine env --swarm swarm-00)
 
-for image in $images; do
-  label=$name-$image
-  echo Building $repo/$label image...
+for component in $components; do
+  label=$name-$component
+  echo Building $repo/$label component...
+
+  # instantiate mixin templates, if any
+  yaml=./launch/$component/config.yaml
+  templates=$(ls ./launch/$component/*.template 2> /dev/null)
+  for template in $templates; do
+    output=${template%.template}
+    cat > $output <<EOF
+# WARNING:
+# This file was automatically generated!
+#
+# To make changes, edit
+#   $(basename $template)
+# instead.
+
+$(yaml template $yaml $template)
+EOF
+  done
+
   docker build \
     -t $repo/$label \
-    -f launch/$image/Dockerfile \
+    -f launch/$component/Dockerfile \
     .
-  echo Pushing $repo/$label image...
+  echo Pushing $repo/$label component...
   sleep 2
   docker push $repo/$label
 done
