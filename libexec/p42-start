@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 
 # Usage: p42 start [<component>]
-# Summary: Start application containers.
-# Help: Start application containers.
-# You can start containers for the entire application
+# Summary: Start application component.
+# Help: Start application component.
+# You can start component for the entire application
 # or just a given set of components. Images for each
 # container must already exist.
 #
@@ -11,7 +11,7 @@
 #     p42 start www redis
 #
 # You can build images first using the build subcommand.
-# The run subcommand will build and start containers for you.
+# The run subcommand will build and start component for you.
 #
 
 if [ ! -e ./p42.yaml ]; then
@@ -20,28 +20,31 @@ if [ ! -e ./p42.yaml ]; then
   exit -1
 fi
 
-name=$(yaml ./p42.yaml name)
-repo=$(yaml ./p42.yaml repo)
+name=$(yaml get ./p42.yaml name)
+repo=$(yaml get ./p42.yaml repo)
 
 if [ $# -gt 0 ]; then
-  containers="$@"
+  component="$@"
 else
   if [ ! -d ./launch ]; then
     echo p42: nothing to start
     exit
   fi
-  containers=$(ls ./launch)
+  component=$(ls ./launch)
 fi
 
 # TODO: what if the swarm master dies?
 eval $(docker-machine env --swarm swarm-00)
 
-for container in $containers; do
+for container in $component; do
   label=$name-$container
   echo Starting $label container...
   # TODO: add error handling for Docker errors?
+  # TODO: components that launch multiple containers?
+  # TODO: specifying constraints for Swarm deploy?
   docker run \
     -P \
+    --name ${label} \
     --restart always \
-    -d pandastrike/$label:latest
+    -d ${repo}/${label}:latest
 done

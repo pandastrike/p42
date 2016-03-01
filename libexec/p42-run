@@ -15,8 +15,8 @@ if [ ! -e ./p42.yaml ]; then
   exit -1
 fi
 
-name=$(yaml ./p42.yaml name)
-repo=$(yaml ./p42.yaml repo)
+name=$(yaml get ./p42.yaml name)
+repo=$(yaml get ./p42.yaml repo)
 
 if [ $# -gt 0 ]; then
   components="$@"
