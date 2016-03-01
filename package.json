@@ -29,5 +29,8 @@
   "bugs": {
     "url": "https://github.com/pandastrike/p42/issues"
   },
-  "homepage": "https://github.com/pandastrike/p42#readme"
+  "homepage": "https://github.com/pandastrike/p42#readme",
+  "devDependencies": {
+    "json": "^9.0.3"
+  }
 }
