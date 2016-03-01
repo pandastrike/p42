@@ -15,31 +15,15 @@ A CLI for simplifying the use of Docker.
 
 ### Installation
 
-To install into `/usr/local/p42`:
-
 ```
-$ curl -L https://github.com/pandastrike/p42/archive/master.tar.gz |\
-    tar -xvs /p42-master/p42/ -C /usr/local
-```
-
-For bash users:
-
-```bash
-echo 'eval "$(/usr/local/bin/p42/bin env -)"' >> ~/.bash_profile
-exec bash
-```
-For zsh users:
-
-```zsh
-echo 'eval "$(/usr/local/bin/p42/bin env -)"' >> ~/.zshenv
-source ~/.zshenv
+$ npm install -g p42
 ```
 
 ### Creating A Cluster
 
 #### Create A Docker Host
 
-```bash
+```
 $ p42 cluster host
 ```
 
@@ -47,7 +31,7 @@ $ p42 cluster host
 
 This will give you a cluster with a single (master) node.
 
-```bash
+```
 $ p42 cluster create
 ```
 
@@ -55,13 +39,13 @@ $ p42 cluster create
 
 To add 3 nodes to your cluster:
 
-```bash
+```
 $ p42 cluster add --size 3
 ```
 
 To add just one:
 
-```bash
+```
 $ p42 cluster add
 ```
 
@@ -69,7 +53,7 @@ $ p42 cluster add
 
 If you want to use Docker commands directly:
 
-```bash
+```
 $ eval $(p42 cluster env)
 ```
 
@@ -77,7 +61,7 @@ which will select the Swarm master, if possible, or the default machine otherwis
 
 #### Examining Your Cluster
 
-```bash
+```
 p42 cluster ls
 ```
 
@@ -85,7 +69,7 @@ p42 cluster ls
 
 #### Initialize Your App
 
-```bash
+```
 $ p42 init
 Application name [blurb9]:
 Organization repository [pandastrike]:
@@ -95,9 +79,9 @@ Organization repository [pandastrike]:
 
 Provide the git cloneable URL for the mixin repo:
 
-```bash
+```
 $ p42 mixin add git@github.com:pandastrike/p42-mixin-nginx.git
-Document root [./www]:
+Document root [www]:
 ```
 
 #### Run Your App
@@ -116,7 +100,7 @@ We'll assume we've already run a cluster (see [Creating A Cluster](#creating-a-c
 
 Let's create an application directory and initialize it.
 
-```bash
+```
 $ mkdir hello-world
 $ cd hello-world
 $ p42 init
@@ -126,16 +110,16 @@ Organization repository []: pandastrike
 
 Add the Nginx mixin.
 
-```bash
+```
 $ p42 mixin add git@github.com:pandastrike/p42-mixin-nginx.git
-Document root [./www]:
+Document root [www]:
 ```
 
 This will create a `launch/www` directory that includes a `Dockerfile` for running Nginx.
 
 Create an index HTML file.
 
-```bash
+```
 $ mkdir www
 $ cat >> www/index.html
 <h1>Hello, World!</h1>
@@ -143,7 +127,7 @@ $ cat >> www/index.html
 
 Run your application.
 
-```bash
+```
 $ p42 run
 ```
 
@@ -151,14 +135,20 @@ This will take a minute to build and run the image described by `launch/www/Dock
 
 Get the IP and port of your Nginx container.
 
-```bash
+```
 $ p42 ls
 www <ip>:<port>
 $ curl <ip>:<port>
 <h1>Hello, World!</h1>
 ```
 
+## Autocomplete
 
+You can add autocomplete to your shell by running:
+
+```
+$ eval $(p42 env -)
+```
 
 ## Status
 
