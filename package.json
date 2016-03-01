@@ -13,7 +13,6 @@
   },
   "scripts": {
     "test": ": coming soon :",
-    "prepublish": "coffee -o lib/ -c src/*.*coffee",
     "tag": "(node_modules/.bin/json -f package.json version | xargs -I version git tag -am version version) && git push --tags"
   },
   "repository": {
