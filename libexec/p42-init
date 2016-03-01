@@ -1,5 +1,13 @@
 #!/usr/bin/env bash
 
+# Usage: p42 init
+# Summary: Initialize an application for use with p42.
+# Help: Initialize an application for use with p42.
+# This interactive command will ask you a few questions
+# about your application and then write a corresponding
+# configuration file.
+
+
 if [ -e ./p42.yaml ]; then
   echo p42: directory already contains a p42.yaml file
   exit -1

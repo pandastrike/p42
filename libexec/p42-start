@@ -1,5 +1,19 @@
 #!/usr/bin/env bash
 
+# Usage: p42 start [<component>]
+# Summary: Start application containers.
+# Help: Start application containers.
+# You can start containers for the entire application
+# or just a given set of components. Images for each
+# container must already exist.
+#
+#     p42 start
+#     p42 start www redis
+#
+# You can build images first using the build subcommand.
+# The run subcommand will build and start containers for you.
+#
+
 if [ ! -e ./p42.yaml ]; then
   echo p42: missing p42.yaml file
   echo p42: try running: p42 init

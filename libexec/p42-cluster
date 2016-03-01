@@ -1,27 +1,20 @@
 #!/usr/bin/env bash
 
+# Usage: p42 cluster [host|unhost|create|add|stop|ls|env] [<option>...]
+# Summary: Create/manage a cluster (a Docker Swarm).
+# Help: To find out about a specific subcommand:
+#
+#    p42 cluster help <command>
+#
+
+token=${DIGITALOCEAN_TOKEN}
+
 # TODO: we may be able to support multiple
 # (named) clusters by using and filtering
 # by label
 
-token=${DIGITALOCEAN_TOKEN}
-action=$1
+action="$1"
 shift
-
-# process options...
-# TODO: check for valid options by action (below)
-while [ $# -gt 0 ]; do
-  case $1 in
-    -c|--count)
-      count=$2
-      shift; shift
-      ;;
-    *)
-      # ignore
-      shift
-      ;;
-  esac
-done
 
 case "$action" in
 
@@ -56,6 +49,21 @@ case "$action" in
     ;;
 
   add)
+
+    # process options...
+    while [ $# -gt 0 ]; do
+      case $1 in
+        -c|--count)
+          count=$2
+          shift; shift
+          ;;
+        *)
+          # ignore
+          shift
+          ;;
+      esac
+    done
+
     i=${count:-1}
     swarm=$(docker-machine inspect swarm-00 \
       -f '{{ .HostOptions.SwarmOptions.Discovery }}')
@@ -99,10 +107,69 @@ case "$action" in
     fi
     ;;
 
+  help)
+    topic="$1"
+    if [ ! $topic ]; then
+      exec $_P42_ROOT/libexec/p42-help cluster
+    fi
+
+    case "$topic" in
+      host)
+        cat <<EOF
+Usage: p42 cluster host
+Set up a default Docker host to bootstrap the cluster.
+EOF
+        ;;
+      unhost)
+        cat <<EOF
+Usage: p42 cluster unhost
+Remote the default Docker host used to bootstrap the cluster.
+EOF
+        ;;
+      create)
+        cat <<EOF
+Usage: p42 cluster create
+Create a master Swarm node.
+EOF
+        ;;
+      add)
+        cat <<EOF
+Usage: p42 cluster add [--size <size>]
+Add a node to the cluster.
+
+You can add multiple nodes using --size.
+So to add 3 nodes to the cluster:
+
+    p42 cluster add --size 3
+EOF
+        ;;
+      stop)
+        cat <<EOF
+Usage: p42 cluster stop
+Stop a given cluster (Swarm) and remove the associated machines.
+EOF
+        ;;
+      ls)
+        cat <<EOF
+Usage: p42 cluster ls
+List all the machines in a cluster.
+EOF
+        ;;
+      env)
+        cat <<'EOF'
+Usage: p42 cluster env
+Set up your environment to use Docker with your cluster.
+
+    eval $(p42 cluster env)
+EOF
+        ;;
+      *)
+        echo "'$topic' is not a valid subcommand"
+        exec $_P42_ROOT/libexec/p42-help cluster
+    esac
+    ;;
   *)
-    echo 'Hm...'
-    echo $'I don\'t know how to do that.'
-    exit -1
+    exec $_P42_ROOT/libexec/p42-help cluster
     ;;
 
 esac

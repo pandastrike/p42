@@ -1,5 +1,14 @@
 #!/usr/bin/env bash
 
+# Usage: p42 run [<component>]
+# Summary: Build images and start application containers.
+# Help: Build images and start application containers.
+# You can run the entire application or just a given set of components.
+#
+#     p42 run
+#     p42 run www redis
+#
+
 if [ ! -e ./p42.yaml ]; then
   echo p42: missing p42.yaml file
   echo p42: try running: p42 init

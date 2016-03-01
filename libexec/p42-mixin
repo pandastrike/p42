@@ -1,5 +1,12 @@
 #!/usr/bin/env bash
 
+# Usage: p42 mixin [add] [<option>...]
+# Summary: Add/manage mixins for an application.
+# Help: To find out about a specific subcommand:
+#
+#    p42 mixin help <command>
+#
+
 action=$1
 shift
 
@@ -22,5 +29,33 @@ case "$action" in
       $directory/bin/interview > ./launch/$name/config.yaml
     fi
     ;;
+
+    help)
+      topic="$1"
+      if [ ! $topic ]; then
+        exec $_P42_ROOT/libexec/p42-help mixin
+      fi
+
+      case "$topic" in
+        add)
+          cat <<EOF
+Usage: p42 mixin add <component> <git-repo>
+Add a mixin based on a git repo path or URL.
+
+    p42 mixin add www https://github.com/pandastrike/p42-mixin-nginx.git
+
+Mixins write to your applications launch directory. Mixins may define a
+configuration based on interactive prompts.
+EOF
+          ;;
+        *)
+          echo "'$topic' is not a valid subcommand"
+          exec $_P42_ROOT/libexec/p42-help mixin
+      esac
+      ;;
+
+    *)
+      exec $_P42_ROOT/libexec/p42-help mixin
+      ;;
 
   esac

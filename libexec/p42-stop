@@ -1,5 +1,14 @@
 #!/usr/bin/env bash
 
+# Usage: p42 stop [<component>]
+# Summary: Stop application containers and remove them.
+# Help: Stop application containers and remove them.
+# You can stop an entire application or just a given set of components.
+#
+#     p42 stop
+#     p42 stop www redis
+#
+
 if [ ! -e ./p42.yaml ]; then
   echo p42: missing p42.yaml file
   echo p42: try running: p42 init
