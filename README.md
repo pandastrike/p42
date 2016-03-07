@@ -9,6 +9,7 @@ A CLI for simplifying the use of Docker.
 - Bash version 3 or later
 - Docker version 1.10
 - Docker Machine version 0.6
+- AWS CLI version 1.10.8
 - Node version 4 or later
 - NPM version 2 or later
 - `yaml` (via `npm install yaml -g`) version 1 or later
@@ -21,32 +22,23 @@ $ npm install -g p42
 
 ### Creating A Cluster
 
-#### Create A Docker Host
-
-```
-$ p42 cluster host
-```
-
-#### Create A Cluster
-
-This will give you a cluster with a single (master) node.
-
 ```
 $ p42 cluster create
+Creating VPC [red-ghost]...
 ```
 
 #### Add Nodes To The Cluster
 
-To add 3 nodes to your cluster:
+To add 3 nodes to a cluster:
 
 ```
-$ p42 cluster add --size 3
+$ p42 cluster add red-ghost -n 3
 ```
 
 To add just one:
 
 ```
-$ p42 cluster add
+$ p42 cluster add red-ghost
 ```
 
 #### Using Docker Commands
@@ -54,7 +46,7 @@ $ p42 cluster add
 If you want to use Docker commands directly:
 
 ```
-$ eval $(p42 cluster env)
+$ eval $(p42 cluster env red-ghost)
 ```
 
 which will select the Swarm master, if possible, or the default machine otherwise.
@@ -62,7 +54,7 @@ which will select the Swarm master, if possible, or the default machine otherwis
 #### Examining Your Cluster
 
 ```
-p42 cluster ls
+p42 cluster ls red-ghost
 ```
 
 ### Running An App

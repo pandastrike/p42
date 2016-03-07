@@ -204,33 +204,33 @@ EOF
         ;;
       add)
         cat <<EOF
-Usage: p42 cluster add [--size <size>]
+Usage: p42 cluster add <name> [-n <size>]
 Add a node to the cluster.
 
-You can add multiple nodes using --size.
-So to add 3 nodes to the cluster:
+You can add multiple nodes using -n.
+To add 3 nodes to the cluster named "red-ghost":
 
-    p42 cluster add --size 3
+    p42 cluster add red-ghost -n 3
 EOF
         ;;
       stop)
         cat <<EOF
-Usage: p42 cluster stop
+Usage: p42 cluster stop <name>
 Stop a given cluster (Swarm) and remove the associated machines.
 EOF
         ;;
       ls)
         cat <<EOF
-Usage: p42 cluster ls
+Usage: p42 cluster ls <name>
 List all the machines in a cluster.
 EOF
         ;;
       env)
         cat <<'EOF'
-Usage: p42 cluster env
+Usage: p42 cluster env <name>
 Set up your environment to use Docker with your cluster.
 
-    eval $(p42 cluster env)
+    eval $(p42 cluster env red-ghost)
 EOF
         ;;
       *)
