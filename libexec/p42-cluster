@@ -34,7 +34,7 @@ case "$action" in
       > /dev/null
 
     while true; do
-      sleep 1
+      sleep 5
       description=$(aws cloudformation describe-stacks --stack-name ${name})
       status=$(json Stacks[0].StackStatus <<<"${description}")
       if [ "$status" == "CREATE_COMPLETE" ]; then
