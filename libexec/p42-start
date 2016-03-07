@@ -22,6 +22,7 @@ fi
 
 name=$(yaml get ./p42.yaml name)
 repo=$(yaml get ./p42.yaml repo)
+cluster=$(yaml get ./p42.yaml clusters.production)
 
 if [ $# -gt 0 ]; then
   component="$@"
@@ -34,7 +35,7 @@ else
 fi
 
 # TODO: what if the swarm master dies?
-eval $(docker-machine env --swarm fearless-clock-00)
+eval $(docker-machine env --swarm ${cluster}-00)
 
 for container in $component; do
   label=$name-$container

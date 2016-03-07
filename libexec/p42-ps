@@ -4,6 +4,8 @@
 # Summary: List deployed containers and their IP/port.
 # Help: List deployed containers and their IP/port.
 
+cluster=$(yaml get ./p42.yaml clusters.production)
+
 # TODO: what if the swarm master dies?
-eval $(docker-machine env --swarm swarm-00)
+eval $(docker-machine env --swarm ${cluster}-00)
 docker ps --format '{{ .Names }} {{ .Ports }}'
