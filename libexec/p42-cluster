@@ -33,6 +33,8 @@ case "$action" in
       --template-body file:///${path} \
       > /dev/null
 
+    exit -1
+
     while true; do
       sleep 5
       description=$(aws cloudformation describe-stacks --stack-name ${name})
