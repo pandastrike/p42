@@ -34,7 +34,7 @@ else
 fi
 
 # TODO: what if the swarm master dies?
-eval $(docker-machine env --swarm swarm-00)
+eval $(docker-machine env --swarm fearless-clock-00)
 
 for container in $component; do
   label=$name-$container

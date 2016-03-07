@@ -12,8 +12,9 @@
     "p42": "libexec/p42"
   },
   "scripts": {
-    "test": ": coming soon :",
-    "tag": "(node_modules/.bin/json -f package.json version | xargs -I version git tag -am version version) && git push --tags"
+    "test": "coffee -o lib/ -c src/*.*coffee && coffee test/test.coffee",
+    "prepublish": "coffee -o lib/ -c src/*.*coffee",
+    "postpublish": "(node_modules/.bin/json -f package.json version | xargs -I version git tag -am version version) && git push --tags"
   },
   "repository": {
     "type": "git",
@@ -32,5 +33,9 @@
   "homepage": "https://github.com/pandastrike/p42#readme",
   "devDependencies": {
     "json": "^9.0.3"
+  },
+  "dependencies": {
+    "fairmont": "^1.0.0-beta-40",
+    "js-yaml": "^3.5.3"
   }
 }

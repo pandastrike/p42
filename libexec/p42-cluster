@@ -7,54 +7,98 @@
 #    p42 cluster help <command>
 #
 
-token=${DIGITALOCEAN_TOKEN}
-
-# TODO: we may be able to support multiple
-# (named) clusters by using and filtering
-# by label
+clusters="${HOME}/.config/p42/clusters"
+mkdir -p "${clusters}"
 
 action="$1"
 shift
 
+# test SSH
+# ssh -i ~/.docker/machine/certs/cert.pem ubuntu@<IP-of-your-instance> -v
+
 case "$action" in
 
-  host)
-    echo Creating default machine...
-    docker-machine create default\
-      --driver digitalocean \
-      --digitalocean-access-token ${token} \
-      --digitalocean-region=sfo1 \
-    ;;
-
-  unhost)
-    echo Removing default machine...
-    docker-machine stop default
-    docker-machine rm default
-    ;;
-
   create)
-    eval "$(docker-machine env default)"
+
+    name=$(p42 name)
+
+    echo Creating VPC [${name}]...
+    directory=$(mktemp -d "${TMPDIR:-/tmp}/p42.XXXXXXXXX")
+    path=${directory}/cf-template.yaml
+    # Originally, I was going to templatize the file,
+    # but I'm no longer sure that's necessary...
+    yaml json write $_P42_ROOT/share/cf-template.yaml > ${path}
+    aws cloudformation create-stack \
+      --stack-name ${name} \
+      --template-body file:///${path} \
+      > /dev/null
+
+    while true; do
+      sleep 1
+      description=$(aws cloudformation describe-stacks --stack-name ${name})
+      status=$(json Stacks[0].StackStatus <<<"${description}")
+      if [ "$status" == "CREATE_COMPLETE" ]; then
+        break
+      fi
+    done
+
+    echo VPC [${name}] created.
+
+    vpc=$(json Stacks[0].Outputs[0].OutputValue <<<"${description}")
+    subnet=$(json Stacks[0].Outputs[1].OutputValue <<<"${description}")
+    az=$(json Stacks[0].Outputs[2].OutputValue <<<"${description}")
+    region="${az%?}"
+    zone="${az: -1}"
+
+    cat > "${clusters}/${name}" <<EOF
+vpc: ${vpc}
+subnet: ${subnet}
+region: ${region}
+zone: ${zone}
+EOF
+
+    echo Creating Docker host...
+
+    docker-machine create ${name} \
+      --driver amazonec2 \
+      --amazonec2-region ${region} \
+      --amazonec2-vpc-id ${vpc} \
+      --amazonec2-subnet-id ${subnet} \
+      --amazonec2-zone ${zone}
+
+    echo Creating Swarm master...
+
+    eval "$(docker-machine env ${name})"
 
     echo Generating token...
     swarm=$(docker run swarm create)
 
     echo "Creating Swarm Master for token://${swarm}..."
     docker-machine create \
-      --driver digitalocean \
-      --digitalocean-access-token ${token} \
-      --digitalocean-region=sfo1 \
+      --driver amazonec2 \
+      --amazonec2-region ${region} \
+      --amazonec2-vpc-id ${vpc} \
+      --amazonec2-subnet-id ${subnet} \
+      --amazonec2-zone ${zone} \
       --swarm --swarm-master \
       --swarm-discovery token://${swarm} \
-      swarm-00
+      ${name}-00
     ;;
 
   add)
 
+    name=$1
+    shift
+    if [ ! -e "${clusters}/${name}" ]; then
+      echo p42: Invalid cluster: ${name}
+      exit -1
+    fi
+
     # process options...
     while [ $# -gt 0 ]; do
       case $1 in
-        -c|--count)
-          count=$2
+        -n)
+          n=$2
           shift; shift
           ;;
         *)
@@ -64,46 +108,83 @@ case "$action" in
       esac
     done
 
-    i=${count:-1}
-    swarm=$(docker-machine inspect swarm-00 \
+    i=${n:-1}
+    swarm=$(docker-machine inspect ${name}-00 \
       -f '{{ .HostOptions.SwarmOptions.Discovery }}')
-    echo "Adding $i node(s) to Swarm for ${swarm}..."
+    echo "Adding $i node(s) to cluster [${name}]..."
+
+    region=$(yaml get ${clusters}/${name} region)
+    zone=$(yaml get ${clusters}/${name} zone)
+    vpc=$(yaml get ${clusters}/${name} vpc)
+    subnet=$(yaml get ${clusters}/${name} subnet)
+
     while [ $i -gt 0 ]; do
       i=$[$i-1]
-      candidates=$(echo swarm-{0..9}{0..9})
-      for name in $candidates; do
-        docker-machine inspect $name &> /dev/null
+      candidates=$(echo ${name}-{0..9}{0..9})
+      for _name in $candidates; do
+        docker-machine inspect $_name &> /dev/null
         if [ $? -ne 0 ]; then
-          echo Creating machine [$name]...
+          echo Creating machine [$_name]...
           docker-machine create \
-            --driver digitalocean \
-            --digitalocean-access-token ${token} \
-            --digitalocean-region=sfo1 \
+            --driver amazonec2 \
+            --amazonec2-region ${region} \
+            --amazonec2-vpc-id ${vpc} \
+            --amazonec2-subnet-id ${subnet} \
+            --amazonec2-zone ${zone} \
             --swarm --swarm-discovery ${swarm} \
-            ${name}
+            ${_name}
           break
         fi
       done
     done
+
     ;;
 
   stop)
+
+    name=$1
+    shift
+    if [ ! -e "${clusters}/${name}" ]; then
+      echo p42: Invalid cluster: ${name}
+      exit -1
+    fi
+
     echo Stopping Swarm...
-    machines=$(docker-machine ls --format '{{ .Name }}' | grep swarm)
+    machines=$(docker-machine ls \
+      --format '{{ .Name }}' \
+      --filter "name=${name}")
     docker-machine stop $machines
     docker-machine rm $machines
+
+    echo Deleting VPC...
+    aws cloudformation delete-stack --stack-name ${name}
+    rm ${clusters}/${name}
     ;;
 
   ls)
-    docker-machine ls
+    name=$1
+    shift
+    if [ ! -e "${clusters}/${name}" ]; then
+      echo p42: Invalid cluster: ${name}
+      exit -1
+    fi
+
+    docker-machine ls --filter "name=${name}-"
     ;;
 
   env)
-    machine=$(docker-machine ls --format '{{ .Name }}' | grep swarm-00)
+
+    name=$1
+    shift
+    if [ ! -e "${clusters}/${name}" ]; then
+      echo p42: Invalid cluster: ${name}
+      exit -1
+    fi
+
     if [ $machine ]; then
-      docker-machine env --swarm $machine
+      docker-machine env --swarm "${name}-00"
     else
-      docker-machine env default
+      docker-machine env ${name}
     fi
     ;;
 
@@ -114,22 +195,11 @@ case "$action" in
     fi
 
     case "$topic" in
-      host)
-        cat <<EOF
-Usage: p42 cluster host
-Set up a default Docker host to bootstrap the cluster.
-EOF
-        ;;
-      unhost)
-        cat <<EOF
-Usage: p42 cluster unhost
-Remote the default Docker host used to bootstrap the cluster.
-EOF
-        ;;
+
       create)
         cat <<EOF
 Usage: p42 cluster create
-Create a master Swarm node.
+Create a VPC, bootstrap Docker Host, and a master Swarm node.
 EOF
         ;;
       add)
@@ -168,6 +238,7 @@ EOF
         exec $_P42_ROOT/libexec/p42-help cluster
     esac
     ;;
+
   *)
     exec $_P42_ROOT/libexec/p42-help cluster
     ;;
