@@ -76,6 +76,14 @@ $ p42 mixin add git@github.com:pandastrike/p42-mixin-nginx.git
 Document root [www]:
 ```
 
+#### Add Target
+
+Add the cluster as a target for your app.
+
+```tty
+$ p42 target add master red-ghost
+```
+
 #### Run Your App
 
 The `run` command will build and run all the images described in your `launch` directory.

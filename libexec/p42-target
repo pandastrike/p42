@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+# Usage: p42 target [add|rm|remove|mv|rename] <branch> <cluster>
+# Summary: Create/manage deploy targets.
+# Help: To find out about a specific subcommand:
+#
+#    p42 target help <command>
+#
+
+exec node $_P42_ROOT/lib/target.js $@
