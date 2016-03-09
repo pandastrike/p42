@@ -84,9 +84,6 @@ Resources:
       DestinationCidrBlock: 0.0.0.0/0
       GatewayId:
         Ref: InternetGateway
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id: e940bae2-493f-4016-9fb4-c1b62e1a348d
   PublicSubnetRouteTableAssociation:
     Type: 'AWS::EC2::SubnetRouteTableAssociation'
     Properties:
@@ -94,9 +91,6 @@ Resources:
         Ref: PublicSubnet
       RouteTableId:
         Ref: PublicRouteTable
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id: 5135621c-2561-4efd-ba18-e9419832ef2c
   PublicNetworkAcl:
     Type: 'AWS::EC2::NetworkAcl'
     Properties:
