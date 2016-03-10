@@ -9,15 +9,5 @@
 #     p42 run www redis
 #
 
-if [ $# -gt 0 ]; then
-  components="$@"
-else
-  if [ ! -d ./launch ]; then
-    echo p42: nothing to run
-    exit
-  fi
-  components=$(ls ./launch)
-fi
-
-p42 build $components
-p42 start $components
+p42 build $@
+p42 start $@

@@ -7,17 +7,7 @@
 #    p42 build www
 #
 
-if [ ! -e ./p42.yaml ]; then
-  echo p42: missing p42.yaml file
-  echo p42: try running: p42 init
-  exit -1
-fi
-
-name=$(yaml get ./p42.yaml name)
-repo=$(yaml get ./p42.yaml repo)
-cluster=$(yaml get ./p42.yaml clusters.production)
-
-echo ${cluster}
+source $_P42_ROOT/share/context.sh
 
 if [ $# -gt 0 ]; then
   components="$@"
