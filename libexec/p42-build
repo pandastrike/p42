@@ -59,10 +59,10 @@ EOF
       --region us-east-1 \
       > /dev/null
     policy=$(yaml json write "${share}/ecr/policy.yaml")
-    # aws ecr set-repository-policy \
-    #   --repository-name "${label}" \
-    #   --region us-east-1 \
-    #   --policy-text "${policy}"
+    aws ecr set-repository-policy \
+      --repository-name "${label}" \
+      --region us-east-1 \
+      --policy-text "${policy}"
   fi
 
   echo "Pushing $label component..."
