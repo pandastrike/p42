@@ -1,3 +1,6 @@
+share="${_P42_ROOT}/share"
+app="./p42.yaml"
+
 if [ ! -e ./p42.yaml ]; then
   echo p42: missing p42.yaml file
   echo p42: try running: p42 init
@@ -10,9 +13,10 @@ if [ -z ${branch} ]; then
   exit -1
 fi
 
-name=$(yaml get ./p42.yaml name)
-repo=$(yaml get ./p42.yaml repo)
-cluster=$(yaml get ./p42.yaml clusters.${branch})
+name=$(yaml get "${app}" name)
+repo=$(yaml get "${app}" repo)
+registry=$(yaml get "${app}" registry)
+cluster=$(yaml get "${app}" clusters.${branch})
 
 if [ -z ${cluster} ]; then
   >&2 echo "p42: No target found for branch ${branch}"

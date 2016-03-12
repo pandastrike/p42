@@ -1,0 +1,7 @@
+Version: '2008-10-17'
+Statement:
+  - Sid: 'Allow Any/All'
+    Effect: Allow
+    Principal: '*'
+    Action:
+      - 'ecr:*'

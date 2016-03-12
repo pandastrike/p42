@@ -190,10 +190,20 @@ Resources:
       DomainName: 'name.internal'
       DomainNameServers:
        - AmazonProvidedDNS
-      Tags:
-        - Key: Application
-          Value:
-            Ref: 'AWS::StackName'
+  ELB:
+    Type: 'AWS::ElasticLoadBalancing::LoadBalancer'
+    Properties:
+      LoadBalancerName:
+        Ref: 'AWS::StackName'
+      Listeners:
+        - LoadBalancerPort: 80
+          InstancePort: 80
+          Protocol: HTTP
+        # - LoadBalancerPort: 443
+        #   InstancePort: 443
+        #   Protocol: HTTPS
+      Subnets:
+        - Ref: 'PublicSubnet'
 Outputs:
   VPCId:
     Description: VPCId of the newly created VPC

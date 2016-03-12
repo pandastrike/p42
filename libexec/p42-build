@@ -24,7 +24,7 @@ eval $(docker-machine env --swarm ${cluster}-00)
 
 for component in $components; do
   label=$name-$component
-  echo Building $repo/$label component...
+  echo "Building ${label} component..."
 
   # instantiate mixin templates, if any
   yaml=./launch/$component/config.yaml
@@ -44,10 +44,28 @@ EOF
   done
 
   docker build \
-    -t $repo/$label \
-    -f launch/$component/Dockerfile \
+    -t "${label}" \
+    -f "launch/${component}/Dockerfile" \
     .
-  echo Pushing $repo/$label component...
-  sleep 2
-  docker push $repo/$label
+
+  docker tag "${label}" "${registry}/${label}"
+
+  if [ ! "$(aws ecr describe-repositories \
+    --repository-name ${label} \
+    --region us-east-1)" ]; then
+    echo "Creating repository '${label}'..."
+    aws ecr create-repository \
+      --repository-name "${label}" \
+      --region us-east-1 \
+      > /dev/null
+    policy=$(yaml json write "${share}/ecr/policy.yaml")
+    # aws ecr set-repository-policy \
+    #   --repository-name "${label}" \
+    #   --region us-east-1 \
+    #   --policy-text "${policy}"
+  fi
+
+  echo "Pushing $label component..."
+  eval $(aws ecr get-login --region us-east-1 > /dev/null)
+  docker push "${registry}/${label}"
 done

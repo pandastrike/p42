@@ -1,0 +1,9 @@
+Comment: '{{comment}}'
+Changes:
+  - Action: UPSERT
+    ResourceRecordSet:
+      Name: _{{public_host}}._{{protocol}}.name.internal.
+      Type: SRV
+      TTL: 60
+      ResourceRecords:
+        - Value: '0 0 {{port}} {{private_host}}.name.internal'

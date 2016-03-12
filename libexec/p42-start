@@ -41,12 +41,31 @@ dns-a() {
     yaml set - machine "${_name}" |\
     yaml set - comment "${_comment}" |\
     yaml set - ip ${_ip} |\
-    yaml template - $_P42_ROOT/share/dns.yaml |\
-    yaml json write - > "${tmpDir}/dns-${_name}.json"
+    yaml template - $_P42_ROOT/share/dns/a.yaml |\
+    yaml json write - > "${tmpDir}/dns-a-${_name}.json"
 
   aws route53 change-resource-record-sets \
     --hosted-zone-id ${dns} \
-    --change-batch file:///${tmpDir}/dns-${_name}.json \
+    --change-batch file:///${tmpDir}/dns-a-${_name}.json \
+    > /dev/null
+}
+
+dns-srv() {
+
+  echo "Adding DNS SRV record for '${3}'..."
+
+  cat "${clusters}/${cluster}" |\
+    yaml set - protocol "${1}" |\
+    yaml set - public_host "${2}" |\
+    yaml set - private_host "${3}" |\
+    yaml set - port "${4}" |\
+    yaml set - comment "${5}" |\
+    yaml template - $_P42_ROOT/share/dns/srv.yaml |\
+    yaml json write - > "${tmpDir}/dns-srv-${_name}.json"
+
+  aws route53 change-resource-record-sets \
+    --hosted-zone-id ${dns} \
+    --change-batch file:///${tmpDir}/dns-srv-${_name}.json \
     > /dev/null
 }
 
@@ -61,9 +80,12 @@ for container in $component; do
     -P \
     --name ${label} \
     --restart always \
-    -d ${repo}/${label}:latest
+    -d ${registry}/${label}:latest
 
-  ip=$(docker inspect --format '{{ .NetworkSettings.IPAddress }}' ${label})
+  info=$(docker inspect ${label} | json '[0]')
+  ip=$(json 'Node.IP' <<<$info )
+  port=$(json 'NetworkSettings.Ports["80/tcp"][0].HostPort' <<<$info )
   dns-a $container $ip $label
+  dns-srv http $container $container $port $label
 
 done
