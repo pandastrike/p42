@@ -175,6 +175,25 @@ Resources:
         Ref: PublicSubnet
       NetworkAclId:
         Ref: PublicNetworkAcl
+  PrivateDNS:
+    Type: 'AWS::Route53::HostedZone'
+    Properties:
+      Name: 'name.internal.'
+      VPCs:
+        - VPCId:
+            Ref: VPC
+          VPCRegion:
+            Ref: 'AWS::Region'
+  DHCPOptions :
+    Type: 'AWS::EC2::DHCPOptions'
+    Properties:
+      DomainName: 'name.internal'
+      DomainNameServers:
+       - AmazonProvidedDNS
+      Tags:
+        - Key: Application
+          Value:
+            Ref: 'AWS::StackName'
 Outputs:
   VPCId:
     Description: VPCId of the newly created VPC
@@ -190,3 +209,7 @@ Outputs:
       'Fn::GetAtt':
         - PublicSubnet
         - AvailabilityZone
+  HostedZoneId:
+    Description: HostedZoneId of the private HostedZone
+    Value:
+      Ref: PrivateDNS

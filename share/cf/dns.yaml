@@ -1,0 +1,12 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: AWS CloudFormation Template to add a DNS record.
+Resources:
+  DNSRecord:
+    Type: 'AWS::Route53::RecordSet'
+    Properties:
+      HostedZoneId: {{dns}}
+      Name: {{machine}}.private.name.
+      Type: A
+      TTL: 60
+      ResourceRecords:
+        - 10.0.0.25

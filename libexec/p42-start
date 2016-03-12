@@ -15,8 +15,6 @@
 #
 
 source $_P42_ROOT/share/context.sh
-context
-
 
 if [ $# -gt 0 ]; then
   component="$@"
@@ -31,15 +29,41 @@ fi
 # TODO: what if the swarm master dies?
 eval $(docker-machine env --swarm ${cluster}-00)
 
+dns-a() {
+
+  _name=$1
+  _ip=$2
+  _comment=$3
+
+  echo "Adding DNS A record for '${_name}'..."
+
+  cat "${clusters}/${cluster}" |\
+    yaml set - machine "${_name}" |\
+    yaml set - comment "${_comment}" |\
+    yaml set - ip ${_ip} |\
+    yaml template - $_P42_ROOT/share/dns.yaml |\
+    yaml json write - > "${tmpDir}/dns-${_name}.json"
+
+  aws route53 change-resource-record-sets \
+    --hosted-zone-id ${dns} \
+    --change-batch file:///${tmpDir}/dns-${_name}.json \
+    > /dev/null
+}
+
 for container in $component; do
   label=$name-$container
   echo Starting $label container...
   # TODO: add error handling for Docker errors?
   # TODO: components that launch multiple containers?
   # TODO: specifying constraints for Swarm deploy?
+
   docker run \
     -P \
     --name ${label} \
     --restart always \
     -d ${repo}/${label}:latest
+
+  ip=$(docker inspect --format '{{ .NetworkSettings.IPAddress }}' ${label})
+  dns-a $container $ip $label
+
 done

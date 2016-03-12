@@ -23,14 +23,13 @@ case "$action" in
     name=$(p42 name)
 
     echo Creating VPC [${name}]...
-    directory=$(mktemp -d "${TMPDIR:-/tmp}/p42.XXXXXXXXX")
-    path=${directory}/cf-template.yaml
+      tmpDir=$(mktemp -d "${TMPDIR:-/tmp}/p42.XXXXXXXXX")
     # Originally, I was going to templatize the file,
     # but I'm no longer sure that's necessary...
-    yaml json write $_P42_ROOT/share/cf-template.yaml > ${path}
+    yaml json write $_P42_ROOT/share/cf/vpc.yaml > ${tmpDir}/vpc.json
     aws cloudformation create-stack \
       --stack-name ${name} \
-      --template-body file:///${path} \
+      --template-body file:///${tmpDir}/vpc.json \
       > /dev/null
 
     while true; do
@@ -49,12 +48,15 @@ case "$action" in
     az=$(json Stacks[0].Outputs[2].OutputValue <<<"${description}")
     region="${az%?}"
     zone="${az: -1}"
+    dns=$(json Stacks[0].Outputs[3].OutputValue <<<"${description}")
 
     cat > "${clusters}/${name}" <<EOF
+name: ${name}
 vpc: ${vpc}
 subnet: ${subnet}
 region: ${region}
 zone: ${zone}
+dns: ${dns}
 EOF
 
     echo Creating Docker host...
@@ -66,7 +68,7 @@ EOF
       --amazonec2-subnet-id ${subnet} \
       --amazonec2-zone ${zone}
 
-    echo Creating Swarm master...
+    echo 'Creating Swarm master...'
 
     eval "$(docker-machine env ${name})"
 
@@ -83,6 +85,7 @@ EOF
       --swarm --swarm-master \
       --swarm-discovery token://${swarm} \
       ${name}-00
+
     ;;
 
   add)
@@ -140,7 +143,7 @@ EOF
 
     ;;
 
-  stop)
+  rm)
 
     name=$1
     shift
@@ -164,12 +167,15 @@ EOF
   ls)
     name=$1
     shift
-    if [ ! -e "${clusters}/${name}" ]; then
-      echo p42: Invalid cluster: ${name}
-      exit -1
+    if [ -z $name ]; then
+      ls ${clusters}
+    else
+      if [ -f "${clusters}/${name}" ]; then
+        docker-machine ls --filter "name=${name}"
+      else
+        echo "p42: cluster '${name}' does not exist."
+      fi
     fi
-
-    docker-machine ls --filter "name=${name}-"
     ;;
 
   env)

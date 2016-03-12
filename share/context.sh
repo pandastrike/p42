@@ -18,3 +18,14 @@ if [ -z ${cluster} ]; then
   >&2 echo "p42: No target found for branch ${branch}"
   exit -1
 fi
+
+clusters="${HOME}/.config/p42/clusters"
+mkdir -p "${clusters}"
+
+region=$(yaml get ${clusters}/${cluster} region)
+zone=$(yaml get ${clusters}/${cluster} zone)
+vpc=$(yaml get ${clusters}/${cluster} vpc)
+subnet=$(yaml get ${clusters}/${cluster} subnet)
+dns=$(yaml get ${clusters}/${cluster} dns)
+
+tmpDir=$(mktemp -d "${TMPDIR:-/tmp}/p42.XXXXXXXXX")
