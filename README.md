@@ -1,6 +1,6 @@
 # p42
 
-A CLI for simplifying the use of Docker.
+A CLI for simplifying the use of AWS with Docker Swarm.
 
 ## Getting Started
 
@@ -8,11 +8,18 @@ A CLI for simplifying the use of Docker.
 
 - Bash version 3 or later
 - Docker version 1.10
-- Docker Machine version 0.6
+- Docker Machine version 0.6 release candidate (see below)
 - AWS CLI version 1.10.8
 - Node version 4 or later
 - NPM version 2 or later
 - `yaml` (via `npm install yaml -g`) version 1 or later
+
+To install the Docker Machine release candidate, run the following from the shell:
+
+```sh
+curl -L https://github.com/docker/machine/releases/download/v0.6.0-rc4/docker-machine-`uname -s`-`uname -m` > /usr/local/bin/docker-machine && \\
+chmod +x /usr/local/bin/docker-machine
+```
 
 ### Installation
 

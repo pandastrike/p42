@@ -1,4 +1,4 @@
-Comment: '{{comment}}'
+Comment: "{{comment}}"
 Changes:
   - Action: UPSERT
     ResourceRecordSet:

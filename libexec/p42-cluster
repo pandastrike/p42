@@ -7,14 +7,64 @@
 #    p42 cluster help <command>
 #
 
-clusters="${HOME}/.config/p42/clusters"
-mkdir -p "${clusters}"
-
 action="$1"
 shift
 
 # test SSH
 # ssh -i ~/.docker/machine/certs/cert.pem ubuntu@<IP-of-your-instance> -v
+
+get_security_group() {
+  local vpc name
+  local "${@}"
+  aws ec2 describe-security-groups \
+    --filters \
+      "Name=vpc-id,Values=${vpc}" \
+      "Name=group-name,Values=${name}" |\
+    json SecurityGroups[0].GroupId
+}
+
+create_instance() {
+  local name region zone vpc subnet options
+  local "${@}"
+  docker-machine create ${name} \
+    --driver amazonec2 \
+    --amazonec2-region ${region} \
+    --amazonec2-vpc-id ${vpc} \
+    --amazonec2-subnet-id ${subnet} \
+    --amazonec2-zone ${zone} \
+    ${options}
+}
+
+create_swarm_node() {
+
+  local name master token region zone vpc subnet groups
+  local "${@}"
+
+  create_instance \
+    name=${name} \
+    region=${region} \
+    zone=${zone} \
+    vpc=${vpc} \
+    subnet=${subnet} \
+    options="--swarm \
+      ${master+--swarm-master} \
+      --swarm-discovery ${token}"
+
+  # We need to add the VPC default SG
+
+
+  # get the instance ID of the newly created machine
+  id=$(aws ec2 describe-instances \
+    --filters "Name=tag-value,Values=${name}" |\
+    json 'Reservations[0].Instances[0].InstanceId')
+
+  # add the default VPC security group
+  aws ec2 modify-instance-attribute \
+    --instance-id ${id} \
+    --groups \
+      $(get_security_group vpc=${vpc} name=default) \
+      $(get_security_group vpc=${vpc} name=docker-machine)
+}
 
 case "$action" in
 
@@ -51,6 +101,14 @@ case "$action" in
     region="${az%?}"
     zone="${az: -1}"
     dns=$(json Stacks[0].Outputs[3].OutputValue <<<"${description}")
+    echo Creating Docker host...
+
+    create_instance \
+      name=${name} \
+      region=${region} \
+      zone=${zone} \
+      vpc=${vpc} \
+      subnet=${subnet}
 
     cat > "${clusters}/${name}" <<EOF
 name: ${name}
@@ -61,38 +119,30 @@ zone: ${zone}
 dns: ${dns}
 EOF
 
-    echo Creating Docker host...
-
-    docker-machine create ${name} \
-      --driver amazonec2 \
-      --amazonec2-region ${region} \
-      --amazonec2-vpc-id ${vpc} \
-      --amazonec2-subnet-id ${subnet} \
-      --amazonec2-zone ${zone}
-
     echo 'Creating Swarm master...'
 
     eval "$(docker-machine env ${name})"
 
     echo Generating token...
-    swarm=$(docker run swarm create)
+    token=$(docker run swarm create)
 
-    echo "Creating Swarm Master for token://${swarm}..."
-    docker-machine create \
-      --driver amazonec2 \
-      --amazonec2-region ${region} \
-      --amazonec2-vpc-id ${vpc} \
-      --amazonec2-subnet-id ${subnet} \
-      --amazonec2-zone ${zone} \
-      --swarm --swarm-master \
-      --swarm-discovery token://${swarm} \
-      ${name}-00
+    echo "Creating Swarm Master with token://${token}..."
+
+    create_swarm_node \
+      name=${name}-00 \
+      master=true \
+      token="token://${token}" \
+      region=${region} \
+      zone=${zone} \
+      vpc=${vpc} \
+      subnet=${subnet}
 
     ;;
 
-  add)
+  expand)
 
-    name=$1
+    source "${lib}/context.sh"
+    name=${1:-${cluster}}
     shift
     if [ ! -e "${clusters}/${name}" ]; then
       echo p42: Invalid cluster: ${name}
@@ -114,7 +164,7 @@ EOF
     done
 
     i=${n:-1}
-    swarm=$(docker-machine inspect ${name}-00 \
+    token=$(docker-machine inspect ${name}-00 \
       -f '{{ .HostOptions.SwarmOptions.Discovery }}')
     echo "Adding $i node(s) to cluster [${name}]..."
 
@@ -129,20 +179,26 @@ EOF
       for _name in $candidates; do
         docker-machine inspect $_name &> /dev/null
         if [ $? -ne 0 ]; then
-          echo Creating machine [$_name]...
-          docker-machine create \
-            --driver amazonec2 \
-            --amazonec2-region ${region} \
-            --amazonec2-vpc-id ${vpc} \
-            --amazonec2-subnet-id ${subnet} \
-            --amazonec2-zone ${zone} \
-            --swarm --swarm-discovery ${swarm} \
-            ${_name}
+
+          echo "Creating Swarm Node '${_name}' with '${token}'..."
+          create_swarm_node \
+            name=${_name} \
+            token=${token} \
+            region=${region} \
+            zone=${zone} \
+            vpc=${vpc} \
+            subnet=${subnet}
+
           break
         fi
       done
     done
 
+    ;;
+
+  contract)
+    echo 'Not implemented yet.'
+    exit -1
     ;;
 
   rm)
@@ -167,16 +223,21 @@ EOF
     ;;
 
   ls)
+    ls "${clusters}"
+    ;;
+
+  ps)
     name=$1
     shift
     if [ -z $name ]; then
-      ls ${clusters}
+      source $
+      name=$cluster
+    fi
+
+    if [ -f "${clusters}/${name}" ]; then
+      docker-machine ls --filter "name=${name}"
     else
-      if [ -f "${clusters}/${name}" ]; then
-        docker-machine ls --filter "name=${name}"
-      else
-        echo "p42: cluster '${name}' does not exist."
-      fi
+      echo "p42: cluster '${name}' does not exist."
     fi
     ;;
 
@@ -189,11 +250,20 @@ EOF
       exit -1
     fi
 
-    if [ $machine ]; then
-      docker-machine env --swarm "${name}-00"
-    else
-      docker-machine env ${name}
+    docker-machine env --swarm "${name}-00"
+
+    ;;
+
+  get)
+    name="${1}"
+    shift
+    if [ ! -e "${clusters}/${name}" ]; then
+      echo p42: Invalid cluster: ${name}
+      exit -1
     fi
+    property="${1}"
+
+    yaml get "${clusters}/${name}" "${property}"
     ;;
 
   help)

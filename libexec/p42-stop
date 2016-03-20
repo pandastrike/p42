@@ -9,7 +9,7 @@
 #     p42 stop www redis
 #
 
-source $_P42_ROOT/share/context.sh
+source ${lib}/context.sh
 
 if [ $# -gt 0 ]; then
   containers="$@"
@@ -26,11 +26,11 @@ eval $(docker-machine env --swarm ${cluster}-00)
 
 for container in $containers; do
   label=$name-$container
-  id=$(docker ps | grep $label | awk '{ print $1 }')
-  if [ $id ]; then
+  ids=
+  for id in $(docker ps --filter "name=${label}" --format '{{ .ID }}'); do
     echo Stopping $label container...
     docker stop $id && docker rm $id
-  fi
+  done
 
   # TODO: Remove DNS records
 done

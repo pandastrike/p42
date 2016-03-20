@@ -23,6 +23,8 @@ libexec_path="$(abs_dirname "$0")"
 export _P42_ROOT="$(abs_dirname "$libexec_path")"
 export PATH="${libexec_path}:$PATH"
 
+source $_P42_ROOT/libsh/init.sh
+
 command="$1"
 case "$command" in
 "" | "-h" | "--help" )

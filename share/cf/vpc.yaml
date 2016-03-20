@@ -177,6 +177,7 @@ Resources:
         Ref: PublicNetworkAcl
   PrivateDNS:
     Type: 'AWS::Route53::HostedZone'
+    DependsOn: VPC
     Properties:
       Name: 'name.internal.'
       VPCs:
@@ -190,20 +191,45 @@ Resources:
       DomainName: 'name.internal'
       DomainNameServers:
        - AmazonProvidedDNS
+  ELBSecurityGroup:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      GroupDescription: 'Allow ELB to accept traffic from the public Web'
+      VpcId:
+        Ref: 'VPC'
+      SecurityGroupIngress:
+        - IpProtocol: 'tcp'
+          FromPort: '80'
+          ToPort: '80'
+          CidrIp: '0.0.0.0/0'
   ELB:
     Type: 'AWS::ElasticLoadBalancing::LoadBalancer'
+    DependsOn: GatewayToInternet
     Properties:
       LoadBalancerName:
         Ref: 'AWS::StackName'
+      SecurityGroups:
+        - Ref: 'ELBSecurityGroup'
+        - 'Fn::GetAtt':
+          - VPC
+          - DefaultSecurityGroup
       Listeners:
         - LoadBalancerPort: 80
-          InstancePort: 80
           Protocol: HTTP
+          InstancePort: 80
+        # Ignore HTTPS for now
         # - LoadBalancerPort: 443
-        #   InstancePort: 443
         #   Protocol: HTTPS
+        #   InstancePort: 80
+        #   InstanceProtocol: HTTP
       Subnets:
         - Ref: 'PublicSubnet'
+      HealthCheck:
+        HealthyThreshold: 2 # checks
+        Interval: 30 # seconds
+        Target: "TCP:80"
+        Timeout: 5
+        UnhealthyThreshold: 2
 Outputs:
   VPCId:
     Description: VPCId of the newly created VPC
@@ -223,3 +249,9 @@ Outputs:
     Description: HostedZoneId of the private HostedZone
     Value:
       Ref: PrivateDNS
+  DefaultSecurityGroupId:
+    Description: "Default security group ID for the VPC"
+    Value:
+      'Fn::GetAtt':
+        - VPC
+        - DefaultSecurityGroup

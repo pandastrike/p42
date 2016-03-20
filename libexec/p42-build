@@ -7,7 +7,7 @@
 #    p42 build www
 #
 
-source $_P42_ROOT/share/context.sh
+source ${lib}/context.sh
 
 if [ $# -gt 0 ]; then
   components="$@"
@@ -21,6 +21,8 @@ fi
 
 # TODO: what if the swarm master dies?
 eval $(docker-machine env --swarm ${cluster}-00)
+
+eval $(aws ecr get-login --region us-east-1) > /dev/null
 
 for component in $components; do
   label=$name-$component
@@ -44,11 +46,9 @@ EOF
   done
 
   docker build \
-    -t "${label}" \
+    -t "${registry}/${label}" \
     -f "launch/${component}/Dockerfile" \
     .
-
-  docker tag "${label}" "${registry}/${label}"
 
   if [ ! "$(aws ecr describe-repositories \
     --repository-name ${label} \
@@ -66,6 +66,6 @@ EOF
   fi
 
   echo "Pushing $label component..."
-  eval $(aws ecr get-login --region us-east-1 > /dev/null)
   docker push "${registry}/${label}"
+
 done

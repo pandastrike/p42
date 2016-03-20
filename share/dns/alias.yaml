@@ -1,0 +1,10 @@
+Comment: "{{comment}}"
+Changes:
+  - Action: UPSERT
+    ResourceRecordSet:
+      Name: '{{domain}}.'
+      Type: A
+      AliasTarget:
+        HostedZoneId: '{{zone}}'
+        DNSName: '{{name}}'
+        EvaluateTargetHealth: false
