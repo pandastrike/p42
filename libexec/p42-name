@@ -1,9 +1,3 @@
 #!/usr/bin/env bash
 
-# Usage: p42 name
-# Summary: Generate a name.
-# Help: Generate a name.
-#     $ p42 name
-#     yellow-ghost
-
-exec node $_P42_ROOT/lib/name.js $@
+exec coffee $_P42_ROOT/lib/name.coffee $@

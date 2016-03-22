@@ -1,61 +1,26 @@
 #!/usr/bin/env bash
 
-# Usage: p42 mixin [add] [<option>...]
-# Summary: Add/manage mixins for an application.
-# Help: To find out about a specific subcommand:
-#
-#    p42 mixin help <command>
-#
+_add() {
+  local name="${1}" path="${2-${1}}"
+  if [ ! -d "${mixins}/${path}" ]; then
+    abort "invalid mixin: <${path}>"
+  fi
+  mixin="./run/${name}"
+  mkdir -p "${mixin}"
+  cp -R "${mixins}/${path}/run" "${mixin}"
+  p42 interview "${mixins}/${path}/interview.yaml" > "${mixin}/config.yaml"
+}
 
-action=$1
-shift
+_rm() {
+  local name="${1}"
+  if [ -d "./run/${name}" ]; then
+    rm -rf "./run/${name}"
+  fi
+}
 
-case "$action" in
+_help() {
+  echo "help!"
+}
 
-  add)
-    name=$1
-    shift
-    path=$1
-    shift
-
-    directory=$(mktemp -d "${TMPDIR:-/tmp}/p42.XXXXXXXXX")
-
-    git clone $path $directory
-
-    mkdir -p ./launch/$name
-    cp -R $directory/template/ ./launch/$name/
-    if [ -x $directory/bin/interview ]; then
-      _MIXIN_ROOT=$directory \
-      $directory/bin/interview > ./launch/$name/config.yaml
-    fi
-    ;;
-
-    help)
-      topic="$1"
-      if [ ! $topic ]; then
-        exec $_P42_ROOT/libexec/p42-help mixin
-      fi
-
-      case "$topic" in
-        add)
-          cat <<EOF
-Usage: p42 mixin add <component> <git-repo>
-Add a mixin based on a git repo path or URL.
-
-    p42 mixin add www https://github.com/pandastrike/p42-mixin-nginx.git
-
-Mixins write to your applications launch directory. Mixins may define a
-configuration based on interactive prompts.
-EOF
-          ;;
-        *)
-          echo "'$topic' is not a valid subcommand"
-          exec $_P42_ROOT/libexec/p42-help mixin
-      esac
-      ;;
-
-    *)
-      exec $_P42_ROOT/libexec/p42-help mixin
-      ;;
-
-  esac
+action=$1; shift
+_${action} ${@}

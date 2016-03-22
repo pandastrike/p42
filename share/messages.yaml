@@ -1,0 +1,120 @@
+usage: |
+  Usage: p42 <command> <options...>
+  Available commands are:
+
+    build, cluster, help, init, mixin, ls, ps,
+    run, start, stop, target
+
+  Run 'p42 help <command>' for command specific help.
+
+init:
+  usage: p42 init
+
+  # Summary: Initialize an application for use with p42.
+  # Help: Initialize an application for use with p42.
+  # This interactive command will ask you a few questions
+  # about your application and then write a corresponding
+  # configuration file.
+
+
+# Usage: p42 mixin [add] [<option>...]
+# Summary: Add/manage mixins for an application.
+# Help: To find out about a specific subcommand:
+#
+#    p42 mixin help <command>
+#
+
+# Usage: p42 mixin add <component> <git-repo>
+# Add a mixin based on a git repo path or URL.
+#
+#     p42 mixin add www https://github.com/pandastrike/p42-mixin-nginx.git
+#
+# Mixins write to your applications launch directory. Mixins may define a
+# configuration based on interactive prompts.
+#
+
+# Usage: p42 name
+# Summary: Generate a name.
+# Help: Generate a name.
+#     $ p42 name
+#     yellow-ghost
+
+# Usage: p42 ps
+# Summary: List deployed containers and their IP/port.
+# Help: List deployed containers and their IP/port.
+
+# Usage: p42 run [<component>]
+# Summary: Build images and start application containers.
+# Help: Build images and start application containers.
+# You can run the entire application or just a given set of components.
+#
+#     p42 run
+#     p42 run www redis
+#
+
+# Usage: p42 start [<component>]
+# Summary: Start application component.
+# Help: Start application component.
+# You can start component for the entire application
+# or just a given set of components. Images for each
+# container must already exist.
+#
+#     p42 start
+#     p42 start www redis
+#
+# You can build images first using the build subcommand.
+# The run subcommand will build and start component for you.
+#
+
+
+
+cluster:
+
+  usage: |
+    Usage: p42 cluster <command> <options>
+    Create, manage, or remove clusters.
+
+    Valid commands include:
+      create, add, rm, ls, ps, env, get
+
+    Run 'p42 help <command>' for command specific help.
+
+  help:
+
+    create: |
+      Usage: p42 cluster create
+      Create a VPC and a master Swarm node.
+
+    add: |
+      Usage: p42 cluster add <name> [-n <size>]
+      Add a node to the cluster.
+
+      You can add multiple nodes using -n.
+      To add 3 nodes to the cluster named "red-ghost":
+
+          p42 cluster add red-ghost -n 3
+
+    rm: |
+      Usage: p42 cluster rm <name>
+      Stop a given cluster (Swarm) and remove the associated machines.
+
+    ls: |
+      Usage: p42 cluster ls
+      List the available clusters.
+
+    ps: |
+      Usage: p42 cluster ls <name>
+      List all the nodes in a given cluster.
+
+
+    env: |
+      Usage: p42 cluster env <name>
+      Set up your environment to use Docker with your cluster.
+
+          eval $(p42 cluster env red-ghost)
+
+    get: |
+      Usage: p42 cluster get <name> <property>
+      Get the value of a given property for the given cluster.
+
+          p42 cluster get red-host vpc

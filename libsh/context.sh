@@ -29,3 +29,13 @@ zone=$(yaml get ${clusters}/${cluster} zone)
 vpc=$(yaml get ${clusters}/${cluster} vpc)
 subnet=$(yaml get ${clusters}/${cluster} subnet)
 dns=$(yaml get ${clusters}/${cluster} dns)
+
+if [ $# -gt 0 ]; then
+  parts="$@"
+else
+  if [ ! -d ./run ]; then
+    echo 'p42: nothing to run'
+    exit 1
+  fi
+  parts=$(ls ./run)
+fi

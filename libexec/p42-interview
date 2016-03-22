@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+
+exec coffee ${root}/src/interview.coffee $@

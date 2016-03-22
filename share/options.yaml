@@ -1,0 +1,19 @@
+cluster:
+  expand:
+    defaults: |
+      count=1
+
+    no-flag:
+      name: cluster
+      type: string
+
+    '--count': &count
+      name: count
+      type: number
+
+    '-n': *count
+
+  rm:
+    no-flag:
+      name: cluster
+      type: string

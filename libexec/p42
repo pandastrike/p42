@@ -22,8 +22,17 @@ abs_dirname() {
 libexec_path="$(abs_dirname "$0")"
 export _P42_ROOT="$(abs_dirname "$libexec_path")"
 export PATH="${libexec_path}:$PATH"
+export root="${_P42_ROOT}"
+export lib="${root}/libsh"
+export share="${root}/share"
+export messages="${share}/messages.yaml"
+export mixins="${share}/mixins"
 
-source $_P42_ROOT/libsh/init.sh
+include() {
+  source "${lib}/${1}.sh"
+}
+
+export -f include
 
 command="$1"
 case "$command" in

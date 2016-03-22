@@ -1,61 +1,17 @@
 #!/usr/bin/env bash
 
-# Usage: p42 init
-# Summary: Initialize an application for use with p42.
-# Help: Initialize an application for use with p42.
-# This interactive command will ask you a few questions
-# about your application and then write a corresponding
-# configuration file.
+# if [ -e ./p42.yaml ]; then
+#   echo p42: directory already contains a p42.yaml file
+#   exit 1
+# fi
 
+include aws
 
-if [ -e ./p42.yaml ]; then
-  echo p42: directory already contains a p42.yaml file
-  exit -1
-fi
-
-name=$(basename $(pwd))
-read -e -p "Application name [$name]: " input
-name=${input:-$name}
-
-domain=${name}.com
-read -e -p "Domain [${domain}]: " input
-domain=${input:-$domain}
-
-while true ; do
-
-  read -e -p "Private registry [Yn]? " input
-
-  case $input in
-
-    [Yy]* )
-      echo "Determining registry endpoint..."
-      registry=$(aws ecr get-authorization-token \
-        --region us-east-1 |\
-        json authorizationData[0].proxyEndpoint |\
-        sed 's/^https:\/\///')
-      break
-      ;;
-
-    [Nn]* )
-
-      # grab default org name from git if possible
-      registry=$(dirname \
-            $(git ls-remote --get-url |\
-              awk -F : '{print $2}'))
-      read -e -p "Docker organization name [$registry]: " input
-      registry=${input:-$registry}
-      break
-      ;;
-
-    *)
-      echo "Please answer with [y]es or [n]o."
-      ;;
-  esac
-done
-
-echo "Writing p42.yaml file..."
-cat << EOF > ./p42.yaml
-name: ${name}
-domain: ${domain}
-registry: ${registry}
+read -d '' defaults <<EOF
+name: $(basename $(pwd))
+registry: $(get_registry_domain)
 EOF
+
+_interview="${share}/interviews/init.yaml"
+interview=$(yaml template <(echo "${defaults}") ${_interview})
+p42 interview <(echo "${interview}") > ./p42.yaml
