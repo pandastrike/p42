@@ -9,13 +9,12 @@ module.exports = async (prefix) ->
   Messages ?= yield messages path
 
   if prefix?
+    {message, abort} = Messages
     Helpers[prefix] ?=
-      message: (key, data={}) -> Messages.message "#{prefix}.#{key}", data
-      abort: (key, data={}) -> Messages.abort "#{prefix}.errors.#{key}", data
+      message: (key, data={}) -> message "#{prefix}.#{key}", data
+      abort: (key, data={}) -> abort "#{prefix}.errors.#{key}", data
       usage: (key, data={}) ->
-        if key?
-          Messages.abort "#{prefix}.#{key}.help", data
-        else
-          Messages.abort "#{prefix}.help", data
+        key = (if key? then "#{prefix}.#{key}.help" else "#{prefix}.help")
+        abort key, data
   else
     Messages
