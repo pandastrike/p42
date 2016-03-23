@@ -1,7 +1,9 @@
 {join} = require "path"
 YAML = require "js-yaml"
 {async, call, read, readdir, write, includes} = require "fairmont"
-messages = require "./messages"
+messages = require "panda-messages"
+# these will be define later...
+[message, abort, usage] = []
 
 # TODO: check for valid branch
 isBranch = (name) -> true
@@ -69,7 +71,8 @@ Target.mv = Target.rename
 
 run = async (action, rest...) ->
 
-  {usage, abort} = yield messages "target"
+  {share} = process.env
+  {message, abort, usage} = yield messages "target"
 
   if Target[action]?
     Target[action] rest...
