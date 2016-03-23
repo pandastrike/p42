@@ -66,7 +66,36 @@ init:
 # The run subcommand will build and start component for you.
 #
 
-
+# Usage: p42 stop [<component>]
+# Summary: Stop application containers and remove them.
+# Help: Stop application containers and remove them.
+# You can stop an entire application or just a given set of components.
+#
+#     p42 stop
+#     p42 stop www redis
+#
+# Usage: p42 target [add|rm|remove|mv|rename] <branch> <cluster>
+# Summary: Create/manage deploy targets.
+# Help: To find out about a specific subcommand:
+#
+#    p42 target help <command>
+#
+#
+target:
+  help: p42 target [add|rm|remove|mv|rename] <arguments...>
+  errors:
+    invalid-branch: invalid branch {{branch}}.
+    invalid-cluster: invalid cluster {{cluster}}.
+    invalid-config: invalid application configuration.
+    error-writing-config: |
+      unexpected error updating application configuration.
+  commands:
+    add:
+      help: p42 target add <branch> <cluster>
+    remove:
+      help: p42 target [remove|rm] <branch>
+    rename:
+      help: p42 target [rename|mv] <branch> <branch>
 
 cluster:
 

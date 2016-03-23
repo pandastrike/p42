@@ -37,6 +37,7 @@
   "dependencies": {
     "fairmont": "^1.0.0-beta-40",
     "js-yaml": "^3.5.3",
+    "markup-js": "^1.5.21",
     "prompt": "^1.0.0",
     "when": "^3.7.7"
   }

@@ -8,6 +8,7 @@ include context
 declare "$(get_elb ${cluster})"
 
 _pull() {
+
   local cluster image
   local "${@}"
 
@@ -19,9 +20,11 @@ _pull() {
     docker_login
     docker pull ${registry}/${image}:latest
   done
+
 }
 
 _run() {
+
   local part image config count subdomains
   local "${@}"
 
@@ -42,20 +45,42 @@ _run() {
   swarm_env "${cluster}"
   docker_login
 
+  # TODO: this is a hack. We know that if you're
+  # setting up subdomains for a part, that you must
+  # want to use standard ports. The ports we expose
+  # should be based on some additional piece of
+  # information (ex: protocols, like we do with
+  # discovery), but for the moment, we're just
+  # assuming you want port 80. Note that we're
+  # terminating TLS at the ELB so you probably
+  # don't want to expose 443.
+  if [ -n "${subdomains}" ]; then
+    port_option="-p 80:80"
+  else # just pick a random port
+    port_option="-P"
+  fi
+
+  # TODO: Refactoring this loop is tricky because
+  # all the pieces here are pretty intertwined:
+  #
+  # - run the docker container
+  #
+  # - add the private A record for the container
+  #
+  # - if we want discovery for this container,
+  #   add the container and it's port to a list
+  #   so we can later add a private SRV record
+  #
+  # - possibly add the node running the container
+  #   to the ELB if it's advertising a subdomain
+  #
+
   for (( i = 0 ; i < ${count:=1} ; i++ )); do
-    instance="${part}-$(printf '%02d' $i)"
-    container="${app}-${instance}"
 
-    echo "Starting '${image}' container '${container}'..."
-
-    if [ -n "${subdomains}" ]; then
-      port_option="-p 80:80"
-    else
-      port_option="-P"
-    fi
+    name="${app}-${part}-$(printf '%02d' $i)"
 
     docker_run \
-      name="${container}" \
+      name="${name}" \
       image="${registry}/${image}:latest" \
       options="${port_options}"
 
@@ -93,10 +118,13 @@ _run() {
     fi
   done
 
+  # Create SRV records for each target,
+  # for each protocol the container supports
+
   for protocol in ${discovery}; do
     dns_srv \
       protocol="${protocol}" \
-      public="${component}" \
+      public="${part}" \
       targets="${targets}" \
       comment="Added by p42 for stack '${cluster}'"
   done

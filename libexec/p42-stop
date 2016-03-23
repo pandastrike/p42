@@ -1,36 +1,17 @@
 #!/usr/bin/env bash
 
-# Usage: p42 stop [<component>]
-# Summary: Stop application containers and remove them.
-# Help: Stop application containers and remove them.
-# You can stop an entire application or just a given set of components.
+
+include docker
+include context
+
+# TODO: how to get a list of parts into the environment
 #
-#     p42 stop
-#     p42 stop www redis
+#   declare "$(load_context)"
 #
+# or put all this inside a function?
 
-source ${lib}/context.sh
+swarm_env "${cluster}"
 
-if [ $# -gt 0 ]; then
-  containers="$@"
-else
-  if [ ! -d ./launch ]; then
-    echo p42: nothing to stop
-    exit
-  fi
-  containers=$(ls ./launch)
-fi
-
-# TODO: what if the swarm master dies?
-eval $(docker-machine env --swarm ${cluster}-00)
-
-for container in $containers; do
-  label=$name-$container
-  ids=
-  for id in $(docker ps --filter "name=${label}" --format '{{ .ID }}'); do
-    echo Stopping $label container...
-    docker stop $id && docker rm $id
-  done
-
-  # TODO: Remove DNS records
+for part in ${parts}; do
+  stop_containers $(list_containers "${part}")
 done

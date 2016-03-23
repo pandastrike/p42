@@ -21,6 +21,8 @@ docker_run() {
   local name image options
   local "${@}"
 
+  echo "Starting '${image}' container '${name}'..."
+
   docker run \
     ${option} \
     --name ${name} \
@@ -37,5 +39,10 @@ docker_inspect() {
   ip=$(json 'Node.IP' <<<$info )
   port=$(json 'NetworkSettings.Ports["80/tcp"][0].HostPort' <<<$info )
   name=$(json 'Node.Name' <<<$info )
-  echo "ip=${ip} port="${port} name=${name}"
+  echo "ip=${ip} port=${port} name=${name}"
+}
+
+list_containers() {
+  local cluster="${1}"
+  $(docker ps --filter "name=${cluster}" --format '{{ .ID }}')
 }
