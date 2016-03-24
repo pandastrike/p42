@@ -5,8 +5,6 @@ include aws
 include docker
 include context
 
-declare "$(get_elb ${cluster})"
-
 _pull() {
 
   local cluster image
@@ -109,8 +107,8 @@ _run() {
         instance="${id}"
 
       for subdomain in ${subdomains}; do
-          echo "Adding '${subdomain}' alias for ELB..."
           dns_alias \
+            cluster="${cluster}" \
             subdomain="${subdomain}" \
             domain="${domain}" \
             comment="Added by p42 for stack '${cluster}'"

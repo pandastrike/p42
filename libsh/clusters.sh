@@ -1,4 +1,4 @@
-clusters="${HOME}/.config/p42/clusters"
+clusters="${config}/clusters"
 mkdir -p "${clusters}"
 
 save_cluster() {
@@ -16,15 +16,10 @@ EOF
 }
 
 load_cluster() {
-  local name
-  local "${@}"
+  
+  local name="${1}"
 
-  # if [ ! -e "${clusters}/${name}" ]; then
-  #   echo p42: Invalid cluster: ${name}
-  #   exit -1
-  # fi
-
-
+  assert_cluster "${1}"
 
   echo "region=$(yaml get ${clusters}/${name} region) \
     zone=$(yaml get ${clusters}/${name} zone) \
@@ -37,7 +32,7 @@ create_cluster() {
 
   local name="${1}"
 
-  echo "Creating VPC '${name}'..."
+  echo "Creating cluster '${name}'..."
 
   # Originally, I was going to templatize the file,
   # but I'm no longer sure that's necessary...
@@ -54,6 +49,9 @@ create_cluster() {
     status=$(json Stacks[0].StackStatus <<<"${description}")
     if [ "$status" == "CREATE_COMPLETE" ]; then
       break
+    else if [ "${status}" == "CREATE_FAILED" ]; then
+      1>&2 echo "p42: cluster creation failed!"
+      exit 1
     fi
   done
 
@@ -78,7 +76,7 @@ remove_cluster() {
 
 }
 
-assert_cluster_exists() {
+assert_cluster() {
   local cluster="${1}"
   if [ -z "${cluster}" ]; then
     echo "No cluster name specified"

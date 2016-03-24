@@ -27,9 +27,14 @@ export lib="${root}/libsh"
 export share="${root}/share"
 export messages="${share}/messages.yaml"
 export mixins="${share}/mixins"
+export config="${HOME}/.config/p42"
+mkdir -p "${config}"
 
 include() {
-  source "${lib}/${1}.sh"
+  if [[ ! "${included}" =~ "${1}" ]]; then
+    source "${lib}/${1}.sh"
+    included="${included} ${1}"
+  fi
 }
 
 export -f include

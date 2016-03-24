@@ -81,8 +81,12 @@ dns_a() {
 # TODO: handle entry with no subdomain
 dns_alias() {
 
-  local subdomain domain comment
+  local cluster subdomain domain comment
   local "${@}"
+
+  msg 'dns.elb-alias' "subdomain: ${subdomain}"
+
+  local "$(get_elb ${cluster})"
   local id=$(aws route53 list-hosted-zones-by-name \
     --dns-name ${domain} \
     --max-items 1 |\
@@ -112,7 +116,7 @@ dns_alias() {
 }
 
 dns_srv() {
-  local protocol public targets comment
+  local cluster protocol public targets comment
   local "${@}"
 
   echo -n "Adding DNS SRV '${protocol}' record "
@@ -150,6 +154,7 @@ dns_srv() {
 }
 
 get_elb() {
+  local cluster="${1}"
   local elb phz domain
   elb=$(aws elb describe-load-balancers \
     --load-balancer-name "${cluster}" |\

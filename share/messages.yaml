@@ -1,4 +1,5 @@
-usage: |
+help: |
+
   Usage: p42 <command> <options...>
   Available commands are:
 
@@ -8,7 +9,8 @@ usage: |
   Run 'p42 help <command>' for command specific help.
 
 init:
-  usage: p42 init
+
+  help: p42 init
 
   # Summary: Initialize an application for use with p42.
   # Help: Initialize an application for use with p42.
@@ -82,24 +84,35 @@ init:
 #
 #
 target:
+
   help: p42 target [add|rm|remove|mv|rename] <arguments...>
+
   errors:
-    invalid-branch: invalid branch {{branch}}.
-    invalid-cluster: invalid cluster {{cluster}}.
+
+    invalid-branch: invalid branch '{{branch}}'.
+
+    invalid-cluster: invalid cluster '{{cluster}}'.
+
     invalid-config: invalid application configuration.
+
     error-writing-config: |
       unexpected error updating application configuration.
-  commands:
-    add:
-      help: p42 target add <branch> <cluster>
-    remove:
-      help: p42 target [remove|rm] <branch>
-    rename:
-      help: p42 target [rename|mv] <branch> <branch>
+
+target-add:
+
+  help: p42 target add <branch> <cluster>
+
+target-remove:
+
+  help: p42 target [remove|rm] <branch>
+
+target-rename:
+
+  help: p42 target [rename|mv] <branch> <branch>
 
 cluster:
 
-  usage: |
+  help: |
     Usage: p42 cluster <command> <options>
     Create, manage, or remove clusters.
 
@@ -108,42 +121,57 @@ cluster:
 
     Run 'p42 help <command>' for command specific help.
 
-  help:
+cluster-create:
 
-    create: |
-      Usage: p42 cluster create
-      Create a VPC and a master Swarm node.
+  help: |
+    Usage: p42 cluster create
+    Create a VPC and a master Swarm node.
 
-    add: |
-      Usage: p42 cluster add <name> [-n <size>]
-      Add a node to the cluster.
+cluster-add:
 
-      You can add multiple nodes using -n.
-      To add 3 nodes to the cluster named "red-ghost":
+  help: |
+    Usage: p42 cluster add <name> [-n <size>]
+    Add a node to the cluster.
 
-          p42 cluster add red-ghost -n 3
+    You can add multiple nodes using -n.
+    To add 3 nodes to the cluster named "red-ghost":
 
-    rm: |
-      Usage: p42 cluster rm <name>
-      Stop a given cluster (Swarm) and remove the associated machines.
+        p42 cluster add red-ghost -n 3
 
-    ls: |
-      Usage: p42 cluster ls
-      List the available clusters.
+cluster-rm:
 
-    ps: |
-      Usage: p42 cluster ls <name>
-      List all the nodes in a given cluster.
+  help: |
+    Usage: p42 cluster rm <name>
+    Stop a given cluster (Swarm) and remove the associated machines.
 
+cluster-ls:
 
-    env: |
-      Usage: p42 cluster env <name>
-      Set up your environment to use Docker with your cluster.
+  help: |
+    Usage: p42 cluster ls
+    List the available clusters.
 
-          eval $(p42 cluster env red-ghost)
+cluster-ps:
 
-    get: |
-      Usage: p42 cluster get <name> <property>
-      Get the value of a given property for the given cluster.
+  help: |
+    Usage: p42 cluster ls <name>
+    List all the nodes in a given cluster.
 
-          p42 cluster get red-host vpc
+cluster-env:
+
+  help: |
+    Usage: p42 cluster env <name>
+    Set up your environment to use Docker with your cluster.
+
+        eval $(p42 cluster env red-ghost)
+
+cluster-get:
+
+  help: |
+    Usage: p42 cluster get <name> <property>
+    Get the value of a given property for the given cluster.
+
+        p42 cluster get red-host vpc
+
+dns:
+  
+  elb-alias: Adding alias for subdomain [{{subdomain}}]

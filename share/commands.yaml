@@ -1,0 +1,24 @@
+aws:
+  ecr:
+
+    describe-repositories: |
+      aws ecr describe-repositories
+        --repository-name {{name}}
+        --region us-east-1
+
+    create-repository:
+
+  ec2:
+
+    describe-instances:
+
+      template: |
+        aws ec2 describe-instances
+          --filters Name=tag-value,Values={{name}}
+
+      response:
+        use: json
+        attributes:
+          - name: instanceid
+            accessor: Reservations[0].Instances[0].InstanceId
+            test: test-123

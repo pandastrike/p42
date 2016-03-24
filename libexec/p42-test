@@ -1,11 +1,13 @@
 #!/usr/bin/env bash
 
-include options
+include commands
+dry_run=true
 
 f() {
-  echo $(options cluster.expand $@)
-  local $(options cluster.expand $@)
-  echo COUNT: $count
+  local $(run aws.ec2.describe-instances "name: green-chef")
+  echo $instanceid
 }
 
-f $@
+f
+
+show_commands

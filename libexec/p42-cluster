@@ -75,11 +75,14 @@ _get() {
 }
 
 _help() {
-  if [ -z "${1}" ]; then
-    yaml get ${messages} "cluster.usage"
+  local action="${1}"
+  if [ -z "${action}" ]; then
+    err "cluster.help"
   else
-    yaml get ${messages} "cluster.help.${1}"
+    declare -F "_${action}" && err "cluster-${action}.help"
+    err "cluster.help"
 }
 
 action=${1}; shift
+declare -F "_${action}" || _help
 _${action} ${@}
