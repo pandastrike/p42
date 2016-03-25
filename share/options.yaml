@@ -1,3 +1,9 @@
+test:
+  no-flag:
+    name: test
+    type: string
+
+
 cluster:
   expand:
     defaults: |

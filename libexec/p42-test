@@ -1,13 +1,41 @@
 #!/usr/bin/env bash
 
+include 'test'
+include options
 include commands
-dry_run=true
+include aws
+include dns
 
-f() {
-  local $(run aws.ec2.describe-instances "name: green-chef")
-  echo $instanceid
+test_create_repo() {
+  run_test create_repo blurb9-api
 }
 
-f
+test_set_security_groups() {
+  run_test set_security_groups \
+    vpc=test-vpc-00 \
+    name=test-instance-00 \
+    groups='default docker-machine'
+}
 
-show_commands
+test_get_registry_domain() {
+  run_test get_registry_domain
+}
+
+test_dns_a() {
+  run_test dns_a \
+    cluster='violent-aftermath' \
+    name='test.com' \
+    ip='192.168.0.42' \
+    comment='this is a test'
+}
+
+declare test $(options 'test' ${@})
+
+dry_run=true
+clusters="${share}/test/clusters"
+
+if [ -n "${test}" ]; then
+  "test_${test}"
+else
+  run_tests
+fi

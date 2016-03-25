@@ -16,7 +16,7 @@ EOF
 }
 
 load_cluster() {
-  
+
   local name="${1}"
 
   assert_cluster "${1}"
@@ -49,7 +49,7 @@ create_cluster() {
     status=$(json Stacks[0].StackStatus <<<"${description}")
     if [ "$status" == "CREATE_COMPLETE" ]; then
       break
-    else if [ "${status}" == "CREATE_FAILED" ]; then
+    elif [ "${status}" == "CREATE_FAILED" ]; then
       1>&2 echo "p42: cluster creation failed!"
       exit 1
     fi

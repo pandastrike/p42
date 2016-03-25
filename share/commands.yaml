@@ -1,12 +1,46 @@
 aws:
   ecr:
 
-    describe-repositories: |
-      aws ecr describe-repositories
-        --repository-name {{name}}
-        --region us-east-1
-
     create-repository:
+
+      template: |
+        aws ecr create-repository
+          --repository-name {{name}}
+          --region us-east-1
+
+    set-repository-policy:
+
+      template: |
+        aws ecr set-repository-policy
+          --repository-name {{name}}
+          --region us-east-1
+          --policy-text {{policy}}
+
+
+    describe-repositories:
+
+      template: |
+        aws ecr describe-repositories
+          --repository-name {{name}}
+          --region us-east-1
+      response:
+        use: json
+        attributes:
+          - name: repositoryid
+            accessor: repositories[0].registryId
+
+    # actually used to get the registry URL
+    get-authorization-token:
+      template: |
+        aws ecr get-authorization-token
+          --region us-east-1
+
+      response:
+        use: json
+        attributes:
+          - name: url
+            accessor: json authorizationData[0].proxyEndpoint
+            test: 'https://123.registry.test.com'
 
   ec2:
 
@@ -21,4 +55,39 @@ aws:
         attributes:
           - name: instanceid
             accessor: Reservations[0].Instances[0].InstanceId
-            test: test-123
+            test: test-instance-00
+
+
+    describe-security-groups:
+
+      template: |
+        aws ec2 describe-security-groups
+          --filters
+            Name=vpc-id,Values={{vpc}}
+            Name=group-name,Values={{name}}
+
+      response:
+        use: json
+        attributes:
+          - name: groupid
+            accessor: SecurityGroups[0].GroupId
+            test: test-sg-00
+
+
+    modify-instance-attribute:
+
+      template: |
+        aws ec2 modify-instance-attribute
+          --instance-id {{instanceid}}
+          --groups {{groupids}}
+      response: |
+        use: silent
+
+  route53:
+
+    change-resource-record-sets:
+
+      template: |
+        aws route53 change-resource-record-sets
+          --hosted-zone-id {{dns}}
+          --change-batch file://{{file}}
