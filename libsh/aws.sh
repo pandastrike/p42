@@ -1,20 +1,9 @@
 include commands
 include clusters
 
-get_repo() {
+get_instance() {
   local name="${1}"
-  local $(run aws.ecr.describe-repositories "name: ${1}")
-  echo $repositoryid
-}
-
-create_repo() {
-  local name="${1}"
-  if [ -z "$(get_repo ${name})" ]; then
-    run aws.ecr.create-repository "name: ${name}"
-    policy="$(yaml json write ${share}/ecr/policy.yaml)"
-    run aws.ecr.set-repository-policy \
-      "{name: '${name}', policy: '${policy}'}"
-  fi
+  run aws.ec2.describe-instances "name: '${name}'"
 }
 
 get_security_group() {
@@ -22,22 +11,36 @@ get_security_group() {
   local "${@}"
   local $(run aws.ec2.describe-security-groups \
     "{ name: '${name}', vpc: '${vpc}' }")
-  echo $groupid
+  echo $group_id
 }
 
 set_security_groups() {
   local vpc name groups
   local "${@}"
 
-  # get the instance ID of the newly created machine
-  local $(run aws.ec2.describe-instances "name: ${name}")
+  local $(get_instance "${name}")
 
-  local groupids
+  local group_ids
   for group in $groups; do
-    groupids="${groupids} $(get_security_group vpc=${vpc} name=${group})"
+    group_ids="${group_ids} $(get_security_group vpc=${vpc} name=${group})"
   done
+
   run aws.ec2.modify-instance-attribute \
-    "{ instanceid: '${instanceid}', groupids: '${groupids}' }"
+    "{ instance_id: '${instance_id}', group_ids: '${group_ids}' }"
+}
+
+get_elb() {
+  run aws.elb.describe-load-balancers \
+    "{ cluster: '${1}' }"
+}
+
+register_with_elb() {
+  local cluster instance_id
+  local "${@}"
+  # TODO: use container name and call get_instance from here?
+  # echo "Adding <${container}> to ELB..."
+  run aws.elb.register-instances-with-load-balancer \
+    "{ cluster: '${cluster}', instance_id: '${instance_id}' }"
 }
 
 get_registry_url() {
@@ -49,35 +52,18 @@ get_registry_domain() {
   get_registry_url | sed 's/^https:\/\///'
 }
 
-get_elb() {
-  local cluster="${1}"
-  local elb phz domain
-  elb=$(aws elb describe-load-balancers \
-    --load-balancer-name "${cluster}" |\
-    json 'LoadBalancerDescriptions[0]')
-
-  phz=$(json CanonicalHostedZoneNameID <<<${elb} )
-  domain=$(json CanonicalHostedZoneName <<<${elb} )
-  echo "elb_hosted_zone=${phz} elb_domain=${domain}"
+get_repo() {
+  local name="${1}"
+  local $(run aws.ecr.describe-repositories "name: ${1}")
+  echo $repository_id
 }
 
-get_instance() {
-  local name="${1}" info id ip
-  info=$(aws ec2 describe-instances \
-    --filters "Name=tag-value,Values=${name}" |\
-    json 'Reservations[0].Instances[0]')
-  id=$(json InstanceId <<< "${aws_info}")
-  ip=$(json PrivateIpAddress <<< "${aws_info}")
-  echo "id=${id} ip=${ip}"
-}
-
-register_instance_with_elb() {
-  local cluster instance
-  local "${@}"
-  # TODO: use container name and call get_instance from here?
-  # echo "Adding <${container}> to ELB..."
-  aws elb register-instances-with-load-balancer \
-    --load-balancer-name ${cluster} \
-    --instances ${id} >\
-    /dev/null
+create_repo() {
+  local name="${1}"
+  if [ -z "$(get_repo ${name})" ]; then
+    run aws.ecr.create-repository "name: ${name}"
+    policy="$(yaml json write ${share}/ecr/policy.yaml)"
+    run aws.ecr.set-repository-policy \
+      "{name: '${name}', policy: '${policy}'}"
+  fi
 }

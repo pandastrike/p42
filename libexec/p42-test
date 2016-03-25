@@ -29,6 +29,16 @@ test_dns_a() {
     comment='this is a test'
 }
 
+test_get_elb() {
+  run_test get_elb 'violent-aftermath'
+}
+
+test_register_with_elb() {
+  run_test register_with_elb \
+    instance_id='test-instance-00' \
+    cluster='vodka-martini'
+}
+
 declare test $(options 'test' ${@})
 
 dry_run=true

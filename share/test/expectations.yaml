@@ -14,3 +14,9 @@ get_registry_domain: |
 
 dns_a: |
   aws route53 change-resource-record-sets --hosted-zone-id test-dns-00 --change-batch file:///****
+
+get_elb: |
+  aws elb describe-load-balancers --load-balancer-name violent-aftermath
+
+register_with_elb: |
+  aws elb register-instances-with-load-balancer --load-balancer-name vodka-martini --instances test-instance-00

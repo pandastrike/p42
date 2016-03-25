@@ -1,4 +1,31 @@
 aws:
+
+  elb:
+
+    describe-load-balancers:
+
+      template: |
+        aws elb describe-load-balancers
+          --load-balancer-name {{cluster}}
+
+      response:
+        use: json
+        attributes:
+          - name: elb_hosted_zone
+            accessor: LoadBalancerDescriptions[0].CanonicalHostedZoneNameID
+          - name: elb_domain
+            accessor: LoadBalancerDescriptions[0].CanonicalHostedZoneName
+
+    register-instances-with-load-balancer:
+
+      template: |
+        aws elb register-instances-with-load-balancer
+            --load-balancer-name {{cluster}}
+            --instances {{instance_id}}
+
+      response:
+        use: silent
+
   ecr:
 
     create-repository:
@@ -26,7 +53,7 @@ aws:
       response:
         use: json
         attributes:
-          - name: repositoryid
+          - name: repository_id
             accessor: repositories[0].registryId
 
     # actually used to get the registry URL
@@ -53,10 +80,12 @@ aws:
       response:
         use: json
         attributes:
-          - name: instanceid
+          - name: instance_id
             accessor: Reservations[0].Instances[0].InstanceId
             test: test-instance-00
-
+          - name: instance_ip
+            accessor: Reservations[0].Instances[0].PrivateIpAddress
+            test: test-instance-00
 
     describe-security-groups:
 
@@ -69,7 +98,7 @@ aws:
       response:
         use: json
         attributes:
-          - name: groupid
+          - name: group_id
             accessor: SecurityGroups[0].GroupId
             test: test-sg-00
 
@@ -78,9 +107,9 @@ aws:
 
       template: |
         aws ec2 modify-instance-attribute
-          --instance-id {{instanceid}}
-          --groups {{groupids}}
-      response: |
+          --instance-id {{instance_id}}
+          --groups {{group_ids}}
+      response:
         use: silent
 
   route53:

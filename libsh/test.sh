@@ -44,7 +44,3 @@ run_tests() {
   tests=$(declare -f | grep -E 'test_[a-zA-Z0\_]+ \(' | cut -d ' ' -f 1)
   for test in $tests; do $test ; done
 }
-
-declare -x dry_run clusters
-dry_run=true
-clusters="${share}/test/clusters"
