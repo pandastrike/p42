@@ -56,7 +56,7 @@ test_dns_alias() {
 }
 
 test_dns_srv() {
-  dns_srv \
+  run_test dns_srv \
     cluster='violent-aftermath' \
     protocol='http' \
     public='www' \
@@ -65,6 +65,21 @@ test_dns_srv() {
     comment='this is a test'
 }
 
+# yamlize() {
+#   local "${@}"
+#   echo $comment
+# }
+#
+# test_yamlize() {
+#   yamlize \
+#     cluster='violent-aftermath' \
+#     protocol='http' \
+#     public='www' \
+#     private='www-00' \
+#     port='12345' \
+#     comment='this is a test'
+# }
+#
 declare test $(options 'test' ${@})
 
 dry_run=true

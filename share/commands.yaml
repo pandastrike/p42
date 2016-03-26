@@ -181,3 +181,90 @@ aws:
 
       response:
         use: silent
+
+docker:
+
+  login:
+
+    template: |
+      eval $(aws ecr get-login --region us-east-1)
+
+    response:
+      use: silent
+
+  machine:
+
+    env:
+
+      template: |
+        eval $(docker-machine env {{name}})
+
+      response:
+        use: silent
+
+    swarm-env:
+
+      template: |
+        eval $(docker-machine env --swarm {{cluster}})
+
+      response:
+        use: silent
+
+  build:
+
+    template: |
+      docker build
+        -t {{tag}}
+        -f {{file}}
+        .
+
+    response:
+      use: silent
+
+  push:
+
+    template: |
+      docker push {{tag}}
+
+    response:
+      use: silent
+
+  run:
+
+    # TODO: may parameterize keys/region too?
+    # Doesn't seem like high-value coverage.
+    template: |
+      docker run
+        {{options}}
+        --name {{name}}
+        --restart always
+        -e AWS_ACCESS_KEY_ID="$(aws configure get aws_access_key_id)"
+        -e AWS_SECRET_ACCESS_KEY="$(aws configure get aws_secret_access_key)"
+        -e AWS_DEFAULT_REGION="$(aws configure get region)"
+        -d {{tag}}
+
+    response:
+      use: silent
+
+  inspect:
+
+    template: |
+        docker inspect {{name}}
+
+    response:
+      use: json
+      attributes:
+        - name: name
+          accessor: [0].Node.Name
+          test: violent-aftermath-01
+        - name: ip
+          accessor: [0].Node.IP
+          test: 192.168.0.42
+        - name: port
+          accessor: [0].NetworkSettings.Ports["80/tcp"][0].HostPort
+          test: 32768
+
+  ps:
+
+    template: |
+      docker ps --filter name={{cluster}} --format \{{ .ID }}

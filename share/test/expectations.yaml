@@ -32,3 +32,7 @@ dns_alias: |
   aws elb describe-load-balancers --load-balancer-name violent-aftermath
   aws route53 list-hosted-zones-by-name --dns-name bar.com --max-items 1
   aws route53 change-resource-record-sets --hosted-zone-id test-dns-00 --change-batch file:///****
+
+dns_srv: |
+  aws route53 change-resource-record-sets --hosted-zone-id test-dns-00 --change-batch file:///****
+  aws route53 change-resource-record-sets --hosted-zone-id test-dns-00 --change-batch file:///****

@@ -1,4 +1,4 @@
 include tmpdir
 
-logs="${tmpDir}/logs"
+declare -x logs="${tmpDir}/logs"
 mkdir -p "${logs}"

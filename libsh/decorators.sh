@@ -22,8 +22,13 @@ decorator_docker() {
 
   tag="${application}-${part}"
 
-  docker_build part="${part}" tag="${tag}"
+  docker_build \
+    registry="${registry}" \
+    part="${part}" \
+    tag="${tag}"
+
   create_repo name="${tag}"
+
   docker_push "${tag}"
 
 }

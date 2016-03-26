@@ -67,6 +67,8 @@ dns_srv() {
     :
   fi
 
+  local $(load_cluster ${cluster})
+
   local file="${tmpDir}/dns-srv-${public}.json"
 
   cat "${clusters}/${cluster}" |\
@@ -85,11 +87,11 @@ dns_srv() {
   # so we add a second SRV for the empty value, ex: _._http.
   if [ "${public}" = "www" ]; then
     dns_srv \
+      cluster="${cluster}" \
       protocol="${protocol}" \
       public="" \
       private="${private}" \
       port="${port}" \
       comment="${comment}"
   fi
-
 }

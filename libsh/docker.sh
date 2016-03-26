@@ -1,63 +1,49 @@
 include aws
 
 docker_env() {
-  local name
-  local "${@}"
-  eval $(docker-machine env ${name})
+  local name="${1}"
+  run docker.machine.env "name: '${name}'"
 }
 
-# TODO: what if the swarm master dies?
 swarm_env() {
-  local cluster
-  local "${@}"
-  eval $(docker-machine env --swarm ${cluster}-00)
+  local cluster="${1}"
+  # TODO: what if the swarm master dies?
+  run docker.machine.swarm-env "cluster: '${cluster}-00'"
 }
 
-docker_login() {
-  eval $(aws ecr get-login --region us-east-1) > /dev/null
-}
+docker_login() { run docker.login }
 
 docker_build() {
-  docker build \
-    -t "${registry}/${label}" \
-    -f "run/${part}/Dockerfile" \
-    .
+  local registry tag part
+  local "${@}"
+  local file="./run/${part}/Dockerfile"
+  local qtag="${registry}/${tag}"
 
-
+  run docker.build "{ tag: '${qtag}', file: '${file}'}"
 }
 
 docker_push() {
+  local registry tag
+  local "${@}"
+  local qtag="${registry}/${tag}"
 
-    docker push "${registry}/${label}"
-
+  run docker.push "tag: '${qtag}'"
 }
 
 docker_run() {
-  local name image options
+  local name tag options
   local "${@}"
 
-  echo "Starting '${image}' container '${name}'..."
-
-  docker run \
-    ${option} \
-    --name ${name} \
-    --restart always \
-    -e AWS_ACCESS_KEY_ID="$(aws configure get aws_access_key_id)" \
-    -e AWS_SECRET_ACCESS_KEY="$(aws configure get aws_secret_access_key)" \
-    -e AWS_DEFAULT_REGION="$(aws configure get region)" \
-    -d ${image}
+  run docker.run \
+    "{ options: '${options}', name: '${name}', tag: "${tag}"}"
 }
 
 docker_inspect() {
-  local container="${1}" ip port name
-  info=$(docker inspect ${container} | json '[0]')
-  ip=$(json 'Node.IP' <<<$info )
-  port=$(json 'NetworkSettings.Ports["80/tcp"][0].HostPort' <<<$info )
-  name=$(json 'Node.Name' <<<$info )
-  echo "ip=${ip} port=${port} name=${name}"
+  local name="${1}" ip port name
+  run docker.inspect "{ name: '${name}' }"
 }
 
 list_containers() {
   local cluster="${1}"
-  $(docker ps --filter "name=${cluster}" --format '{{ .ID }}')
+  run docker.ps "{ cluster: '${cluster}' }"
 }
