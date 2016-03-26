@@ -12,11 +12,23 @@ set_security_groups: |
 get_registry_domain: |
   aws ecr get-authorization-token --region us-east-1
 
-dns_a: |
-  aws route53 change-resource-record-sets --hosted-zone-id test-dns-00 --change-batch file:///****
-
 get_elb: |
   aws elb describe-load-balancers --load-balancer-name violent-aftermath
 
 register_with_elb: |
   aws elb register-instances-with-load-balancer --load-balancer-name vodka-martini --instances test-instance-00
+
+create_cluster: |
+  aws cloudformation create-stack --stack-name preventative-malpractice --template-body file:///****
+  aws cloudformation describe-stacks --stack-name preventative-malpractice
+
+remove_cluster: |
+  aws cloudformation delete-stack --stack-name preventative-malpractice
+
+dns_a: |
+  aws route53 change-resource-record-sets --hosted-zone-id test-dns-00 --change-batch file:///****
+
+dns_alias: |
+  aws elb describe-load-balancers --load-balancer-name violent-aftermath
+  aws route53 list-hosted-zones-by-name --dns-name bar.com --max-items 1
+  aws route53 change-resource-record-sets --hosted-zone-id test-dns-00 --change-batch file:///****

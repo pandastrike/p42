@@ -5,6 +5,7 @@ include options
 include commands
 include aws
 include dns
+include clusters
 
 test_create_repo() {
   run_test create_repo blurb9-api
@@ -21,14 +22,6 @@ test_get_registry_domain() {
   run_test get_registry_domain
 }
 
-test_dns_a() {
-  run_test dns_a \
-    cluster='violent-aftermath' \
-    name='test.com' \
-    ip='192.168.0.42' \
-    comment='this is a test'
-}
-
 test_get_elb() {
   run_test get_elb 'violent-aftermath'
 }
@@ -37,6 +30,39 @@ test_register_with_elb() {
   run_test register_with_elb \
     instance_id='test-instance-00' \
     cluster='vodka-martini'
+}
+
+_test_create_cluster() {
+  run_test create_cluster preventative-malpractice
+}
+
+_test_remove_cluster() {
+  run_test remove_cluster preventative-malpractice
+}
+
+test_cluster_suite() {
+  _test_create_cluster
+  # TODO: we need a way to pass/fail on this assert
+  assert_cluster preventative-malpractice
+  _test_remove_cluster
+}
+
+test_dns_alias() {
+  run_test dns_alias \
+    cluster='violent-aftermath' \
+    subdomain='foo' \
+    domain='bar.com' \
+    comment='this is a test'
+}
+
+test_dns_srv() {
+  dns_srv \
+    cluster='violent-aftermath' \
+    protocol='http' \
+    public='www' \
+    private='www-00' \
+    port='12345' \
+    comment='this is a test'
 }
 
 declare test $(options 'test' ${@})

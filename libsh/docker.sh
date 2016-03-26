@@ -17,6 +17,21 @@ docker_login() {
   eval $(aws ecr get-login --region us-east-1) > /dev/null
 }
 
+docker_build() {
+  docker build \
+    -t "${registry}/${label}" \
+    -f "run/${part}/Dockerfile" \
+    .
+
+
+}
+
+docker_push() {
+
+    docker push "${registry}/${label}"
+
+}
+
 docker_run() {
   local name image options
   local "${@}"

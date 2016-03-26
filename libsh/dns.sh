@@ -1,14 +1,14 @@
+include aws
 include commands
 include clusters
 
 dns_a() {
+
   local cluster name ip comment
   local "${@}"
   local $(load_cluster ${cluster})
 
-  echo "Adding DNS A record for '${name}'..."
-
-  update_file="${tmpDir}/dns-a-${name}.json"
+  file="${tmpDir}/dns-a-${name}.json"
 
   cat "${clusters}/${cluster}" |\
     yaml set - machine "${name}" |\
@@ -18,40 +18,36 @@ dns_a() {
     yaml json write - > "${update_file}"
 
   run aws.route53.change-resource-record-sets \
-    "{ dns: '${dns}', file: '${update_file}' }"
+    "{ zone_id: '${dns}', file: '${file}' }"
 
 }
 
 # TODO: handle entry with no subdomain
 dns_alias() {
+
   local cluster subdomain domain comment
   local "${@}"
 
-  msg 'dns.elb-alias' "subdomain: ${subdomain}"
-
   local "$(get_elb ${cluster})"
-  local id=$(aws route53 list-hosted-zones-by-name \
-    --dns-name ${domain} \
-    --max-items 1 |\
-    json HostedZones[0].Id)
+  local "$(run aws.route53.list-hosted-zones-by-name "domain: '${domain}'")"
+
 
   cat "${clusters}/${cluster}" |\
     yaml set - domain "${subdomain}.${domain}" |\
     yaml set - name "${elb_domain}" |\
-    yaml set - zone "${elb_hosted_zone}" |\
+    yaml set - zone "${elb_zone_id}" |\
     yaml set - comment "${comment}" |\
-    yaml template - $_P42_ROOT/share/dns/alias.yaml |\
-    yaml json write - > "${tmpDir}/dns-alias-${subdomain}.json"
+    yaml template - "${share}/dns/alias.yaml" |\
+    yaml json write - > "${file}"
 
-  aws route53 change-resource-record-sets \
-    --hosted-zone-id "${id}" \
-    --change-batch file:///${tmpDir}/dns-alias-${subdomain}.json \
-    > /dev/null
+  run aws.route53.change-resource-record-sets \
+    "{ zone_id: '${domain_zone_id}', file: '${file}' }"
 
   # Temporary hack--we assume www is also the apex record,
   # so we add a second alias for apex.
   if [ "${sudomain}" = "www" ]; then
     dns_alias \
+      cluster="${cluster}" \
       subdomain="" \
       domain="${domain}" \
       comment="${comment}"
@@ -62,12 +58,16 @@ dns_srv() {
   local cluster protocol public targets comment
   local "${@}"
 
-  echo -n "Adding DNS SRV '${protocol}' record "
+  # MESSAGE: adding SRV record for
   if [ -n "${public}" ]; then
-    echo "  for '${public}'..."
+    # MESSAGE for
+    :
   else
-    echo "  for zone apex..."
+    # MESSAGE for zone apex
+    :
   fi
+
+  local file="${tmpDir}/dns-srv-${public}.json"
 
   cat "${clusters}/${cluster}" |\
     yaml set - protocol "${protocol}" |\
@@ -75,12 +75,11 @@ dns_srv() {
     yaml set - comment "${comment}" |\
     (cat && echo 'targets: ' && \
       printf -- '-  host: %s\n   port: %s\n' $targets) |\
-    yaml template - $_P42_ROOT/share/dns/srv.yaml |\
-    yaml json write - > "${tmpDir}/dns-srv-${public}.json"
+    yaml template - "${share}/dns/srv.yaml" |\
+    yaml json write - > "${file}"
 
-  aws route53 change-resource-record-sets \
-    --hosted-zone-id ${dns} \
-    --change-batch file:///${tmpDir}/dns-srv-${public}.json
+  run aws.route53.change-resource-record-sets \
+    "{ zone_id: '${dns}', file: '${file}' }"
 
   # Temporary hack--we assume www is also the apex record,
   # so we add a second SRV for the empty value, ex: _._http.

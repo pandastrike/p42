@@ -1,5 +1,49 @@
 aws:
 
+  cloudformation:
+
+    create-stack:
+      template: |
+        aws cloudformation create-stack
+          --stack-name {{name}}
+          --template-body file://{{file}}
+
+      response:
+        use: silent
+
+    describe-stacks:
+
+      template: |
+        aws cloudformation describe-stacks --stack-name {{name}}
+
+      response:
+
+        use: json
+        attributes:
+          - name: status
+            accessor: json Stacks[0].StackStatus
+            test: CREATE_COMPLETE
+          - name: vpc
+            accessor: Stacks[0].Outputs[0].OutputValue
+            test: test-vpc-00
+          - name: subnet
+            accessor: Stacks[0].Outputs[1].OutputValue
+            test: test-subnet-00
+          - name: az
+            accessor: Stacks[0].Outputs[2].OutputValue
+            test: us-west-1a
+          - name: dns
+            accessor: Stacks[0].Outputs[3].OutputValue
+            test: test-dns-00
+
+    delete-stack:
+
+      template: |
+        aws cloudformation delete-stack --stack-name {{name}}
+
+      response:
+        use: silent
+
   elb:
 
     describe-load-balancers:
@@ -11,7 +55,7 @@ aws:
       response:
         use: json
         attributes:
-          - name: elb_hosted_zone
+          - name: elb_zone_id
             accessor: LoadBalancerDescriptions[0].CanonicalHostedZoneNameID
           - name: elb_domain
             accessor: LoadBalancerDescriptions[0].CanonicalHostedZoneName
@@ -114,9 +158,26 @@ aws:
 
   route53:
 
+    list-hosted-zones-by-name:
+
+      template: |
+        aws route53 list-hosted-zones-by-name
+          --dns-name {{domain}}
+          --max-items 1
+
+      response:
+        use: json
+        attributes:
+          - name: domain_zone_id
+            accessor: HostedZones[0].Id)
+            test: test-dns-00
+
     change-resource-record-sets:
 
       template: |
         aws route53 change-resource-record-sets
-          --hosted-zone-id {{dns}}
+          --hosted-zone-id {{zone_id}}
           --change-batch file://{{file}}
+
+      response:
+        use: silent

@@ -1,6 +1,15 @@
 clusters="${config}/clusters"
 mkdir -p "${clusters}"
 
+# basically, we just want to decorate the declarations coming
+# back from AWS to explicitly include the region and zone
+get_stack() {
+  local name=${1}
+  local description=$(run aws.cloudformation.describe-stacks "name: '${name}'")
+  local ${description}
+  echo "name=${name} ${description} region=${az%?} zone=${az: -1}"
+}
+
 save_cluster() {
   local name vpc subnet region zone dns
   local "${@}"
@@ -19,7 +28,7 @@ load_cluster() {
 
   local name="${1}"
 
-  assert_cluster "${1}"
+  assert_cluster "${name}"
 
   echo "region=$(yaml get ${clusters}/${name} region) \
     zone=$(yaml get ${clusters}/${name} zone) \
@@ -31,59 +40,47 @@ load_cluster() {
 create_cluster() {
 
   local name="${1}"
+  local file="${tmpDir}/vpc.json"
 
-  echo "Creating cluster '${name}'..."
+  yaml json write ${share}/cf/vpc.yaml > ${file}
 
-  # Originally, I was going to templatize the file,
-  # but I'm no longer sure that's necessary...
-  yaml json write ${share}/cf/vpc.yaml > ${tmpDir}/vpc.json
+  run aws.cloudformation.create-stack \
+    "{ name: '${name}', file: '${file}' }"
 
-  aws cloudformation create-`stack` \
-    --stack-name ${name} \
-    --template-body file:///${tmpDir}/vpc.json \
-    > /dev/null
-
+  # MESSAGE: this might be a moment...
   while true; do
-    sleep 5
-    description=$(aws cloudformation describe-stacks --stack-name ${name})
-    status=$(json Stacks[0].StackStatus <<<"${description}")
-    if [ "$status" == "CREATE_COMPLETE" ]; then
+    if [ -z "${dry_run}" ]; then
+      sleep 5
+    fi
+    local description="$(get_stack ${name})"
+    local ${description}
+
+    if [ "${status}" == "CREATE_COMPLETE" ]; then
       break
     elif [ "${status}" == "CREATE_FAILED" ]; then
-      1>&2 echo "p42: cluster creation failed!"
+      # MESSAGE: error
       exit 1
     fi
   done
 
-  az=$(json Stacks[0].Outputs[2].OutputValue <<<"${description}")
-
-  save_cluster \
-    vpc=$(json Stacks[0].Outputs[0].OutputValue <<<"${description}") \
-    subnet=$(json Stacks[0].Outputs[1].OutputValue <<<"${description}") \
-    region="${az%?}" \
-    zone="${az: -1}" \
-    dns=$(json Stacks[0].Outputs[3].OutputValue <<<"${description}") \
-
-  echo "VPC '${name}' created."
-
+  save_cluster ${description}
 }
 
 remove_cluster() {
-  local cluster="${1}"
-  echo "Deleting AWS stack <${cluster}>..."
-  aws cloudformation delete-stack --stack-name ${cluster}
-  rm ${clusters}/${cluster}
-
+  local name="${1}"
+  # MESSAGE: removing cluster
+  run aws.cloudformation.delete-stack "name: '${name}'"
+  rm ${clusters}/${name}
 }
 
 assert_cluster() {
-  local cluster="${1}"
-  if [ -z "${cluster}" ]; then
-    echo "No cluster name specified"
+  local name="${1}"
+  if [ -z "${name}" ]; then
+    # MESSAGE: no cluster specified
     exit 1
   else
-    if [ ! -f "${clusters}/${cluster}" ]; then
-      echo "Cluster <${cluster}> does not exist."
+    if [ ! -f "${clusters}/${name}" ]; then
+      # MESSAGE: cluster does not exist
       exit 1
     fi
   fi
