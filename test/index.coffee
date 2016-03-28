@@ -1,9 +1,10 @@
 Path = require "path"
 assert = require "assert"
 Amen = require "amen"
-{async, isDirectory} = require "fairmont"
+{async, isDirectory, isWriteStream} = require "fairmont"
 Share = require "../src/share"
 Tmp = require "../src/tmp"
+Logger = require "../src/logger"
 # {read} = require "panda-rw"
 # AWSHelpers = require "../src/helpers/aws"
 # Logs = require "../src/logs"
@@ -11,13 +12,18 @@ Tmp = require "../src/tmp"
 Amen.describe "p42", (context) ->
 
   context.test "share", ->
-
     assert (yield Share).test.expectations?
 
   context.test "tmp", ->
     {dir, base} = Path.parse (yield Tmp.file "test.txt")
     assert.equal base, "test.txt"
     assert.equal true, (yield isDirectory dir)
+
+  context.test "logger", ->
+    yield Logger.log "test", "this is a test"
+    yield Logger.log "test", "this is not a test"
+    content = yield Logger.read "test"
+    assert.equal content, "this is a test\nthis is not a test\n"
 
   # yield read Share.expectations
   #

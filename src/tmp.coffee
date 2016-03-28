@@ -1,6 +1,8 @@
 {join} = require "path"
-{async, shell, rmDir, mkdirp} = require "fairmont"
+{async, shell, rmDir, mkdirp, exists} = require "fairmont"
 
+# TODO: check for error
+# TODO: use run instead? ex: run "mktemp"
 sh = async (command) ->
   (yield shell command)
   .stdout.trim()
@@ -15,6 +17,8 @@ Tmp =
     yield mkdirp path
     join path, name
 
-process.on "exit", -> rmDir (yield Tmp.dir)
+process.on "exit", ->
+  path = yield Tmp.dir
+  rmDir path if yield exists path
 
 module.exports = Tmp
