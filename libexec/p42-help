@@ -1,7 +1,0 @@
-#!/usr/bin/env bash
-
-if [ -z "${1}" ]; then
-  yaml get ${messages} usage
-else
-  yaml get ${messages} "${1}.usage"
-fi

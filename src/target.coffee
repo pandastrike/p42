@@ -69,12 +69,4 @@ Target =
 Target.rm = Target.remove
 Target.mv = Target.rename
 
-run = async (action, rest...) ->
-
-  {share} = process.env
-  {message, abort, usage} = yield messages "target"
-
-  if Target[action]?
-    Target[action] rest...
-  else
-    usage()
+module.exports = Target

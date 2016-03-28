@@ -1,3 +1,0 @@
-#!/usr/bin/env bash
-
-exec coffee ${root}/src/target.coffee $@

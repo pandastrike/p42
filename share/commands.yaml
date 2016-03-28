@@ -8,41 +8,34 @@ aws:
           --stack-name {{name}}
           --template-body file://{{file}}
 
-      response:
-        use: silent
-
     describe-stacks:
 
       template: |
         aws cloudformation describe-stacks --stack-name {{name}}
 
-      response:
+      processor: json
 
-        use: json
-        attributes:
-          - name: status
-            accessor: json Stacks[0].StackStatus
-            test: CREATE_COMPLETE
-          - name: vpc
-            accessor: Stacks[0].Outputs[0].OutputValue
-            test: test-vpc-00
-          - name: subnet
-            accessor: Stacks[0].Outputs[1].OutputValue
-            test: test-subnet-00
-          - name: az
-            accessor: Stacks[0].Outputs[2].OutputValue
-            test: us-west-1a
-          - name: dns
-            accessor: Stacks[0].Outputs[3].OutputValue
-            test: test-dns-00
+      attributes:
+        - name: status
+          accessor: json Stacks[0].StackStatus
+          test: CREATE_COMPLETE
+        - name: vpc
+          accessor: Stacks[0].Outputs[0].OutputValue
+          test: test-vpc-00
+        - name: subnet
+          accessor: Stacks[0].Outputs[1].OutputValue
+          test: test-subnet-00
+        - name: az
+          accessor: Stacks[0].Outputs[2].OutputValue
+          test: us-west-1a
+        - name: dns
+          accessor: Stacks[0].Outputs[3].OutputValue
+          test: test-dns-00
 
     delete-stack:
 
       template: |
         aws cloudformation delete-stack --stack-name {{name}}
-
-      response:
-        use: silent
 
   elb:
 
@@ -52,13 +45,13 @@ aws:
         aws elb describe-load-balancers
           --load-balancer-name {{cluster}}
 
-      response:
-        use: json
-        attributes:
-          - name: elb_zone_id
-            accessor: LoadBalancerDescriptions[0].CanonicalHostedZoneNameID
-          - name: elb_domain
-            accessor: LoadBalancerDescriptions[0].CanonicalHostedZoneName
+      processor: json
+
+      attributes:
+        - name: elb_zone_id
+          accessor: LoadBalancerDescriptions[0].CanonicalHostedZoneNameID
+        - name: elb_domain
+          accessor: LoadBalancerDescriptions[0].CanonicalHostedZoneName
 
     register-instances-with-load-balancer:
 
@@ -66,9 +59,6 @@ aws:
         aws elb register-instances-with-load-balancer
             --load-balancer-name {{cluster}}
             --instances {{instance_id}}
-
-      response:
-        use: silent
 
   ecr:
 
@@ -94,24 +84,25 @@ aws:
         aws ecr describe-repositories
           --repository-name {{name}}
           --region us-east-1
-      response:
-        use: json
-        attributes:
-          - name: repository_id
-            accessor: repositories[0].registryId
 
-    # actually used to get the registry URL
+      processor: json
+
+      attributes:
+        - name: repository_id
+          accessor: repositories[0].registryId
+
+    # actually processord to get the registry URL
     get-authorization-token:
       template: |
         aws ecr get-authorization-token
           --region us-east-1
 
-      response:
-        use: json
-        attributes:
-          - name: url
-            accessor: json authorizationData[0].proxyEndpoint
-            test: 'https://123.registry.test.com'
+      processor: json
+
+      attributes:
+        - name: url
+          accessor: json authorizationData[0].proxyEndpoint
+          test: 'https://123.registry.test.com'
 
   ec2:
 
@@ -121,15 +112,15 @@ aws:
         aws ec2 describe-instances
           --filters Name=tag-value,Values={{name}}
 
-      response:
-        use: json
-        attributes:
-          - name: instance_id
-            accessor: Reservations[0].Instances[0].InstanceId
-            test: test-instance-00
-          - name: instance_ip
-            accessor: Reservations[0].Instances[0].PrivateIpAddress
-            test: test-instance-00
+      processor: json
+
+      attributes:
+        - name: instance_id
+          accessor: Reservations[0].Instances[0].InstanceId
+          test: test-instance-00
+        - name: instance_ip
+          accessor: Reservations[0].Instances[0].PrivateIpAddress
+          test: test-instance-00
 
     describe-security-groups:
 
@@ -139,12 +130,12 @@ aws:
             Name=vpc-id,Values={{vpc}}
             Name=group-name,Values={{name}}
 
-      response:
-        use: json
-        attributes:
-          - name: group_id
-            accessor: SecurityGroups[0].GroupId
-            test: test-sg-00
+      processor: json
+
+      attributes:
+        - name: group_id
+          accessor: SecurityGroups[0].GroupId
+          test: test-sg-00
 
 
     modify-instance-attribute:
@@ -153,8 +144,6 @@ aws:
         aws ec2 modify-instance-attribute
           --instance-id {{instance_id}}
           --groups {{group_ids}}
-      response:
-        use: silent
 
   route53:
 
@@ -165,12 +154,12 @@ aws:
           --dns-name {{domain}}
           --max-items 1
 
-      response:
-        use: json
-        attributes:
-          - name: domain_zone_id
-            accessor: HostedZones[0].Id)
-            test: test-dns-00
+      processor: json
+
+      attributes:
+        - name: domain_zone_id
+          accessor: HostedZones[0].Id)
+          test: test-dns-00
 
     change-resource-record-sets:
 
@@ -179,18 +168,12 @@ aws:
           --hosted-zone-id {{zone_id}}
           --change-batch file://{{file}}
 
-      response:
-        use: silent
-
 docker:
 
   login:
 
     template: |
       eval $(aws ecr get-login --region us-east-1)
-
-    response:
-      use: silent
 
   machine:
 
@@ -199,16 +182,10 @@ docker:
       template: |
         eval $(docker-machine env {{name}})
 
-      response:
-        use: silent
-
     swarm-env:
 
       template: |
         eval $(docker-machine env --swarm {{cluster}})
-
-      response:
-        use: silent
 
   build:
 
@@ -218,16 +195,10 @@ docker:
         -f {{file}}
         .
 
-    response:
-      use: silent
-
   push:
 
     template: |
       docker push {{tag}}
-
-    response:
-      use: silent
 
   run:
 
@@ -243,28 +214,84 @@ docker:
         -e AWS_DEFAULT_REGION="$(aws configure get region)"
         -d {{tag}}
 
-    response:
-      use: silent
-
   inspect:
 
     template: |
         docker inspect {{name}}
 
-    response:
-      use: json
-      attributes:
-        - name: name
-          accessor: [0].Node.Name
-          test: violent-aftermath-01
-        - name: ip
-          accessor: [0].Node.IP
-          test: 192.168.0.42
-        - name: port
-          accessor: [0].NetworkSettings.Ports["80/tcp"][0].HostPort
-          test: 32768
+    processor: json
+
+    attributes:
+      - name: name
+        accessor: [0].Node.Name
+        test: violent-aftermath-01
+      - name: ip
+        accessor: [0].Node.IP
+        test: 192.168.0.42
+      - name: port
+        accessor: [0].NetworkSettings.Ports["80/tcp"][0].HostPort
+        test: 32768
 
   ps:
 
     template: |
       docker ps --filter name={{cluster}} --format \{{ .ID }}
+
+
+# create_instance() {
+#   local name region zone vpc subnet options
+#   local "${@}"
+#   docker-machine create ${name} \
+#     --driver amazonec2 \
+#     --amazonec2-region ${region} \
+#     --amazonec2-vpc-id ${vpc} \
+#     --amazonec2-subnet-id ${subnet} \
+#     --amazonec2-zone ${zone} \
+#     ${options}
+# }
+#
+# create_swarm_node() {
+#
+#   local master cluster
+#   local "${@}"
+#   local "$(load-cluster ${cluster})"
+#
+#   create_instance \
+#     name="$(find_available_name ${cluster})" \
+#     region=${region} \
+#     zone=${zone} \
+#     vpc=${vpc} \
+#     subnet=${subnet} \
+#     options="--swarm \
+#       ${master+--swarm-master} \
+#       --swarm-discovery nodes://10.0.[0:255].[0:255]:2375"
+#
+#   # We need to add the VPC default SG
+#   set_security_groups \
+#     vpc="${vpc}" \
+#     name="${name}" \
+#     groups="default docker-machine"
+# }
+#
+# find_available_name() {
+#   local cluster="${1}"
+#   local candidates=$(printf '%s\n' $(echo ${cluster}-{0..9}{0..9}))
+#   local taken=$(list-nodes ${cluster})
+#   # return the first element from candidates list that
+#   # isn't in the taken list...
+#   comm -23 <(echo "${candidates}") <(echo "${taken}") | head -n 1
+# }
+#
+# list_swarm_nodes() {
+#   docker-machine ls \
+#     --format '{{ .Name }}' \
+#     --filter "name=${1}"
+# }
+#
+# remove_swarm_nodes() {
+#   local cluster="${1}"
+#   echo "Removing Swarm nodes for cluster <${cluster}>"
+#   local machines=$(list_swarm_nodes ${cluster})
+#   docker-machine stop $machines
+#   docker-machine rm $machines
+# }

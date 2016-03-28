@@ -1,3 +1,0 @@
-#!/usr/bin/env bash
-
-exec coffee $_P42_ROOT/lib/name.coffee $@
