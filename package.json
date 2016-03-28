@@ -12,7 +12,7 @@
     "p42": "libexec/p42"
   },
   "scripts": {
-    "test": "coffee -o lib/ -c src/*.*coffee && coffee test/test.coffee",
+    "test": "coffee test/index.coffee",
     "prepublish": "coffee -o lib/ -c src/*.*coffee",
     "postpublish": "(node_modules/.bin/json -f package.json version | xargs -I version git tag -am version version) && git push --tags"
   },
@@ -32,6 +32,7 @@
   },
   "homepage": "https://github.com/pandastrike/p42#readme",
   "devDependencies": {
+    "amen": "^1.0.0-alpha-06",
     "json": "^9.0.3"
   },
   "dependencies": {

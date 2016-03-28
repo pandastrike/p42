@@ -1,20 +1,32 @@
-#!/usr/bin/env bash
+Path = require "path"
+assert = require "assert"
+Amen = require "amen"
+{async, isDirectory} = require "fairmont"
+Share = require "../src/share"
+Tmp = require "../src/tmp"
+# {read} = require "panda-rw"
+# AWSHelpers = require "../src/helpers/aws"
+# Logs = require "../src/logs"
 
-{async} = require "fairmont"
-{read} = require "panda-rw"
-AWSHelpers = require "../src/helpers/aws"
-Logs = require "../src/logs"
+Amen.describe "p42", (context) ->
 
-Amen.describe "p42", async (context) ->
+  context.test "share", ->
 
-  yield read "#{share}/expectations.yaml"
+    assert (yield Share).test.expectations?
 
-  context.test "createRepository", ->
-    Logs.clear "commands"
-    yield AWSHelpers.createRepository "blurb9-api"
-    actual = Logs.get "commands"
-    expected = expectations.createRepository
-    assert.equal actual, expected
+  context.test "tmp", ->
+    {dir, base} = Path.parse (yield Tmp.file "test.txt")
+    assert.equal base, "test.txt"
+    assert.equal true, (yield isDirectory dir)
+
+  # yield read Share.expectations
+  #
+  # context.test "createRepository", ->
+  #   Logs.clear "commands"
+  #   yield AWSHelpers.createRepository "blurb9-api"
+  #   actual = Logs.get "commands"
+  #   expected = expectations.createRepository
+  #   assert.equal actual, expected
 
 # test_create_repo() {
 #   run_test create_repo blurb9-api
