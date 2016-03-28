@@ -1,46 +1,101 @@
-black=$(tput setaf 0)
-red=$(tput setaf 1)
-green=$(tput setaf 2)
-yellow=$(tput setaf 3)
-blue=$(tput setaf 4)
-magenta=$(tput setaf 5)
-cyan=$(tput setaf 6)
-white=$(tput setaf 7)
-bold=$(tput bold)
-old=$(tput dim)
-reset=$(tput sgr0)
+#!/usr/bin/env bash
 
-_p() {
-  echo "$@ ${reset}"
-}
+{async} = require "fairmont"
+{read} = require "panda-rw"
+AWSHelpers = require "../src/helpers/aws"
+Logs = require "../src/logs"
 
-_normalize() {
-  # TODO: we could actually extract the file path here,
-  # read it, and compare it to a derivable key in the
-  # expectations file, maybe the basename (which is
-  # predictable even when parameterized because the
-  # parameterization depends on the test).
-  sed -E 's/file:[\/a-zA-Z0-9_\.\-]+/file:\/\/\/****/g'
-}
+Amen.describe "p42", async (context) ->
 
-run_test() {
+  yield read "#{share}/expectations.yaml"
 
-  clear_commands
-  "${@}" > /dev/null
-  _diff=$(diff -B \
-    <(show_commands | _normalize) \
-    <(yaml get ${share}/test/expectations.yaml ${1}))
+  context.test "createRepository", ->
+    Logs.clear "commands"
+    yield AWSHelpers.createRepository "blurb9-api"
+    actual = Logs.get "commands"
+    expected = expectations.createRepository
+    assert.equal actual, expected
 
-  if [ -z "${_diff}" ]; then
-    _p ${green} ${1}: ${bold} pass
-  else
-    _p ${red} ${1}: ${bold} fail
-    _p ${red} "$_diff"
-  fi
-
-}
-
-run_tests() {
-  tests=$(declare -f | grep -E '^test_[a-zA-Z0\_]+ \(' | cut -d ' ' -f 1)
-  for test in $tests; do $test ; done
-}
+# test_create_repo() {
+#   run_test create_repo blurb9-api
+# }
+#
+# test_set_security_groups() {
+#   run_test set_security_groups \
+#     vpc=test-vpc-00 \
+#     name=test-instance-00 \
+#     groups='default docker-machine'
+# }
+#
+# test_get_registry_domain() {
+#   run_test get_registry_domain
+# }
+#
+# test_get_elb() {
+#   run_test get_elb 'violent-aftermath'
+# }
+#
+# test_register_with_elb() {
+#   run_test register_with_elb \
+#     instance_id='test-instance-00' \
+#     cluster='vodka-martini'
+# }
+#
+# _test_create_cluster() {
+#   run_test create_cluster preventative-malpractice
+# }
+#
+# _test_remove_cluster() {
+#   run_test remove_cluster preventative-malpractice
+# }
+#
+# test_cluster_suite() {
+#   _test_create_cluster
+#   # TODO: we need a way to pass/fail on this assert
+#   assert_cluster preventative-malpractice
+#   _test_remove_cluster
+# }
+#
+# test_dns_alias() {
+#   run_test dns_alias \
+#     cluster='violent-aftermath' \
+#     subdomain='foo' \
+#     domain='bar.com' \
+#     comment='this is a test'
+# }
+#
+# test_dns_srv() {
+#   run_test dns_srv \
+#     cluster='violent-aftermath' \
+#     protocol='http' \
+#     public='www' \
+#     private='www-00' \
+#     port='12345' \
+#     comment='this is a test'
+# }
+#
+# # yamlize() {
+# #   local "${@}"
+# #   echo $comment
+# # }
+# #
+# # test_yamlize() {
+# #   yamlize \
+# #     cluster='violent-aftermath' \
+# #     protocol='http' \
+# #     public='www' \
+# #     private='www-00' \
+# #     port='12345' \
+# #     comment='this is a test'
+# # }
+# #
+# declare test $(options 'test' ${@})
+#
+# dry_run=true
+# clusters="${share}/test/clusters"
+#
+# if [ -n "${test}" ]; then
+#   "test_${test}"
+# else
+#   run_tests
+# fi

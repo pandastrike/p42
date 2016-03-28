@@ -1,5 +1,0 @@
-- name: port
-  description: |
-    Expose port
-  default: 80
-  require: true

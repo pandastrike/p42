@@ -18,9 +18,9 @@ Processors =
 
 Commands =
 
-  path: "#{share}/commands.yaml"
-
-  init: async -> Commands.dictionary = yield read Commands.path
+  init: async ->
+    yield Share.init()
+    Commands.dictionary = yield read Share.commands
 
   build: (key, data={}) ->
 
