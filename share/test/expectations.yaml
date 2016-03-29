@@ -1,3 +1,6 @@
+getRepository: |
+  aws ecr describe-repositories --repository-name blurb9-api --region us-east-1
+  
 create_repo: |
   aws ecr describe-repositories --repository-name blurb9-api --region us-east-1
   aws ecr create-repository --repository-name blurb9-api --region us-east-1

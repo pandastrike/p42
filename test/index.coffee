@@ -2,7 +2,7 @@ Path = require "path"
 assert = require "assert"
 Amen = require "amen"
 {async, isDirectory, isWriteStream} = require "fairmont"
-# {read} = require "panda-rw"
+{read} = require "panda-rw"
 # AWSHelpers = require "../src/helpers/aws"
 # Logs = require "../src/logs"
 
@@ -33,13 +33,27 @@ Amen.describe "p42", (context) ->
     content = yield log.read "test"
     assert.equal content, "info: this is a test baz\nerror: oops\n"
 
-  context.test "shell runner", ->
+  # context.test "shell runner", ->
+  #   shared = yield do (require "../src/share")
+  #   shared.dryRun = true
+  #   {run} = yield do (require "../src/run")
+  #   {zoneId} = yield run "aws.route53.list-hosted-zones-by-name",
+  #     domain: "fubar.com"
+  #   assert.equal zoneId, "test-dns-00"
+
+  context.test "getRepository", ->
     shared = yield do (require "../src/share")
     shared.dryRun = true
+    logger = require "../src/message-logger"
+    {msg, log} = yield logger "commands"
+    log.clear()
     {run} = yield do (require "../src/run")
-    {zoneId} = yield run "aws.route53.list-hosted-zones-by-name",
-      domain: "fubar.com"
-    assert.equal zoneId, "test-dns-00"
+    {getRepository} = Helpers = yield do (require "../src/helpers/aws")
+    getRepository "blurb9-api"
+    actual = yield log.read()
+    expectations = yield read shared.test.expectations
+    expected = "info: #{expectations.getRepository}"
+    assert.equal actual, expected
 
 
   # yield read Share.expectations

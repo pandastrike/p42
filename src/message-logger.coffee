@@ -45,6 +45,7 @@ logger = memoize async (name) ->
       process.exit 1
 
   helpers.log.read = -> Logger.read self
+  helpers.log.clear = -> Logger.clear self
 
   for key, value of Logger.levels
     do (key) ->

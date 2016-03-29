@@ -82,7 +82,7 @@ aws:
 
       template: |
         aws ecr describe-repositories
-          --repository-name {{name}}
+          --repository-name {{repository}}
           --region us-east-1
 
       processor: json
