@@ -1,51 +1,53 @@
-{async, reduce, Method} = require "fairmont"
-{read} = require "panda-rw"
+{async, wrap, reduce, Method} = require "fairmont"
 messages = require "panda-messages"
 {yaml, json} = require "./serialize"
 render = require "./template"
-shared = require "./share"
 logger = require "./message-logger"
+once = (f) -> -> k = f() ; f = wrap k ; k
 
-Processors =
+init = once async ->
 
-  dryRun: do ([f] = []) ->
-    # f sets the properties of a result object
-    # based on the given test values...
-    f = (result, {name, test}) ->
-      result[name] = test
-      result
-    (command) -> reduce f, {}, command.attributes
+  {dryRun} = shared = yield do (require "./share")
+  {lookup} = yield messages shared.commands
 
-  json: (command, response) ->
-    response = json response
-    reduce ((result, {name, accessor}) -> data[name] = response[accessor]),
-      {}, command.attributes
+  Processors =
 
-Commands =
+    dryRun: do ([f] = []) ->
+      # f sets the properties of a result object
+      # based on the given test values...
+      f = (result, {name, test}) ->
+        result[name] = test
+        result
+      (command) -> reduce f, {}, command.attributes
 
-  lookup: do async ->
-    {lookup} = yield messages (yield shared).commands
-    lookup
+    json: (command, response) ->
+      response = json response
+      reduce ((result, {name, accessor}) -> data[name] = response[accessor]),
+        {}, command.attributes
 
-  build: async (key, data={}) ->
+  Commands =
 
-    {template, processor, attributes} = ((yield Commands.lookup)(key))
-    string = yaml render template, data
-    {string, processor, attributes}
+    lookup: lookup
 
-  run: async (key, data={}) ->
+    build: (key, data={}) ->
 
-    {msg} = logger name: "commands"
-    command = yield Commands.build key, data
+      {template, processor, attributes} = Commands.lookup key
+      string = yaml render template, data
+      {string, processor, attributes}
 
-    # msg key
+    run: async (key, data={}) ->
 
-    if (yield shared).dryRun
-      Processors.dryRun command
-    else
-      response = yield sh command.string
-      log "responses", command.string, response
-      if response != ""
-        Processors[command.processor]? command, response
+      {msg} = logger name: "commands"
+      command = Commands.build key, data
 
-module.exports = Commands
+      # msg key
+
+      if dryRun
+        Processors.dryRun command
+      else
+        response = yield sh command.string
+        log "responses", command.string, response
+        if response != ""
+          Processors[command.processor]? command, response
+
+module.exports = init

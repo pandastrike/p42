@@ -1,7 +1,7 @@
-{async} = require "fairmont"
+{async, memoize} = require "fairmont"
 messages = require "panda-messages"
 Logger = require "./logger"
-shared = require "./share"
+
 
 # A function to generate helper methods, which define a logger and
 # a bunch of closurs on the logger. So instead of:
@@ -25,11 +25,13 @@ shared = require "./share"
 #   bye "fubar", name: "baz"
 #
 
-logger = async (name) ->
+logger = memoize async (name) ->
+
+  shared = yield do (require "./share")
 
   self = (Logger.dictionary[name] ?= yield Logger.create {name})
 
-  {message} = yield messages (yield shared).messages
+  {message} = yield messages shared.messages
 
   helpers =
 

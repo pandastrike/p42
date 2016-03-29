@@ -1,6 +1,6 @@
 Path = require "path"
-{reduce, reject, async, glob, mkdirp} = require "fairmont"
-# {read} = require "panda-rw"
+{wrap, reduce, reject, async, glob, mkdirp} = require "fairmont"
+once = (f) -> -> k = f() ; f = wrap k ; k
 
 buildTreeFromPaths = async (object) ->
 
@@ -15,10 +15,10 @@ buildTreeFromPaths = async (object) ->
 
   object
 
-shared = do async ->
+init = once async ->
   root = Path.join __dirname, "..", "share"
   config = Path.join process.env.HOME, ".config", "p42"
   yield mkdirp config
   yield buildTreeFromPaths {root, config}
 
-module.exports = shared
+module.exports = init

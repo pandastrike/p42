@@ -9,8 +9,8 @@ Amen = require "amen"
 Amen.describe "p42", (context) ->
 
   context.test "share", ->
-    shared = require "../src/share"
-    assert (yield shared).test.expectations?
+    shared = yield do (require "../src/share")
+    assert shared.test.expectations?
 
   context.test "tmp", ->
     Tmp = require "../src/tmp"
@@ -34,9 +34,9 @@ Amen.describe "p42", (context) ->
     assert.equal content, "info: this is a test baz\nerror: oops\n"
 
   context.test "shell runner", ->
-    shared = require "../src/share"
-    (yield shared).dryRun = true
-    {run} = require "../src/run"
+    shared = yield do (require "../src/share")
+    shared.dryRun = true
+    {run} = yield do (require "../src/run")
     {zoneId} = yield run "aws.route53.list-hosted-zones-by-name",
       domain: "fubar.com"
     assert.equal zoneId, "test-dns-00"
