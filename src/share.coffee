@@ -15,10 +15,10 @@ buildTreeFromPaths = async (object) ->
 
   object
 
-Share = do async ->
+shared = do async ->
   root = Path.join __dirname, "..", "share"
   config = Path.join process.env.HOME, ".config", "p42"
   yield mkdirp config
   yield buildTreeFromPaths {root, config}
 
-module.exports = Share
+module.exports = shared

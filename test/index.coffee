@@ -2,9 +2,10 @@ Path = require "path"
 assert = require "assert"
 Amen = require "amen"
 {async, isDirectory, isWriteStream} = require "fairmont"
-Share = require "../src/share"
+shared = require "../src/share"
 Tmp = require "../src/tmp"
 Logger = require "../src/logger"
+logger = require "../src/message-logger"
 # {read} = require "panda-rw"
 # AWSHelpers = require "../src/helpers/aws"
 # Logs = require "../src/logs"
@@ -12,7 +13,7 @@ Logger = require "../src/logger"
 Amen.describe "p42", (context) ->
 
   context.test "share", ->
-    assert (yield Share).test.expectations?
+    assert (yield shared).test.expectations?
 
   context.test "tmp", ->
     {dir, base} = Path.parse (yield Tmp.file "test.txt")
@@ -20,10 +21,18 @@ Amen.describe "p42", (context) ->
     assert.equal true, (yield isDirectory dir)
 
   context.test "logger", ->
-    yield Logger.log "test", "this is a test"
-    yield Logger.log "test", "this is not a test"
+    yield Logger.info "fubar", "this is a test"
+    yield Logger.info "fubar", "this is not a test"
+    content = yield Logger.read "fubar"
+    assert.equal content, "info: this is a test\ninfo: this is not a test\n"
+
+  context.test "message logger", ->
+    {msg, log} = yield logger name: "test"
+    msg "fubar", name: "baz"
+    log.error "oops"
     content = yield Logger.read "test"
-    assert.equal content, "this is a test\nthis is not a test\n"
+    assert.equal content, "info: this is a test baz\nerror: oops\n"
+
 
   # yield read Share.expectations
   #

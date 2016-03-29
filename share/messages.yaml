@@ -1,3 +1,6 @@
+test:
+  fubar: this is a test {{name}}
+
 help: |
 
   Usage: p42 <command> <options...>
@@ -173,5 +176,5 @@ cluster-get:
         p42 cluster get red-host vpc
 
 dns:
-  
+
   elb-alias: Adding alias for subdomain [{{subdomain}}]

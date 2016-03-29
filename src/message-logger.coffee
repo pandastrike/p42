@@ -1,0 +1,52 @@
+{async} = require "fairmont"
+messages = require "panda-messages"
+Logger = require "./logger"
+shared = require "./share"
+
+# A function to generate helper methods, which define a logger and
+# a bunch of closurs on the logger. So instead of:
+#
+#   Log.info "blurg", "this is a test"
+#
+# we can simply write:
+#
+#   log.info "this is a test"
+#
+# In addition, we add some helpers for use messages. So instead of:
+#
+#   log.info message "fubar", name: "baz"
+#
+# We can simply write:
+#
+#   msg "fubar", name: "baz"
+#
+# Or, for critical errors:
+#
+#   bye "fubar", name: "baz"
+#
+
+logger = async (options) ->
+
+  {name} = options
+  self = (Logger.dictionary[name] = yield Logger.create options)
+
+  {message} = yield messages (yield shared).messages
+
+  helpers =
+
+    log: -> Logger.log self, arguments...
+
+    msg: (key, data = {}) ->
+      Logger.info self, message "#{name}.#{key}", data
+
+    bye: (key, data = {}) ->
+      Logger.error self, message "#{name}.#{key}", data
+      process.exit 1
+
+  for key, value of Logger.levels
+    do (key) ->
+      helpers.log[key] = -> Logger[key] self, arguments...
+
+  helpers
+
+module.exports = logger

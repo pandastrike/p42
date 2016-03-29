@@ -1,47 +1,73 @@
 FS = require "fs"
-{async, read, write} = require "fairmont"
+{curry,
+async, include, merge, w,
+Type, isType,  isString,
+Method,
+read, write} = require "fairmont"
 Tmp = require "./tmp"
 
-# This is a very simple logger. This is, to some extent, intentional.
-# I played around some other loggers, ex: Winston, but the resulting
-# code, at least for what we need here, was more complex, not less.
-# We may want to revisit this as we look at adding new features:
+createTempStream = async (name) ->
+  FS.createWriteStream (yield Tmp.file "#{name}.log")
 
-# TODO: add support for logging levels
-# TODO: add support for formats (ex: JSON)
-# TODO: add support for S3, syslog?
+# TODO: formatter support
+log = (stream, level, thing) -> write stream, "#{level}: #{thing}\n"
 
-loggers = {}
+Logger = Type.define()
 
-Logger =
+# This little bit of craziness effectively allows us to define
+# logger-based multimethods with parameterizable lookups,
+# so we can call them using a string key or a logger object.
+adapter = curry (K, F) ->
+  M = Method.create()
+  L = K M
+  Method.define M, (isType Logger), (-> true), F
+  Method.define M, (isType Logger), F
+  Method.define M, (isString), (-> true), L
+  Method.define M, (isString), L
+  M
 
-  create: async (name) ->
-    FS.createWriteStream (yield Tmp.file "#{name}.log")
+# Returns a multimethod that will create the logger if it doesn't exist.
+definitely = adapter (method) ->
+  async (name, args...) ->
+    logger = (Logger.dictionary[name] ?= yield Logger.create {name})
+    method logger, args...
 
-  get: async (name) ->
-    loggers[name] ?= yield Logger.create name
+# Returns a multimethod that will do nothing if the logger doesn't exist.
+maybe = adapter (method) ->
+  (name, args...) ->
+    if (logger = Logger.dictionary[name])?
+      method logger, args...
 
-  log: async (name, things...) ->
-    stream = yield Logger.get name
-    for thing in things
-      yield write stream, thing.toString()
-      yield write stream, "\n"
+include Logger,
 
-  read: (name) ->
-    if ({path} = loggers[name])?
-      read path
+  defaults:
+    level: "info"
 
-  stream: (name) ->
-    if ({path} = loggers[name])?
-      FS.createReadStream path
+  levels: {} # see below
 
-  show: (name, stream = process.stdout) ->
-    if ({path} = loggers[name])?
-      FS.createReadStream path
-      .pipe stream
+  dictionary: {}
 
-  clear: (name) ->
-    if ({path} = loggers[name])?
-      write path, ''
+  create: async (options) ->
+    include (Type.create Logger), Logger.defaults,
+      stream: yield createTempStream options.name
+
+  log: definitely async (logger, level, things...) ->
+    if Logger.levels[logger.level] >= Logger.levels[level]
+      (yield log logger.stream, level, thing) for thing in things
+
+  read: maybe ({stream}) -> read stream.path
+
+  stream: maybe ({stream}) -> FS.createReadStream path
+
+  show: maybe (logger, sink) -> (Logger.stream logger).pipe sink
+
+  # TODO: I think we need to recreate the stream here
+  clear: maybe ({stream}) -> write stream.path, ''
+
+# RFC5424 levels for syslog
+for level, index in w "emerg alert crit error warning notice info debug"
+  do (level, index) ->
+    Logger.levels[level] = index
+    Logger[level] = (logger, args...)-> Logger.log logger, level, args...
 
 module.exports = Logger
