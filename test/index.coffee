@@ -2,10 +2,6 @@ Path = require "path"
 assert = require "assert"
 Amen = require "amen"
 {async, isDirectory, isWriteStream} = require "fairmont"
-shared = require "../src/share"
-Tmp = require "../src/tmp"
-Logger = require "../src/logger"
-logger = require "../src/message-logger"
 # {read} = require "panda-rw"
 # AWSHelpers = require "../src/helpers/aws"
 # Logs = require "../src/logs"
@@ -13,25 +9,37 @@ logger = require "../src/message-logger"
 Amen.describe "p42", (context) ->
 
   context.test "share", ->
+    shared = require "../src/share"
     assert (yield shared).test.expectations?
 
   context.test "tmp", ->
+    Tmp = require "../src/tmp"
     {dir, base} = Path.parse (yield Tmp.file "test.txt")
     assert.equal base, "test.txt"
     assert.equal true, (yield isDirectory dir)
 
   context.test "logger", ->
+    Logger = require "../src/logger"
     yield Logger.info "fubar", "this is a test"
     yield Logger.info "fubar", "this is not a test"
     content = yield Logger.read "fubar"
     assert.equal content, "info: this is a test\ninfo: this is not a test\n"
 
   context.test "message logger", ->
-    {msg, log} = yield logger name: "test"
+    logger = require "../src/message-logger"
+    {msg, log} = yield logger "test"
     msg "fubar", name: "baz"
     log.error "oops"
-    content = yield Logger.read "test"
+    content = yield log.read "test"
     assert.equal content, "info: this is a test baz\nerror: oops\n"
+
+  context.test "shell runner", ->
+    shared = require "../src/share"
+    (yield shared).dryRun = true
+    {run} = require "../src/run"
+    {zoneId} = yield run "aws.route53.list-hosted-zones-by-name",
+      domain: "fubar.com"
+    assert.equal zoneId, "test-dns-00"
 
 
   # yield read Share.expectations

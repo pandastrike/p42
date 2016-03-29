@@ -25,10 +25,9 @@ shared = require "./share"
 #   bye "fubar", name: "baz"
 #
 
-logger = async (options) ->
+logger = async (name) ->
 
-  {name} = options
-  self = (Logger.dictionary[name] = yield Logger.create options)
+  self = (Logger.dictionary[name] ?= yield Logger.create {name})
 
   {message} = yield messages (yield shared).messages
 
@@ -42,6 +41,8 @@ logger = async (options) ->
     bye: (key, data = {}) ->
       Logger.error self, message "#{name}.#{key}", data
       process.exit 1
+
+  helpers.log.read = -> Logger.read self
 
   for key, value of Logger.levels
     do (key) ->

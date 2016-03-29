@@ -157,8 +157,8 @@ aws:
       processor: json
 
       attributes:
-        - name: domain_zone_id
-          accessor: HostedZones[0].Id)
+        - name: zoneId
+          accessor: HostedZones[0].Id
           test: test-dns-00
 
     change-resource-record-sets:
@@ -204,38 +204,39 @@ docker:
 
     # TODO: may parameterize keys/region too?
     # Doesn't seem like high-value coverage.
-    template: |
-      docker run
-        {{options}}
-        --name {{name}}
-        --restart always
-        -e AWS_ACCESS_KEY_ID="$(aws configure get aws_access_key_id)"
-        -e AWS_SECRET_ACCESS_KEY="$(aws configure get aws_secret_access_key)"
-        -e AWS_DEFAULT_REGION="$(aws configure get region)"
-        -d {{tag}}
+    # template: |
+    #   docker run
+    #     {{options}}
+    #     --name {{name}}
+    #     --restart always
+    #     -e AWS_ACCESS_KEY_ID="$(aws configure get aws_access_key_id)"
+    #     -e AWS_SECRET_ACCESS_KEY="$(aws configure get aws_secret_access_key)"
+    #     -e AWS_DEFAULT_REGION="$(aws configure get region)"
+    #     -d {{tag}}
 
-  inspect:
-
-    template: |
-        docker inspect {{name}}
-
-    processor: json
-
-    attributes:
-      - name: name
-        accessor: [0].Node.Name
-        test: violent-aftermath-01
-      - name: ip
-        accessor: [0].Node.IP
-        test: 192.168.0.42
-      - name: port
-        accessor: [0].NetworkSettings.Ports["80/tcp"][0].HostPort
-        test: 32768
-
-  ps:
-
-    template: |
-      docker ps --filter name={{cluster}} --format \{{ .ID }}
+  # inspect:
+  #
+  #   template: |
+  #       docker inspect {{name}}
+  #
+  #   processor: json
+  #
+  #   attributes:
+  #
+  #     - name: name
+  #       accessor: [0].Node.Name
+  #       test: violent-aftermath-01
+  #     - name: ip
+  #       accessor: [0].Node.IP
+  #       test: 192.168.0.42
+  #     - name: port
+  #       accessor: [0].NetworkSettings.Ports["80/tcp"][0].HostPort
+  #       test: 32768
+  #
+  # ps:
+  #
+  #   template: |
+  #     docker ps --filter name={{cluster}} --format \{{ .ID }}
 
 
 # create_instance() {
