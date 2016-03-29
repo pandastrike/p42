@@ -1,10 +1,34 @@
 Path = require "path"
 assert = require "assert"
+{promise} = require "when"
 Amen = require "amen"
-{async, isDirectory, isWriteStream} = require "fairmont"
+{async, isDirectory, isWriteStream, sleep} = require "fairmont"
 {read} = require "panda-rw"
-# AWSHelpers = require "../src/helpers/aws"
-# Logs = require "../src/logs"
+{EventEmitter} = require "events"
+
+# This ensures that when we're logging the commands for test A,
+# we don't interfere with the commands for test B.
+synchronize = do (waiting=[]) ->
+
+  # Main run loop. We wait one second before we starting processing
+  # functions in the wait queue to ensure the tests are all queued.
+  do async ->
+    yield sleep 1000
+    yield g() while g = waiting.shift()
+
+  # Queuing function defined as 'synchronize'. We return a promise
+  # the test can yield on, but all we do is a queue a wrapper fn.
+  # The wrapper propagates the result back here from the run loop,
+  # resolving the promise the test code is waiting on.
+  (f) ->
+    promise (resolve, reject) ->
+      waiting.push async ->
+        try
+          # Important to yield here so that the run loop will wait
+          # until f completes before running the next fn.
+          resolve yield f()
+        catch error
+          reject error
 
 Amen.describe "p42", (context) ->
 
@@ -33,27 +57,29 @@ Amen.describe "p42", (context) ->
     content = yield log.read "test"
     assert.equal content, "info: this is a test baz\nerror: oops\n"
 
-  # context.test "shell runner", ->
-  #   shared = yield do (require "../src/share")
-  #   shared.dryRun = true
-  #   {run} = yield do (require "../src/run")
-  #   {zoneId} = yield run "aws.route53.list-hosted-zones-by-name",
-  #     domain: "fubar.com"
-  #   assert.equal zoneId, "test-dns-00"
+  context.test "shell runner", ->
+    yield synchronize async ->
+      shared = yield do (require "../src/share")
+      shared.dryRun = true
+      {run} = yield do (require "../src/run")
+      {zoneId} = yield run "aws.route53.list-hosted-zones-by-name",
+        domain: "fubar.com"
+      assert.equal zoneId, "test-dns-00"
 
   context.test "getRepository", ->
-    shared = yield do (require "../src/share")
-    shared.dryRun = true
-    logger = require "../src/message-logger"
-    {msg, log} = yield logger "commands"
-    log.clear()
-    {run} = yield do (require "../src/run")
-    {getRepository} = Helpers = yield do (require "../src/helpers/aws")
-    getRepository "blurb9-api"
-    actual = yield log.read()
-    expectations = yield read shared.test.expectations
-    expected = "info: #{expectations.getRepository}"
-    assert.equal actual, expected
+    yield synchronize async ->
+      shared = yield do (require "../src/share")
+      shared.dryRun = true
+      logger = require "../src/message-logger"
+      {msg, log} = yield logger "commands"
+      yield log.clear()
+      {getRepository} = Helpers = yield do (require "../src/helpers/aws")
+      {repositoryId} = yield getRepository "blurb9-api"
+      assert.equal repositoryId, "test-repo-00"
+      actual = yield log.read()
+      expectations = yield read shared.test.expectations
+      expected = "info: #{expectations.getRepository}"
+      assert.equal actual, expected
 
 
   # yield read Share.expectations

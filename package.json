@@ -37,6 +37,7 @@
     "fairmont": "^1.0.0-beta-40",
     "js-yaml": "^3.5.3",
     "markup-js": "^1.5.21",
+    "memory-streams": "^0.1.0",
     "panda-messages": "0.0.1",
     "panda-rw": "^1.0.0-beta-02",
     "prompt": "^1.0.0",

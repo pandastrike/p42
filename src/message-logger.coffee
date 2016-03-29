@@ -1,5 +1,6 @@
 {async, memoize} = require "fairmont"
 messages = require "panda-messages"
+mstreams = require "memory-streams"
 Logger = require "./logger"
 
 
@@ -27,8 +28,7 @@ Logger = require "./logger"
 
 logger = memoize async (name) ->
 
-  shared = yield do (require "./share")
-
+  {dryRun} = shared = yield do (require "./share")
   self = (Logger.dictionary[name] ?= yield Logger.create {name})
 
   {message} = yield messages shared.messages

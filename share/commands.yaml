@@ -88,8 +88,9 @@ aws:
       processor: json
 
       attributes:
-        - name: repository_id
+        - name: repositoryId
           accessor: repositories[0].registryId
+          test: test-repo-00
 
     # actually processord to get the registry URL
     get-authorization-token:

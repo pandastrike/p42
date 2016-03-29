@@ -47,9 +47,9 @@ include Logger,
 
   dictionary: {}
 
-  create: async (options) ->
-    include (Type.create Logger), Logger.defaults,
-      stream: yield createTempStream options.name
+  create: async ({name, stream}) ->
+    stream ?= yield createTempStream name
+    include (Type.create Logger), Logger.defaults, {name, stream}
 
   log: definitely async (logger, level, things...) ->
     if Logger.levels[logger.level] >= Logger.levels[level]
@@ -62,7 +62,9 @@ include Logger,
   show: maybe (logger, sink) -> (Logger.stream logger).pipe sink
 
   # TODO: I think we need to recreate the stream here
-  clear: maybe ({stream}) -> write stream.path, ''
+  clear: maybe async (logger) ->
+    yield write logger.stream.path, ''
+    logger.stream = FS.createWriteStream logger.stream.path
 
 # RFC5424 levels for syslog
 for level, index in w "emerg alert crit error warning notice info debug"
