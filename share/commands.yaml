@@ -11,7 +11,7 @@ aws:
     describe-stacks:
 
       template: |
-        aws cloudformation describe-stacks --stack-name {{name}}
+        aws cloudformation describe-stacks --stack-name {{stack}}
 
       processor: json
 
@@ -19,16 +19,16 @@ aws:
         - name: status
           accessor: json Stacks[0].StackStatus
           test: CREATE_COMPLETE
-        - name: vpc
+        - name: vpcId
           accessor: Stacks[0].Outputs[0].OutputValue
           test: test-vpc-00
-        - name: subnet
+        - name: subnetId
           accessor: Stacks[0].Outputs[1].OutputValue
           test: test-subnet-00
         - name: az
           accessor: Stacks[0].Outputs[2].OutputValue
           test: us-west-1a
-        - name: dns
+        - name: zoneId
           accessor: Stacks[0].Outputs[3].OutputValue
           test: test-dns-00
 

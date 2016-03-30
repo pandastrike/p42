@@ -2,7 +2,7 @@ Comment: "{{comment}}"
 Changes:
   - Action: UPSERT
     ResourceRecordSet:
-      Name: {{machine}}.name.internal.
+      Name: {{node}}.name.internal.
       Type: A
       TTL: 60
       ResourceRecords:

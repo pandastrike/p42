@@ -23,11 +23,14 @@ registerWithELB: |
 createStack: |
   aws cloudformation create-stack --stack-name preventative-malpractice --template-body file:///***.json
 
+getStack: |
+  aws cloudformation describe-stacks --stack-name preventative-malpractice
+
 removeStack: |
   aws cloudformation delete-stack --stack-name preventative-malpractice
 
 DNS-A: |
-  aws route53 change-resource-record-sets --hosted-zone-id test-dns-00 --change-batch file:///****
+  aws route53 change-resource-record-sets --hosted-zone-id test-dns-00 --change-batch file:///***.json
 
 DNS-Alias: |
   aws elb describe-load-balancers --load-balancer-name violent-aftermath
