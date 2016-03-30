@@ -30,6 +30,20 @@ synchronize = do (waiting=[]) ->
         catch error
           reject error
 
+command = (name, context, f) ->
+  context.test name, ->
+    yield synchronize async ->
+      shared = yield do (require "../src/share")
+      shared.dryRun = true
+      logger = require "../src/message-logger"
+      {msg, log} = yield logger "commands"
+      yield log.clear()
+      yield f()
+      actual = yield log.read()
+      expectations = yield read shared.test.expectations
+      expected = expectations[name]
+      assert.equal actual, expected
+
 Amen.describe "p42", (context) ->
 
   context.test "share", ->
@@ -47,7 +61,7 @@ Amen.describe "p42", (context) ->
     yield Logger.info "fubar", "this is a test"
     yield Logger.info "fubar", "this is not a test"
     content = yield Logger.read "fubar"
-    assert.equal content, "info: this is a test\ninfo: this is not a test\n"
+    assert.equal content, "this is a test\nthis is not a test\n"
 
   context.test "message logger", ->
     logger = require "../src/message-logger"
@@ -55,7 +69,7 @@ Amen.describe "p42", (context) ->
     msg "fubar", name: "baz"
     log.error "oops"
     content = yield log.read "test"
-    assert.equal content, "info: this is a test baz\nerror: oops\n"
+    assert.equal content, "this is a test baz\noops\n"
 
   context.test "shell runner", ->
     yield synchronize async ->
@@ -66,35 +80,16 @@ Amen.describe "p42", (context) ->
         domain: "fubar.com"
       assert.equal zoneId, "test-dns-00"
 
-  context.test "getRepository", ->
-    yield synchronize async ->
-      shared = yield do (require "../src/share")
-      shared.dryRun = true
-      logger = require "../src/message-logger"
-      {msg, log} = yield logger "commands"
-      yield log.clear()
-      {getRepository} = Helpers = yield do (require "../src/helpers/aws")
-      {repositoryId} = yield getRepository "blurb9-api"
-      assert.equal repositoryId, "test-repo-00"
-      actual = yield log.read()
-      expectations = yield read shared.test.expectations
-      expected = "info: #{expectations.getRepository}"
-      assert.equal actual, expected
+  command "getRepository", context, async ->
+    {getRepository} = yield do (require "../src/helpers/aws")
+    {repositoryId} = yield getRepository "blurb9-api"
+    assert.equal repositoryId, "test-repo-00"
+
+  command "createRepository", context, async ->
+    {createRepository} = yield do (require "../src/helpers/aws")
+    yield createRepository "blurb9-api"
 
 
-  # yield read Share.expectations
-  #
-  # context.test "createRepository", ->
-  #   Logs.clear "commands"
-  #   yield AWSHelpers.createRepository "blurb9-api"
-  #   actual = Logs.get "commands"
-  #   expected = expectations.createRepository
-  #   assert.equal actual, expected
-
-# test_create_repo() {
-#   run_test create_repo blurb9-api
-# }
-#
 # test_set_security_groups() {
 #   run_test set_security_groups \
 #     vpc=test-vpc-00 \

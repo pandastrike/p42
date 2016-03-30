@@ -1,13 +1,14 @@
 {async, wrap} = require "fairmont"
 {read} = require "panda-rw"
-json = JSON.toString
+{yaml, json} = require "../serialize"
 once = (f) -> -> k = f() ; f = wrap k ; k
 
 init = once async ->
 
+  shared = yield do (require "../share")
   {run} = Commands = yield do (require "../run")
 
-  AWSHelpers =
+  H =
 
     getInstance: (instance) -> run "aws.ec2.describe-instances", {instance}
 
@@ -31,11 +32,11 @@ init = once async ->
     getRepository: (repository) ->
       run "aws.ecr.describe-repositories", {repository}
 
-    createRepository: (repository) ->
-      if !(yield getRepository repository)?
-        yield run "aws.ecr.create-repository", {repository}
-        policy = json yield read "#{share}/ecr/policy.yaml"
-        run "aws.ecr.set-repository-policy", {repository, policy}
+    createRepository: async (repository) ->
+      yield run "aws.ecr.create-repository", {repository}
+      policy = json yield read shared.aws.ecr.policy
+      console.log {policy}
+      yield run "aws.ecr.set-repository-policy", {repository, policy}
 
     createStack: async (stack) ->
       file = (yield mktemp()) + ".json"

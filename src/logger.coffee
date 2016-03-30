@@ -10,7 +10,11 @@ createTempStream = async (name) ->
   FS.createWriteStream (yield Tmp.file "#{name}.log")
 
 # TODO: formatter support
-log = (stream, level, thing) -> write stream, "#{level}: #{thing}\n"
+# We don't use the level in the output, nor include a timestamp,
+# and so on. That's to avoid messing with the tests, which rely
+# on clean output. With a formatter, we could just set the
+# formatter when testing to be as below and otherwise more useful.
+log = (stream, level, thing) -> write stream, "#{thing}\n"
 
 Logger = Type.define()
 

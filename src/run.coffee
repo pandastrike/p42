@@ -18,7 +18,8 @@ init = once async ->
       f = (result, {name, test}) ->
         result[name] = test
         result
-      (command) -> reduce f, {}, command.attributes
+      (command) ->
+        reduce f, {}, command.attributes if command.attributes?
 
     json: (command, response) ->
       response = json response
@@ -32,7 +33,9 @@ init = once async ->
     build: (key, data={}) ->
 
       {template, processor, attributes} = Commands.lookup key
-      string = yaml render template, data
+      string = (render template, data)
+        .replace /\s+/g, ' '
+        .trim()
       {string, processor, attributes}
 
     run: async (key, data={}) ->

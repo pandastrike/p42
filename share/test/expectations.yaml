@@ -1,10 +1,9 @@
 getRepository: |
   aws ecr describe-repositories --repository-name blurb9-api --region us-east-1
-  
-create_repo: |
-  aws ecr describe-repositories --repository-name blurb9-api --region us-east-1
+
+createRepository: |
   aws ecr create-repository --repository-name blurb9-api --region us-east-1
-  aws ecr set-repository-policy --repository-name blurb9-api --region us-east-1 --policy-text { "Version": "2008-10-17", "Statement": [ { "Sid": "Allow Any/All", "Effect": "Allow", "Principal": "*", "Action": [ "ecr:*" ] } ] }
+  aws ecr set-repository-policy --repository-name blurb9-api --region us-east-1 --policy-text {"Version":"2008-10-17","Statement":[{"Sid":"Allow Any/All","Effect":"Allow","Principal":"*","Action":["ecr:*"]}]}
 
 set_security_groups: |
   aws ec2 describe-instances --filters Name=tag-value,Values=test-instance-00

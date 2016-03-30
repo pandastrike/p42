@@ -15,9 +15,9 @@ yaml.to = toYAML
 json = Method.create()
 
 Method.define json, isString, fromJSON
-Method.define json, isObject, toYAML
+Method.define json, isObject, toJSON
 
-json.from = fromYAML
-json.to = toYAML
+json.from = fromJSON
+json.to = toJSON
 
 module.exports = {json, yaml}

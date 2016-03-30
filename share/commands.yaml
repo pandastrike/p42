@@ -66,14 +66,14 @@ aws:
 
       template: |
         aws ecr create-repository
-          --repository-name {{name}}
+          --repository-name {{repository}}
           --region us-east-1
 
     set-repository-policy:
 
       template: |
         aws ecr set-repository-policy
-          --repository-name {{name}}
+          --repository-name {{repository}}
           --region us-east-1
           --policy-text {{policy}}
 
