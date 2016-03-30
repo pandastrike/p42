@@ -16,8 +16,10 @@ init = once async ->
       run "aws.ec2.describe-security-groups", {vpcId, group}
 
     setSecurityGroups: async ({vpcId, instance, groups}) ->
-      groupIds = (yield getSecurityGroup {vpcId, group}) for group in groups
-      {instanceId} = yield getInstance instance
+      groupIds = for group in groups
+        (yield H.getSecurityGroup {vpcId, group})
+        .groupId
+      {instanceId} = yield H.getInstance instance
       run "aws.ec2.modify-instance-attribute", {instanceId, groupIds}
 
     getELB: (cluster) -> run "aws.elb.describe-load-balancers", {cluster}
@@ -35,7 +37,6 @@ init = once async ->
     createRepository: async (repository) ->
       yield run "aws.ecr.create-repository", {repository}
       policy = json yield read shared.aws.ecr.policy
-      console.log {policy}
       yield run "aws.ecr.set-repository-policy", {repository, policy}
 
     createStack: async (stack) ->

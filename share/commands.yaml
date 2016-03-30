@@ -48,7 +48,7 @@ aws:
       processor: json
 
       attributes:
-        - name: elb_zone_id
+        - name: elb_zoneId
           accessor: LoadBalancerDescriptions[0].CanonicalHostedZoneNameID
         - name: elb_domain
           accessor: LoadBalancerDescriptions[0].CanonicalHostedZoneName
@@ -58,7 +58,7 @@ aws:
       template: |
         aws elb register-instances-with-load-balancer
             --load-balancer-name {{cluster}}
-            --instances {{instance_id}}
+            --instances {{instanceId}}
 
   ecr:
 
@@ -111,15 +111,15 @@ aws:
 
       template: |
         aws ec2 describe-instances
-          --filters Name=tag-value,Values={{name}}
+          --filters Name=tag-value,Values={{instance}}
 
       processor: json
 
       attributes:
-        - name: instance_id
+        - name: instanceId
           accessor: Reservations[0].Instances[0].InstanceId
           test: test-instance-00
-        - name: instance_ip
+        - name: instanceIP
           accessor: Reservations[0].Instances[0].PrivateIpAddress
           test: test-instance-00
 
@@ -128,13 +128,13 @@ aws:
       template: |
         aws ec2 describe-security-groups
           --filters
-            Name=vpc-id,Values={{vpc}}
-            Name=group-name,Values={{name}}
+            Name=vpc-id,Values={{vpcId}}
+            Name=group-name,Values={{group}}
 
       processor: json
 
       attributes:
-        - name: group_id
+        - name: groupId
           accessor: SecurityGroups[0].GroupId
           test: test-sg-00
 
@@ -143,8 +143,8 @@ aws:
 
       template: |
         aws ec2 modify-instance-attribute
-          --instance-id {{instance_id}}
-          --groups {{group_ids}}
+          --instance-id {{instanceId}}
+          --groups {{groupIds|join> }}
 
   route53:
 
@@ -166,7 +166,7 @@ aws:
 
       template: |
         aws route53 change-resource-record-sets
-          --hosted-zone-id {{zone_id}}
+          --hosted-zone-id {{zoneId}}
           --change-batch file://{{file}}
 
 docker:
@@ -210,7 +210,7 @@ docker:
     #     {{options}}
     #     --name {{name}}
     #     --restart always
-    #     -e AWS_ACCESS_KEY_ID="$(aws configure get aws_access_key_id)"
+    #     -e AWS_ACCESS_KEYId="$(aws configure get aws_access_keyId)"
     #     -e AWS_SECRET_ACCESS_KEY="$(aws configure get aws_secret_access_key)"
     #     -e AWS_DEFAULT_REGION="$(aws configure get region)"
     #     -d {{tag}}

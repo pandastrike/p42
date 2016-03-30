@@ -4,10 +4,15 @@ messages = require "panda-messages"
 render = require "./template"
 logger = require "./message-logger"
 once = (f) -> -> k = f() ; f = wrap k ; k
+unquote = (s) ->
+  s
+  .replace /\s+/g, ' '
+  .trim()
+
 
 init = once async ->
 
-  {dryRun} = shared = yield do (require "./share")
+  shared = yield do (require "./share")
   {lookup} = yield messages shared.commands
 
   Processors =
@@ -33,9 +38,7 @@ init = once async ->
     build: (key, data={}) ->
 
       {template, processor, attributes} = Commands.lookup key
-      string = (render template, data)
-        .replace /\s+/g, ' '
-        .trim()
+      string = unquote render template, data
       {string, processor, attributes}
 
     run: async (key, data={}) ->
@@ -45,7 +48,7 @@ init = once async ->
 
       log.info command.string
 
-      if dryRun
+      if shared.dryRun
         Processors.dryRun command
       else
         response = yield sh command.string

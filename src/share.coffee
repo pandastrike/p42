@@ -18,7 +18,8 @@ buildTreeFromPaths = async (object) ->
 init = once async ->
   root = Path.join __dirname, "..", "share"
   config = Path.join process.env.HOME, ".config", "p42"
+  dryRun = false
   yield mkdirp config
-  yield buildTreeFromPaths {root, config}
+  yield buildTreeFromPaths {root, config, dryRun}
 
 module.exports = init

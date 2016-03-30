@@ -5,10 +5,10 @@ createRepository: |
   aws ecr create-repository --repository-name blurb9-api --region us-east-1
   aws ecr set-repository-policy --repository-name blurb9-api --region us-east-1 --policy-text {"Version":"2008-10-17","Statement":[{"Sid":"Allow Any/All","Effect":"Allow","Principal":"*","Action":["ecr:*"]}]}
 
-set_security_groups: |
-  aws ec2 describe-instances --filters Name=tag-value,Values=test-instance-00
+setSecurityGroups: |
   aws ec2 describe-security-groups --filters Name=vpc-id,Values=test-vpc-00 Name=group-name,Values=default
   aws ec2 describe-security-groups --filters Name=vpc-id,Values=test-vpc-00 Name=group-name,Values=docker-machine
+  aws ec2 describe-instances --filters Name=tag-value,Values=preventative-malpractice-01
   aws ec2 modify-instance-attribute --instance-id test-instance-00 --groups test-sg-00 test-sg-00
 
 get_registry_domain: |
