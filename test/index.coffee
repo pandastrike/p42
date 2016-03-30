@@ -32,7 +32,8 @@ synchronize = do (waiting=[]) ->
 
 sanitize = (s) ->
   s
-  .replace /file:\/+[\w\/\-]+/g, "file:///***" # :\/\/\/[\w\-]+/g, "file:///***"
+  .replace /file:\/+[\w\/\-]+/g, "file:///***"
+
 command = (name, context, f) ->
   context.test name, ->
     yield synchronize async ->
@@ -136,7 +137,6 @@ Amen.describe "p42", (context) ->
       command "getRegistryDomain", context, async ->
         assert.equal "123.registry.test.com",
           yield AWSHelpers.getRegistryDomain()
-
 
       context.test "DNS", (context) ->
 

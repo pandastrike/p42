@@ -46,11 +46,12 @@ init = once async ->
       {log} = yield logger "commands"
       command = Commands.build key, data
 
-      log.info command.string
 
       if shared.dryRun
+        yield log.info command.string
         Processors.dryRun command
       else
+        log.info command.string
         response = yield sh command.string
         # log command.string, response
         if response != ""

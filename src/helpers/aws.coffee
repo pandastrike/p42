@@ -21,7 +21,7 @@ init = once async ->
         (yield H.getSecurityGroup {vpcId, group})
         .groupId
       {instanceId} = yield H.getInstance instance
-      run "aws.ec2.modify-instance-attribute", {instanceId, groupIds}
+      yield run "aws.ec2.modify-instance-attribute", {instanceId, groupIds}
 
     getELB: (cluster) -> run "aws.elb.describe-load-balancers", {cluster}
 
