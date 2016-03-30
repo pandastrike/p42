@@ -3,4 +3,4 @@ vpc: test-vpc-00
 subnet: test-subnet-00
 region: us-west-1
 zone: a
-dns: test-dns-00
+zoneId: test-dns-00

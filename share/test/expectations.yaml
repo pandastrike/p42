@@ -11,30 +11,29 @@ setSecurityGroups: |
   aws ec2 describe-instances --filters Name=tag-value,Values=preventative-malpractice-01
   aws ec2 modify-instance-attribute --instance-id test-instance-00 --groups test-sg-00 test-sg-00
 
-get_registry_domain: |
+getRegistryDomain: |
   aws ecr get-authorization-token --region us-east-1
 
-get_elb: |
+getELB: |
   aws elb describe-load-balancers --load-balancer-name violent-aftermath
 
-register_with_elb: |
+registerWithELB: |
   aws elb register-instances-with-load-balancer --load-balancer-name vodka-martini --instances test-instance-00
 
-create_cluster: |
-  aws cloudformation create-stack --stack-name preventative-malpractice --template-body file:///****
-  aws cloudformation describe-stacks --stack-name preventative-malpractice
+createStack: |
+  aws cloudformation create-stack --stack-name preventative-malpractice --template-body file:///***.json
 
-remove_cluster: |
+removeStack: |
   aws cloudformation delete-stack --stack-name preventative-malpractice
 
-dns_a: |
+DNS-A: |
   aws route53 change-resource-record-sets --hosted-zone-id test-dns-00 --change-batch file:///****
 
-dns_alias: |
+DNS-Alias: |
   aws elb describe-load-balancers --load-balancer-name violent-aftermath
   aws route53 list-hosted-zones-by-name --dns-name bar.com --max-items 1
-  aws route53 change-resource-record-sets --hosted-zone-id test-dns-00 --change-batch file:///****
+  aws route53 change-resource-record-sets --hosted-zone-id test-dns-00 --change-batch file:///***.json
 
-dns_srv: |
-  aws route53 change-resource-record-sets --hosted-zone-id test-dns-00 --change-batch file:///****
-  aws route53 change-resource-record-sets --hosted-zone-id test-dns-00 --change-batch file:///****
+DNS-SRV: |
+  aws route53 change-resource-record-sets --hosted-zone-id test-dns-00 --change-batch file:///***.json
+  aws route53 change-resource-record-sets --hosted-zone-id test-dns-00 --change-batch file:///***.json

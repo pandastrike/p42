@@ -5,7 +5,7 @@ aws:
     create-stack:
       template: |
         aws cloudformation create-stack
-          --stack-name {{name}}
+          --stack-name {{stack}}
           --template-body file://{{file}}
 
     describe-stacks:
@@ -35,7 +35,7 @@ aws:
     delete-stack:
 
       template: |
-        aws cloudformation delete-stack --stack-name {{name}}
+        aws cloudformation delete-stack --stack-name {{stack}}
 
   elb:
 
@@ -48,10 +48,12 @@ aws:
       processor: json
 
       attributes:
-        - name: elb_zoneId
+        - name: zoneId
           accessor: LoadBalancerDescriptions[0].CanonicalHostedZoneNameID
-        - name: elb_domain
+          test: test-zone-00
+        - name: domain
           accessor: LoadBalancerDescriptions[0].CanonicalHostedZoneName
+          test: '123.elb.test.com'
 
     register-instances-with-load-balancer:
 

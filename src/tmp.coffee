@@ -7,12 +7,14 @@ sh = async (command) ->
   (yield shell command)
   .stdout.trim()
 
+counter = 0
 Tmp =
 
   dir: do async ->
     (yield sh 'mktemp -d "${TMPDIR:-/tmp}p42-XXXXXXXXX"')
 
   file: async (name) ->
+    name ?= "file-#{counter++}"
     path = yield Tmp.dir
     yield mkdirp path
     join path, name

@@ -1,46 +1,59 @@
-Cluster = require "cluster"
-{run} = require "commands"
-render = (template, data={}) ->
+{async, wrap, merge, read} = require "fairmont"
+{write} = require "panda-rw"
+{yaml, json} = require "../serialize"
+render = require "../template"
+{run} = require "../run"
+Tmp = require "../tmp"
 
-DNSHelpers =
+once = (f) -> -> k = f() ; f = wrap k ; k
 
-  template: (name) -> read "#{share}/dns/#{name}.yaml"
+init = once async ->
 
-  build: (name, data) -> json yaml render (yield template name), data
+  shared = yield do (require "../share")
+  {run} = Commands = yield do (require "../run")
+  {getELB} = yield do (require "./aws")
+  Cluster = yield do (require "../cluster")
 
-  update: async (type, cluster, data) ->
+  build = async (name, data) ->
+
+  update = async (type, cluster, data) ->
     # merge cluster with update-specific data
-    data = merge (Cluster.load cluster), data
+    data = merge (yield Cluster.load cluster), data
     # extract the zoneId
     {zoneId} = data
     # create tempfile and write JSON string to it
-    file = mktemp() + ".json"
-    yield write file, yield build "a", data
+    file = Tmp.file() + ".json"
+    template = yield read shared.aws.dns[type]
+    yield write file, yaml render template, data
     # run the update
     yield run "aws.route53.change-resource-record-sets", {zoneId, file}
 
-  a: ({cluster, node, ip, comment}) ->
-    update "a", cluster, {node, ip, comment}
+  H =
 
-  alias: async ({cluster, domain, subdomain, comment}) ->
-    {zoneId} = yield run "aws.route53.list-hosted-zones-by-name" {domain}
-    elb = yield getELB cluster
-    yield update "alias", cluster,
-      domain: "#{subdomain}.#{domain}",
-      zoneId: zoneId
-      elbZoneId: elb.zoneId
-      elbDomain: elb.domain
-      comment: comment
+    a: ({cluster, node, ip, comment}) ->
+      update "a", cluster, {node, ip, comment}
 
-    # Temporary hack--we assume www is also the apex record,
-    # so we add a second alias for apex.
-    if subdomain == "www"
-      alias {cluster, domain, subdomain: "", comment}
+    alias: async ({cluster, domain, subdomain, comment}) ->
+      elb = yield getELB cluster
+      {zoneId} = yield run "aws.route53.list-hosted-zones-by-name", {domain}
+      yield update "alias", cluster,
+        domain: "#{subdomain}.#{domain}",
+        zoneId: zoneId
+        elbZoneId: elb.zoneId
+        elbDomain: elb.domain
+        comment: comment
 
-  srv: ({cluster, protocol, subdomain, targets, comment}) ->
-    yield update "srv", cluster, {protocol, subdomain, targets, comment}
+      # Temporary hack--we assume www is also the apex record,
+      # so we add a second alias for apex.
+      if subdomain == "www"
+        alias {cluster, domain, subdomain: "", comment}
 
-    # Temporary hack--we assume www is also the apex record,
-    # so we add a second SRV for the empty value, ex: _._http.
-    if subdomain == "www"
-      srv cluster, protocol, "", targets, comment
+    srv: async ({cluster, protocol, subdomain, targets, comment}) ->
+      yield update "srv", cluster, {protocol, subdomain, targets, comment}
+
+      # Temporary hack--we assume www is also the apex record,
+      # so we add a second SRV for the empty value, ex: _._http.
+      if subdomain == "www"
+        yield update "srv", cluster, {protocol, subdomain: "", targets, comment}
+
+module.exports = init

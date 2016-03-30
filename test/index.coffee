@@ -30,6 +30,9 @@ synchronize = do (waiting=[]) ->
         catch error
           reject error
 
+sanitize = (s) ->
+  s
+  .replace /file:\/+[\w\/\-]+/g, "file:///***" # :\/\/\/[\w\-]+/g, "file:///***"
 command = (name, context, f) ->
   context.test name, ->
     yield synchronize async ->
@@ -39,7 +42,7 @@ command = (name, context, f) ->
       {msg, log} = yield logger "commands"
       yield log.clear()
       yield f()
-      actual = yield log.read()
+      actual = sanitize yield log.read()
       expectations = yield read shared.test.expectations
       expected = expectations[name]
       try
@@ -99,12 +102,11 @@ Amen.describe "p42", (context) ->
     context.test "AWS", (context) ->
       AWSHelpers = yield do (require "../src/helpers/aws")
 
-      command "getRepository", context, async ->
-        {repositoryId} = yield AWSHelpers.getRepository "blurb9-api"
-        assert.equal repositoryId, "test-repo-00"
+      command "createStack", context, ->
+        AWSHelpers.createStack "preventative-malpractice"
 
-      command "createRepository", context, ->
-        AWSHelpers.createRepository "blurb9-api"
+      command "removeStack", context, ->
+        AWSHelpers.removeStack "preventative-malpractice"
 
       command "setSecurityGroups", context, ->
         AWSHelpers.setSecurityGroups
@@ -115,39 +117,43 @@ Amen.describe "p42", (context) ->
             "docker-machine"
           ]
 
-      # command "getRegistryDomain", context, async ->
-      #   AWSHelpers.getRegistryDomain()
-      #
-      # command "getELB", context, async ->
-      #   AWSHelpers.getELB "violent-aftermath"
-      #
-      # command "registerWithELB", context, async ->
-      #   AWSHelpers.registerWithELB
-      #     instanceId: "test-instance-00"
-      #     cluster: "vodka-martini"
-      #
-      # command "createStack", context, async ->
-      #   AWSHelpers.createStack "preventative-malpractice"
-      #
-      # command "removeStack", context, async ->
-      #   AWSHelpers.removeStack "preventative-malpractice"
-      #
-      # context.test "DNS", (context) ->
-      #
-      #   DNSHelpers = yield do (require "../src/helpers/dns")
-      #
-      #   command "Alias", context, async ->
-      #     DNSHelpers.alias
-      #       cluster: "violent-aftermath"
-      #       subdomain: "foo"
-      #       domain: "bar.com"
-      #       comment: "this is a test"
-      #
-      #   command "SRV", context, async ->
-      #     DNSHelpers.srv
-      #       cluster: "violent-aftermath"
-      #       protocol: "http"
-      #       subdomain: "www"
-      #       private: "www-00"
-      #       port: "32768"
-      #       comment: "this is a test"
+      command "getELB", context, async ->
+        {zoneId} = yield AWSHelpers.getELB "violent-aftermath"
+        assert.equal "test-zone-00", zoneId
+
+      command "registerWithELB", context, ->
+        AWSHelpers.registerWithELB
+          instanceId: "test-instance-00"
+          cluster: "vodka-martini"
+
+      command "getRepository", context, async ->
+        {repositoryId} = yield AWSHelpers.getRepository "blurb9-api"
+        assert.equal repositoryId, "test-repo-00"
+
+      command "createRepository", context, ->
+        AWSHelpers.createRepository "blurb9-api"
+
+      command "getRegistryDomain", context, async ->
+        assert.equal "123.registry.test.com",
+          yield AWSHelpers.getRegistryDomain()
+
+
+      context.test "DNS", (context) ->
+
+        DNSHelpers = yield do (require "../src/helpers/dns")
+
+        command "DNS-Alias", context, ->
+          DNSHelpers.alias
+            cluster: "violent-aftermath"
+            subdomain: "foo"
+            domain: "bar.com"
+            comment: "this is a test"
+
+        command "DNS-SRV", context, ->
+          DNSHelpers.srv
+            cluster: "violent-aftermath"
+            protocol: "http"
+            subdomain: "www"
+            private: "www-00"
+            port: "32768"
+            comment: "this is a test"

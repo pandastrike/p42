@@ -1,6 +1,7 @@
 {async, wrap} = require "fairmont"
-{read} = require "panda-rw"
+{read, write} = require "panda-rw"
 {yaml, json} = require "../serialize"
+Tmp = require "../tmp"
 once = (f) -> -> k = f() ; f = wrap k ; k
 
 init = once async ->
@@ -27,9 +28,11 @@ init = once async ->
     registerWithELB: ({cluster, instanceId}) ->
       run "aws.elb.register-instances-with-load-balancer", {cluster, instanceId}
 
-    getRegistryURL: -> run aws.ecr.get-authorization-token
+    getRegistryURL: async ->
+      (yield run "aws.ecr.get-authorization-token").url
 
-    getRegistryDomain: -> getRegistryURL().replace /^https:\/\//, ''
+    getRegistryDomain: async ->
+      (yield H.getRegistryURL()).replace /^https:\/\//, ''
 
     getRepository: (repository) ->
       run "aws.ecr.describe-repositories", {repository}
@@ -40,9 +43,12 @@ init = once async ->
       yield run "aws.ecr.set-repository-policy", {repository, policy}
 
     createStack: async (stack) ->
-      file = (yield mktemp()) + ".json"
-      write file, (json yield read "#{share}/cf/vpc.yaml")
+      file = yield Tmp.file() + ".json"
+      yield write file, yield read shared.aws.cf.vpc
       run "aws.cloudformation.create-stack", {stack, file}
+
+    removeStack: (stack) ->
+      run "aws.cloudformation.delete-stack", {stack}
 
     getStack: async (stack) ->
       stackData = yield run "aws.cloudformation.describe-stacks", {stack}
