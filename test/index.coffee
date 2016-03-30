@@ -1,64 +1,8 @@
-Path = require "path"
 assert = require "assert"
-{promise} = require "when"
 Amen = require "amen"
-{async, isDirectory, isWriteStream, sleep} = require "fairmont"
-{read} = require "panda-rw"
-{EventEmitter} = require "events"
-
-# This ensures that when we're logging the commands for test A,
-# we don't interfere with the commands for test B.
-synchronize = do (waiting=[]) ->
-
-  # Main run loop. We wait one second before we starting processing
-  # functions in the wait queue to ensure the tests are all queued.
-  do async ->
-    yield sleep 1000
-    yield g() while g = waiting.shift()
-
-  # Queuing function defined as 'synchronize'. We return a promise
-  # the test can yield on, but all we do is a queue a wrapper fn.
-  # The wrapper propagates the result back here from the run loop,
-  # resolving the promise the test code is waiting on.
-  (f) ->
-    promise (resolve, reject) ->
-      waiting.push async ->
-        try
-          # Important to yield here so that the run loop will wait
-          # until f completes before running the next fn.
-          resolve yield f()
-        catch error
-          reject error
-
-sanitize = (s) ->
-  s
-  .replace /file:\/+[\w\/\-]+/g, "file:///***"
-
-command = (name, context, f) ->
-  context.test name, ->
-    yield synchronize async ->
-      shared = yield do (require "../src/share")
-      shared.dryRun = true
-      logger = require "../src/message-logger"
-      {msg, log} = yield logger "commands"
-      yield log.clear()
-      yield f()
-      actual = sanitize yield log.read()
-      expectations = yield read shared.test.expectations
-      expected = expectations[name]
-      try
-        assert.equal actual, expected
-      catch error
-        console.log """
-          [ #{name} ]
-
-          ACTUAL
-          #{actual}
-
-          EXPECTED
-          #{expected}
-        """
-        throw error
+Path = require "path"
+{async, isDirectory} = require "fairmont"
+{command, synchronize} = require "./helpers"
 
 Amen.describe "p42", (context) ->
 
