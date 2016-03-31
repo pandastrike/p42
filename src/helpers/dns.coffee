@@ -1,24 +1,21 @@
-{async, wrap, merge, read} = require "fairmont"
+{async, merge, read} = require "fairmont"
 {write} = require "panda-rw"
 {yaml, json} = require "../serialize"
 render = require "../template"
-{run} = require "../run"
 Tmp = require "../tmp"
 
-once = (f) -> -> k = f() ; f = wrap k ; k
+_exports = do async ->
 
-init = once async ->
-
-  shared = yield do (require "../share")
-  {run} = Commands = yield do (require "../run")
-  {getELB} = yield do (require "./aws")
-  Cluster = yield do (require "../cluster")
+  shared = yield require "../shared"
+  run = yield require "../run"
+  {getELB} = yield require "./aws"
+  Cluster = yield require "../cluster"
 
   build = async (name, data) ->
 
   update = async (type, cluster, data) ->
     # merge cluster with update-specific data
-    data = merge (yield Cluster.load cluster), data
+    data = merge cluster, data
     # extract the zoneId
     {zoneId} = data
     # create tempfile and write JSON string to it
@@ -34,7 +31,7 @@ init = once async ->
       update "a", cluster, {node, ip, comment}
 
     alias: async ({cluster, domain, subdomain, comment}) ->
-      elb = yield getELB cluster
+      elb = yield getELB cluster.name
       {zoneId} = yield run "aws.route53.list-hosted-zones-by-name", {domain}
       yield update "alias", cluster,
         domain: "#{subdomain}.#{domain}",
@@ -56,4 +53,4 @@ init = once async ->
       if subdomain == "www"
         yield update "srv", cluster, {protocol, subdomain: "", targets, comment}
 
-module.exports = init
+module.exports = _exports

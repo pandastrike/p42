@@ -28,7 +28,7 @@ Logger = require "./logger"
 
 logger = memoize async (name) ->
 
-  {dryRun} = shared = yield do (require "./share")
+  {dryRun} = shared = yield require "./shared"
   self = (Logger.dictionary[name] ?= yield Logger.create {name})
 
   {message} = yield messages shared.messages

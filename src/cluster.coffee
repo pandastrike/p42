@@ -1,25 +1,21 @@
 {join} = require "path"
-{async, wrap, isFile, mkdirp, rmDir, sleep} = require "fairmont"
+{async, isFile, mkdirp, rmDir, sleep} = require "fairmont"
 {read, write} = require "panda-rw"
 Tmp = require "./tmp"
 {yaml, json} = require "./serialize"
-once = (f) -> -> k = f() ; f = wrap k ; k
 
-init = once async ->
+_exports = do async ->
 
-  shared = yield do (require "./share")
-  {run} = Commands = yield do (require "./run")
-  {createStack, deleteStack} = require "./helpers/aws"
+  shared = yield require "./shared"
+  run = yield require "./run"
+  {createStack, getStack, deleteStack} = yield require "./helpers/aws"
   shared.config.clusters = join shared.config, "clusters"
-  yield mkdirp root
+  yield mkdirp shared.config.clusters
 
   Cluster =
 
     join: (name) ->
-      if shared.dryRun
-        shared.test.clusters[name]
-      else
-        join shared.config.clusters, "#{name}.yaml"
+      join shared.config, "clusters", "#{name}.yaml"
 
     load: async (name) ->
       path = Cluster.join name
@@ -29,18 +25,19 @@ init = once async ->
         # bye "cluster.not-found", name
 
     save: async (cluster) ->
-      yield Cluster.mkDir()
-      write (Cluster.mkPath cluster.name), cluster
+      yield write (Cluster.join cluster.name), cluster
+      cluster
 
     create: async (name) ->
       yield createStack name
-      while true
+      loop
         # wait 5 seconds before querying status
-        yield sleep 5000 unless config.dryRun
+        yield sleep 5000 unless shared.dryRun
         cluster = yield getStack name
-        switch cluster.status
-          when "CREATE_COMPLETE" then break
-          when "CREATE_FAILED" then bye "cluster.create-failed", {name}
+        if cluster.status == "CREATE_COMPLETE"
+          break
+        else if cluster.status == "CREATE_FAILED"
+          bye "cluster.create-failed", {name}
 
       Cluster.save cluster
 
@@ -55,4 +52,4 @@ init = once async ->
       yield deleteStack name
       rmDir Cluster.join name
 
-module.exports = init
+module.exports = _exports

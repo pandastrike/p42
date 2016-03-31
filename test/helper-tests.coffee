@@ -1,6 +1,6 @@
 assert = require "assert"
-Amen = require "amen"
 {async} = require "fairmont"
+{read} = require "panda-rw"
 {command} = require "./helpers"
 
 module.exports = (context) ->
@@ -8,7 +8,7 @@ module.exports = (context) ->
   context.test "helpers", (context) ->
 
     context.test "AWS", (context) ->
-      AWSHelpers = yield do (require "../src/helpers/aws")
+      AWSHelpers = yield require "../src/helpers/aws"
 
       command "createStack", context, ->
         AWSHelpers.createStack "preventative-malpractice"
@@ -58,27 +58,29 @@ module.exports = (context) ->
 
       context.test "DNS", (context) ->
 
-        DNSHelpers = yield do (require "../src/helpers/dns")
+        DNSHelpers = yield require "../src/helpers/dns"
+        shared = yield require "../src/shared"
+        cluster = yield read shared.test.clusters["violent-aftermath"]
 
         # TODO: check generated update JSON files
 
         command "DNS-A", context, ->
           DNSHelpers.a
-            cluster: "violent-aftermath"
+            cluster: cluster
             node: "blurb9-www-00"
             ip: "192.168.0.42"
             comment: "this is a test"
 
         command "DNS-Alias", context, ->
           DNSHelpers.alias
-            cluster: "violent-aftermath"
+            cluster: cluster
             subdomain: "foo"
             domain: "bar.com"
             comment: "this is a test"
 
         command "DNS-SRV", context, ->
           DNSHelpers.srv
-            cluster: "violent-aftermath"
+            cluster: cluster
             protocol: "http"
             subdomain: "www"
             private: "www-00"

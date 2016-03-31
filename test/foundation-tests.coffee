@@ -24,7 +24,7 @@ module.exports = (context) ->
   context.test "foundation", (context) ->
 
     context.test "share", ->
-      shared = yield do (require "../src/share")
+      shared = yield require "../src/shared"
       assert shared.test.expectations?
 
     context.test "tmp", ->
@@ -49,10 +49,10 @@ module.exports = (context) ->
       assert.equal content, "this is a test baz\noops\n"
 
     context.test "shell runner", ->
+      shared = yield require "../src/shared"
       yield synchronize async ->
-        shared = yield do (require "../src/share")
         shared.dryRun = true
-        {run} = yield do (require "../src/run")
+        run = yield require "../src/run"
         {zoneId} = yield run "aws.route53.list-hosted-zones-by-name",
           domain: "fubar.com"
-        assert.equal zoneId, "test-dns-00"
+        assert.equal zoneId, "test-zone-00"

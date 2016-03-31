@@ -1,42 +1,45 @@
+{all} = require "when"
 {async} = require "fairmont"
 Application  = require "../application"
-Cluster = require "../cluster"
-AWSHelpers = require "../helpers/aws"
-DockerHelpers = require "../helpers/dockers"
 
-Commands =
+_exports = do async ->
 
-  create: async ->
-    name = yield Name.generate()
-    cluster = yield AWSHelpers.createCluster name
-    AWSHelpers.createSwarmMaster cluster
+  [Cluster, AWSHelpers, DockerHelpers, Name] =
+    yield all [
+      require "../cluster"
+      require "../helpers/aws"
+      require "../helpers/docker"
+      require "../name"
+    ]
 
-  expand: (name, count=1) ->
-    for i in [1..count]
-      AWSHelpers.createSwarmInstance yield Cluster.resolve name
+  Commands =
 
-  contract: (cluster, count=1) ->
-    bye "not-implemented"
+    create: async ->
+      name = yield Name.generate()
+      cluster = yield Cluster.create name
+      DockerHelpers.createSwarmInstance {cluster, name, master: true}
 
-  rm: (name) ->
-    cluster = yield Cluster.resolve name
-    yield AWSHelpers.removeSwarmNodes cluster
-    Cluster.remove cluster
+    expand: (name, count=1) ->
+      for i in [1..count]
+        AWSHelpers.createSwarmInstance yield Cluster.resolve name
 
-  ls: -> Cluster.list()
+    contract: (cluster, count=1) ->
+      bye "not-implemented"
 
-  ps: (name) ->
-    DockerHelper.listSwarmNodes yield Cluster.resolve name
+    rm: (name) ->
+      cluster = yield Cluster.resolve name
+      yield AWSHelpers.removeSwarmNodes cluster
+      Cluster.remove cluster
 
-  env: async (name) ->
-    DockerHelper.swarmEnv yield Cluster.resolve name
+    ls: -> Cluster.list()
 
-  get: (name, property) ->
-    (yield Cluster.resolve name)[property]
+    ps: (name) ->
+      DockerHelper.listSwarmNodes yield Cluster.resolve name
 
-module.exports = (name, argv...) ->
-  if (command = Commands[name])?
-    # Options.parse "cluster-#{name}", argv
-    command argv...
-  else
-    # usage "bad-subcommand", {name}
+    env: async (name) ->
+      DockerHelper.swarmEnv yield Cluster.resolve name
+
+    get: (name, property) ->
+      (yield Cluster.resolve name)[property]
+
+module.exports = _exports

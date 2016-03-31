@@ -1,13 +1,12 @@
-{async, wrap} = require "fairmont"
+{async} = require "fairmont"
 {read, write} = require "panda-rw"
 {yaml, json} = require "../serialize"
 Tmp = require "../tmp"
-once = (f) -> -> k = f() ; f = wrap k ; k
 
-init = once async ->
+_exports = do async ->
 
-  shared = yield do (require "../share")
-  {run} = Commands = yield do (require "../run")
+  shared = yield require "../shared"
+  run = yield require "../run"
 
   H =
 
@@ -57,4 +56,4 @@ init = once async ->
       stackData.zone = stackData.az[-1..-1]
       stackData
 
-module.exports = init
+module.exports = _exports

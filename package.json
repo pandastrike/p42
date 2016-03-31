@@ -41,6 +41,7 @@
     "panda-messages": "0.0.1",
     "panda-rw": "^1.0.0-beta-02",
     "prompt": "^1.0.0",
+    "sprintf": "^0.1.5",
     "when": "^3.7.7"
   }
 }

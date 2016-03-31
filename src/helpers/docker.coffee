@@ -1,50 +1,76 @@
-{run} = require "commands"
+{join} = require "path"
+{async} = require "fairmont"
+sprintf = require "sprintf"
 
-DockerHelpers =
+_exports = do async ->
 
-  # TODO: the env commands won't actually work correctly
-  # since we shell out to run them.
-  env: (name) -> run "docker.machine.env" {name}
+  shared = yield require "../shared"
+  Cluster = yield require "../cluster"
+  run = yield require "../run"
+  AWSHelpers = yield require "../helpers/aws"
 
-  swarmEnv: (name) ->
-    run "docker.machine.swarm-env" {name}
+  H =
 
-  login: -> run "docker.login"
+    # TODO: env, swarmEnv, and login need to be run alongside ensuing commands
+    # Solution: create a process that to which we  can pipe arbitrary bash
+    # commands, using something like:
+    #
+    #     while true ; do read -r line; eval $line; done
+    #
 
-  build: ({registry, tag, mixin}) ->
-    file = join ".run", mixin, "Dockerfile"
-    run "docker.build", {tag: "#{registry}/#{tag}", file}
+    env: (name) -> run "docker.machine.env", {name}
 
-  push: ({registry, tag}) ->
-    run "docker.push", tag: "${registry}/${tag}"
+    # TODO: dynamically determine the Swarm master
+    swarmEnv: (name) ->
+      run "docker.machine.swarm.env", name: "#{name}-00"
 
-  run: ({name, tag, options}) -> run "docker.run", {name, tag, options}
+    login: -> run "docker.login"
 
-  inspect: (name) -> run "docker.inspect", {name}
+    build: ({registry, tag, mixin}) ->
+      file = join shared.run, mixin, "Dockerfile"
+      run "docker.build", {tag: "#{registry}/#{tag}", file}
 
-  listContainers: (cluster) -> run "docker.ps", {cluster}
+    push: ({registry, tag}) ->
+      run "docker.push", tag: "#{registry}/#{tag}"
 
-  createInstance: (cluster, options) ->
-    run "docker.machine.create", cluster
+    run: ({name, tag, options}) -> run "docker.run", {name, tag, options}
 
-  createSwarmInstance: (cluster) ->
-    run "docker.machine.create-swarm-instance", cluster
+    inspect: (name) -> run "docker.inspect", {name}
 
-    setSecurityGroups cluster, node, [ "default", "docker-machine" ]
+    # TODO: figure out how to escape Markup.js tags
+    # SEe also listSwarmNodes below
+    listContainers: (cluster) -> run "docker.ps",
+      {cluster, format: "{{ .ID }}" }
 
-  findAvailableName: async (cluster) ->
-    taken = yield listSwarmNodes cluster
-    counter = 0
-    while true
-      candidate = sprintf "%s-%2d", cluster.name, counter
-      if ! candidate in taken
-        return candidate
+    createInstance: ({name, cluster}) ->
+      {region, vpcId, subnetId, zoneId} = cluster
+      run "docker.machine.create",
+        {name, region, vpcId, subnetId, zoneId}
 
-  listSwarmNodes: ({name}) -> run "docker.machine.ls", {name}
+    createSwarmInstance: ({name, cluster, master}) ->
+      master ?= false
+      {region, vpcId, subnetId, zoneId} = cluster
+      run "docker.machine.swarm.create",
+        {name, region, vpcId, subnetId, zoneId, master}
+      AWSHelpers.setSecurityGroups
+        vpcId: vpcId
+        instance: name
+        groups: [ "default", "docker-machine" ]
 
-  removeSwarmNodes: async (cluster) ->
-    nodes = yield listSwarmNodes cluster
-    yield run "docker.stop", {nodes}
-    yield run "docker.rm", {nodes}
+    findAvailableName: async (cluster) ->
+      taken = yield H.listSwarmNodes cluster
+      counter = 0
+      while true
+        candidate = sprintf "%s-%02d", cluster, counter++
+        if ! (candidate in taken)
+          return candidate
 
-module.exports = DockerHelpers
+    listSwarmNodes: (name) ->
+      run "docker.machine.ls", {name, format: "{{ .Name }}" }
+
+    removeSwarmNodes: async (cluster) ->
+      nodes = yield H.listSwarmNodes cluster
+      yield run "docker.machine.stop", {nodes}
+      yield run "docker.machine.rm", {nodes}
+
+module.exports = _exports

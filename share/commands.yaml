@@ -18,19 +18,21 @@ aws:
       attributes:
         - name: status
           accessor: json Stacks[0].StackStatus
-          test: CREATE_COMPLETE
         - name: vpcId
           accessor: Stacks[0].Outputs[0].OutputValue
-          test: test-vpc-00
         - name: subnetId
           accessor: Stacks[0].Outputs[1].OutputValue
-          test: test-subnet-00
         - name: az
           accessor: Stacks[0].Outputs[2].OutputValue
-          test: us-west-1a
         - name: zoneId
           accessor: Stacks[0].Outputs[3].OutputValue
-          test: test-dns-00
+
+      test:
+        status: CREATE_COMPLETE
+        vpcId: test-vpc-00
+        subnetId: test-subnet-00
+        az: us-west-1a
+        zoneId: test-zone-00
 
     delete-stack:
 
@@ -50,10 +52,12 @@ aws:
       attributes:
         - name: zoneId
           accessor: LoadBalancerDescriptions[0].CanonicalHostedZoneNameID
-          test: test-zone-00
         - name: domain
           accessor: LoadBalancerDescriptions[0].CanonicalHostedZoneName
-          test: '123.elb.test.com'
+
+      test:
+        zoneId: test-zone-00
+        domain: '123.elb.test.com'
 
     register-instances-with-load-balancer:
 
@@ -92,7 +96,9 @@ aws:
       attributes:
         - name: repositoryId
           accessor: repositories[0].registryId
-          test: test-repo-00
+
+      test:
+        repositoryId: test-repo-00
 
     # actually processord to get the registry URL
     get-authorization-token:
@@ -105,7 +111,9 @@ aws:
       attributes:
         - name: url
           accessor: json authorizationData[0].proxyEndpoint
-          test: 'https://123.registry.test.com'
+
+      test:
+        url: 'https://123.registry.test.com'
 
   ec2:
 
@@ -120,10 +128,12 @@ aws:
       attributes:
         - name: instanceId
           accessor: Reservations[0].Instances[0].InstanceId
-          test: test-instance-00
         - name: instanceIP
           accessor: Reservations[0].Instances[0].PrivateIpAddress
-          test: test-instance-00
+
+      test:
+        instanceId: test-instance-00
+        instanceIP: '192.168.0.42'
 
     describe-security-groups:
 
@@ -138,8 +148,9 @@ aws:
       attributes:
         - name: groupId
           accessor: SecurityGroups[0].GroupId
-          test: test-sg-00
 
+      test:
+        groupId: test-group-00
 
     modify-instance-attribute:
 
@@ -162,7 +173,9 @@ aws:
       attributes:
         - name: zoneId
           accessor: HostedZones[0].Id
-          test: test-dns-00
+
+      test:
+        zoneId: test-zone-00
 
     change-resource-record-sets:
 
@@ -185,10 +198,58 @@ docker:
       template: |
         eval $(docker-machine env {{name}})
 
-    swarm-env:
+    create:
 
       template: |
-        eval $(docker-machine env --swarm {{cluster}})
+        docker-machine create {{name}}
+          --driver amazonec2
+          --amazonec2-region {{region}}
+          --amazonec2-vpc-id {{vpcId}}
+          --amazonec2-subnet-id {{subnetId}}
+          --amazonec2-zone {{zoneId}}
+
+    ls:
+
+      template: |
+        docker-machine ls
+          --format {{ format }}
+          --filter name={{ name }}
+
+      processor: line
+
+      test:
+        - violent-aftermath-00
+        - violent-aftermath-01
+        - violent-aftermath-02
+
+
+    stop:
+      template: |
+        docker-machine stop {{nodes|join> }}
+
+    rm:
+      template: |
+        docker-machine rm {{nodes|join> }}
+
+    swarm:
+
+      env:
+
+        template: |
+          eval $(docker-machine env --swarm {{name}})
+
+      create:
+
+        template: |
+          docker-machine create {{name}}
+            --driver amazonec2
+            --amazonec2-region {{region}}
+            --amazonec2-vpc-id {{vpcId}}
+            --amazonec2-subnet-id {{subnetId}}
+            --amazonec2-zone {{zoneId}}
+            --swarm
+            --swarm-discovery nodes://10.0.[0:255].[0:255]:2375
+            {{if master}}--swarm-master{{/if}}
 
   build:
 
@@ -207,75 +268,44 @@ docker:
 
     # TODO: may parameterize keys/region too?
     # Doesn't seem like high-value coverage.
-    # template: |
-    #   docker run
-    #     {{options}}
-    #     --name {{name}}
-    #     --restart always
-    #     -e AWS_ACCESS_KEYId="$(aws configure get aws_access_keyId)"
-    #     -e AWS_SECRET_ACCESS_KEY="$(aws configure get aws_secret_access_key)"
-    #     -e AWS_DEFAULT_REGION="$(aws configure get region)"
-    #     -d {{tag}}
+    template: |
+      docker run
+        {{options}}
+        --name {{name}}
+        --restart always
+        -e AWS_ACCESS_KEYId="$(aws configure get aws_access_keyId)"
+        -e AWS_SECRET_ACCESS_KEY="$(aws configure get aws_secret_access_key)"
+        -e AWS_DEFAULT_REGION="$(aws configure get region)"
+        -d {{tag}}
 
-  # inspect:
-  #
-  #   template: |
-  #       docker inspect {{name}}
-  #
-  #   processor: json
-  #
-  #   attributes:
-  #
-  #     - name: name
-  #       accessor: [0].Node.Name
-  #       test: violent-aftermath-01
-  #     - name: ip
-  #       accessor: [0].Node.IP
-  #       test: 192.168.0.42
-  #     - name: port
-  #       accessor: [0].NetworkSettings.Ports["80/tcp"][0].HostPort
-  #       test: 32768
-  #
-  # ps:
-  #
-  #   template: |
-  #     docker ps --filter name={{cluster}} --format \{{ .ID }}
+  inspect:
+
+    template: |
+        docker inspect {{name}}
+
+    processor: json
+
+    attributes:
+
+      - name: name
+        accessor: '[0].Node.Name'
+      - name: ip
+        accessor: '[0].Node.IP'
+      - name: port
+        accessor: '[0].NetworkSettings.Ports["80/tcp"][0].HostPort'
+
+    test:
+      name: violent-aftermath-01
+      ip: 192.168.0.42
+      port: 32768
+
+  ps:
+
+    template: |
+      docker ps --filter name={{cluster}} --format {{format}}
 
 
-# create_instance() {
-#   local name region zone vpc subnet options
-#   local "${@}"
-#   docker-machine create ${name} \
-#     --driver amazonec2 \
-#     --amazonec2-region ${region} \
-#     --amazonec2-vpc-id ${vpc} \
-#     --amazonec2-subnet-id ${subnet} \
-#     --amazonec2-zone ${zone} \
-#     ${options}
-# }
-#
-# create_swarm_node() {
-#
-#   local master cluster
-#   local "${@}"
-#   local "$(load-cluster ${cluster})"
-#
-#   create_instance \
-#     name="$(find_available_name ${cluster})" \
-#     region=${region} \
-#     zone=${zone} \
-#     vpc=${vpc} \
-#     subnet=${subnet} \
-#     options="--swarm \
-#       ${master+--swarm-master} \
-#       --swarm-discovery nodes://10.0.[0:255].[0:255]:2375"
-#
-#   # We need to add the VPC default SG
-#   set_security_groups \
-#     vpc="${vpc}" \
-#     name="${name}" \
-#     groups="default docker-machine"
-# }
+
 #
 # find_available_name() {
 #   local cluster="${1}"

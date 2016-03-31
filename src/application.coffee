@@ -1,4 +1,4 @@
-{isFile, isDirectory, ls, sh} = require "fairmont"
+{async, isFile, isDirectory, ls, sh} = require "fairmont"
 {read, write} = require "panda-rw"
 
 Git =

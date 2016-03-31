@@ -42,7 +42,7 @@ command = (name, context, f) ->
     yield synchronize async ->
 
       # Make sure the dryRun flag is set
-      shared = yield do (require "../src/share")
+      shared = yield require "../src/shared"
       shared.dryRun = true
 
       # Get the command logger helpers and clear the log

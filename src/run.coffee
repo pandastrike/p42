@@ -1,60 +1,47 @@
-{async, wrap, reduce, Method} = require "fairmont"
+{async, reduce, Method} = require "fairmont"
 messages = require "panda-messages"
 {yaml, json} = require "./serialize"
 render = require "./template"
 logger = require "./message-logger"
-once = (f) -> -> k = f() ; f = wrap k ; k
+
 unquote = (s) ->
   s
   .replace /\s+/g, ' '
   .trim()
 
+_exports = do async ->
 
-init = once async ->
-
-  shared = yield do (require "./share")
+  shared = yield require "./shared"
   {lookup} = yield messages shared.commands
+  C = yield logger "commands"
+  R = yield logger "response"
+
+  build = (key, data={}) ->
+    {template, processor, attributes, test} = lookup key
+    string = unquote render template, data
+    {string, processor, attributes, test}
 
   Processors =
 
-    dryRun: do ([f] = []) ->
-      # f sets the properties of a result object
-      # based on the given test values...
-      f = (result, {name, test}) ->
-        result[name] = test
-        result
-      (command) ->
-        reduce f, {}, command.attributes if command.attributes?
+    line: (command, reponse) ->
+      # TODO: implement line processor
 
     json: (command, response) ->
       response = json response
       reduce ((result, {name, accessor}) -> data[name] = response[accessor]),
         {}, command.attributes
 
-  Commands =
+  run = async (key, data={}) ->
+    command = build key, data
+    if shared.dryRun
+      yield C.log.info command.string
+      command.test
+    else
+      C.log.info command.string
+      response = yield sh command.string
+      R.log.info command.string
+      if response != ""
+        R.log.info response
+        Processors[command.processor]? command, response
 
-    lookup: lookup
-
-    build: (key, data={}) ->
-
-      {template, processor, attributes} = Commands.lookup key
-      string = unquote render template, data
-      {string, processor, attributes}
-
-    run: async (key, data={}) ->
-
-      {log} = yield logger "commands"
-      command = Commands.build key, data
-
-
-      if shared.dryRun
-        yield log.info command.string
-        Processors.dryRun command
-      else
-        log.info command.string
-        response = yield sh command.string
-        # log command.string, response
-        if response != ""
-          Processors[command.processor]? command, response
-
-module.exports = init
+module.exports = _exports

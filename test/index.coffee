@@ -1,5 +1,7 @@
 Amen = require "amen"
 foundationTests = require "./foundation-tests"
+dockerHelpers = require "./docker-helpers"
+CLIHelpers = require "./cli-helpers"
 
 # Helper tests test the p42 helpers, as opposed to the test
 # helpers in ./helpers
@@ -10,3 +12,7 @@ Amen.describe "p42", (context) ->
   foundationTests context
 
   helperTests context
+
+  dockerHelpers context
+
+  CLIHelpers context

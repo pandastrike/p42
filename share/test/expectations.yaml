@@ -9,7 +9,7 @@ setSecurityGroups: |
   aws ec2 describe-security-groups --filters Name=vpc-id,Values=test-vpc-00 Name=group-name,Values=default
   aws ec2 describe-security-groups --filters Name=vpc-id,Values=test-vpc-00 Name=group-name,Values=docker-machine
   aws ec2 describe-instances --filters Name=tag-value,Values=preventative-malpractice-01
-  aws ec2 modify-instance-attribute --instance-id test-instance-00 --groups test-sg-00 test-sg-00
+  aws ec2 modify-instance-attribute --instance-id test-instance-00 --groups test-group-00 test-group-00
 
 getRegistryDomain: |
   aws ecr get-authorization-token --region us-east-1
@@ -30,13 +30,63 @@ removeStack: |
   aws cloudformation delete-stack --stack-name preventative-malpractice
 
 DNS-A: |
-  aws route53 change-resource-record-sets --hosted-zone-id test-dns-00 --change-batch file:///***.json
+  aws route53 change-resource-record-sets --hosted-zone-id test-zone-00 --change-batch file:///***.json
 
 DNS-Alias: |
   aws elb describe-load-balancers --load-balancer-name violent-aftermath
   aws route53 list-hosted-zones-by-name --dns-name bar.com --max-items 1
-  aws route53 change-resource-record-sets --hosted-zone-id test-dns-00 --change-batch file:///***.json
+  aws route53 change-resource-record-sets --hosted-zone-id test-zone-00 --change-batch file:///***.json
 
 DNS-SRV: |
-  aws route53 change-resource-record-sets --hosted-zone-id test-dns-00 --change-batch file:///***.json
-  aws route53 change-resource-record-sets --hosted-zone-id test-dns-00 --change-batch file:///***.json
+  aws route53 change-resource-record-sets --hosted-zone-id test-zone-00 --change-batch file:///***.json
+  aws route53 change-resource-record-sets --hosted-zone-id test-zone-00 --change-batch file:///***.json
+
+env: |
+  eval $(docker-machine env violent-aftermath-01)
+
+swarmEnv: |
+  eval $(docker-machine env --swarm violent-aftermath-00)
+
+login: |
+  eval $(aws ecr get-login --region us-east-1)
+
+build: |
+  docker build -t 123456789.registry.test.com/blurb9-api -f run/api/Dockerfile .
+
+push: |
+  docker push 123456789.registry.test.com/blurb9-api
+
+run: |
+  docker run -P --name api-00 --restart always -e AWS_ACCESS_KEYId="$(aws configure get aws_access_keyId)" -e AWS_SECRET_ACCESS_KEY="$(aws configure get aws_secret_access_key)" -e AWS_DEFAULT_REGION="$(aws configure get region)" -d blurb9-api
+
+inspect: |
+  docker inspect api-00
+
+listContainers: |
+  docker ps --filter name=violent-aftermath --format {{ .ID }}
+
+createInstance: |
+  docker-machine create violent-aftermath-00 --driver amazonec2 --amazonec2-region us-west-1 --amazonec2-vpc-id test-vpc-00 --amazonec2-subnet-id test-subnet-00 --amazonec2-zone test-dns-00
+
+createSwarmInstance: |
+  docker-machine create violent-aftermath-00 --driver amazonec2 --amazonec2-region us-west-1 --amazonec2-vpc-id test-vpc-00 --amazonec2-subnet-id test-subnet-00 --amazonec2-zone test-dns-00
+
+listSwarmNodes: |
+  docker-machine ls --format {{ .Name }} --filter name=violent-aftermath
+
+findAvailableName: |
+  docker-machine ls --format {{ .Name }} --filter name=violent-aftermath
+
+removeSwarmNodes: |
+  docker-machine ls --format {{ .Name }} --filter name=violent-aftermath
+  docker-machine stop violent-aftermath-00 violent-aftermath-01 violent-aftermath-02
+  docker-machine rm violent-aftermath-00 violent-aftermath-01 violent-aftermath-02
+
+cluster-create: |
+  aws cloudformation create-stack --stack-name violent-aftermath --template-body file:///***.json
+  aws cloudformation describe-stacks --stack-name violent-aftermath
+  docker-machine create violent-aftermath --driver amazonec2 --amazonec2-region us-west-1 --amazonec2-vpc-id test-vpc-00 --amazonec2-subnet-id test-subnet-00 --amazonec2-zone test-zone-00 --swarm --swarm-discovery nodes://10.0.[0:255].[0:255]:2375 --swarm-master
+  aws ec2 describe-security-groups --filters Name=vpc-id,Values=test-vpc-00 Name=group-name,Values=default
+  aws ec2 describe-security-groups --filters Name=vpc-id,Values=test-vpc-00 Name=group-name,Values=docker-machine
+  aws ec2 describe-instances --filters Name=tag-value,Values=violent-aftermath
+  aws ec2 modify-instance-attribute --instance-id test-instance-00 --groups test-group-00 test-group-00
