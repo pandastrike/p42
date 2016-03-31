@@ -19,9 +19,15 @@ _exports = do async ->
       cluster = yield Cluster.create name
       DockerHelpers.createSwarmInstance {cluster, name, master: true}
 
-    expand: (name, count=1) ->
-      for i in [1..count]
-        AWSHelpers.createSwarmInstance yield Cluster.resolve name
+    expand: async ({cluster, count}) ->
+      names = yield DockerHelpers.findAvailableNames cluster, count
+      cluster = yield Cluster.resolve cluster
+      # TODO: ideally we'd launch all three swarm instances in parallel
+      # but that messes up the tests at the moment
+      for name in names
+        yield DockerHelpers.createSwarmInstance
+          name: name
+          cluster: cluster
 
     contract: (cluster, count=1) ->
       bye "not-implemented"

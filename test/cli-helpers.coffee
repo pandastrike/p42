@@ -11,3 +11,6 @@ module.exports = (context) ->
 
     command "cluster-create", context, ->
       Cluster.create()
+
+    command "cluster-expand", context, ->
+      Cluster.expand cluster: "violent-aftermath", count: 3

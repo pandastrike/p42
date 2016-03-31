@@ -74,7 +74,7 @@ createSwarmInstance: |
 listSwarmNodes: |
   docker-machine ls --format {{ .Name }} --filter name=violent-aftermath
 
-findAvailableName: |
+findAvailableNames: |
   docker-machine ls --format {{ .Name }} --filter name=violent-aftermath
 
 removeSwarmNodes: |
@@ -89,4 +89,22 @@ cluster-create: |
   aws ec2 describe-security-groups --filters Name=vpc-id,Values=test-vpc-00 Name=group-name,Values=default
   aws ec2 describe-security-groups --filters Name=vpc-id,Values=test-vpc-00 Name=group-name,Values=docker-machine
   aws ec2 describe-instances --filters Name=tag-value,Values=violent-aftermath
+  aws ec2 modify-instance-attribute --instance-id test-instance-00 --groups test-group-00 test-group-00
+
+cluster-expand: |
+  docker-machine ls --format {{ .Name }} --filter name=violent-aftermath
+  docker-machine create violent-aftermath-03 --driver amazonec2 --amazonec2-region us-west-1 --amazonec2-vpc-id test-vpc-00 --amazonec2-subnet-id test-subnet-00 --amazonec2-zone test-zone-00 --swarm --swarm-discovery nodes://10.0.[0:255].[0:255]:2375
+  aws ec2 describe-security-groups --filters Name=vpc-id,Values=test-vpc-00 Name=group-name,Values=default
+  aws ec2 describe-security-groups --filters Name=vpc-id,Values=test-vpc-00 Name=group-name,Values=docker-machine
+  aws ec2 describe-instances --filters Name=tag-value,Values=violent-aftermath-03
+  aws ec2 modify-instance-attribute --instance-id test-instance-00 --groups test-group-00 test-group-00
+  docker-machine create violent-aftermath-04 --driver amazonec2 --amazonec2-region us-west-1 --amazonec2-vpc-id test-vpc-00 --amazonec2-subnet-id test-subnet-00 --amazonec2-zone test-zone-00 --swarm --swarm-discovery nodes://10.0.[0:255].[0:255]:2375
+  aws ec2 describe-security-groups --filters Name=vpc-id,Values=test-vpc-00 Name=group-name,Values=default
+  aws ec2 describe-security-groups --filters Name=vpc-id,Values=test-vpc-00 Name=group-name,Values=docker-machine
+  aws ec2 describe-instances --filters Name=tag-value,Values=violent-aftermath-04
+  aws ec2 modify-instance-attribute --instance-id test-instance-00 --groups test-group-00 test-group-00
+  docker-machine create violent-aftermath-05 --driver amazonec2 --amazonec2-region us-west-1 --amazonec2-vpc-id test-vpc-00 --amazonec2-subnet-id test-subnet-00 --amazonec2-zone test-zone-00 --swarm --swarm-discovery nodes://10.0.[0:255].[0:255]:2375
+  aws ec2 describe-security-groups --filters Name=vpc-id,Values=test-vpc-00 Name=group-name,Values=default
+  aws ec2 describe-security-groups --filters Name=vpc-id,Values=test-vpc-00 Name=group-name,Values=docker-machine
+  aws ec2 describe-instances --filters Name=tag-value,Values=violent-aftermath-05
   aws ec2 modify-instance-attribute --instance-id test-instance-00 --groups test-group-00 test-group-00

@@ -57,13 +57,15 @@ _exports = do async ->
         instance: name
         groups: [ "default", "docker-machine" ]
 
-    findAvailableName: async (cluster) ->
+    findAvailableNames: async (cluster, count = 1) ->
       taken = yield H.listSwarmNodes cluster
       counter = 0
-      while true
+      names = []
+      while names.length < count
         candidate = sprintf "%s-%02d", cluster, counter++
-        if ! (candidate in taken)
-          return candidate
+        names.push candidate if ! (candidate in taken)
+      names
+
 
     listSwarmNodes: (name) ->
       run "docker.machine.ls", {name, format: "{{ .Name }}" }

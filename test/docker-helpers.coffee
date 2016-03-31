@@ -67,8 +67,8 @@ module.exports = (context) ->
       nodes = yield DockerHelpers.listSwarmNodes "violent-aftermath"
       assert isArray nodes
 
-    command "findAvailableName", context, async ->
-      name = yield DockerHelpers.findAvailableName "violent-aftermath"
+    command "findAvailableNames", context, async ->
+      [name] = yield DockerHelpers.findAvailableNames "violent-aftermath", 1
       assert.equal name, "violent-aftermath-03"
 
     command "removeSwarmNodes", context, ->
