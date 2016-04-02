@@ -67,7 +67,7 @@ module.exports = (context) ->
         command "DNS-A", context, ->
           DNSHelpers.a
             cluster: cluster
-            node: "blurb9-www-00"
+            name: "blurb9-www-00"
             ip: "192.168.0.42"
             comment: "this is a test"
 
@@ -83,6 +83,7 @@ module.exports = (context) ->
             cluster: cluster
             protocol: "http"
             subdomain: "www"
-            private: "www-00"
-            port: "32768"
+            targets:
+              host: "www-00"
+              port: "32768"
             comment: "this is a test"

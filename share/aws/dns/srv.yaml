@@ -2,7 +2,7 @@ Comment: "{{comment}}"
 Changes:
   - Action: UPSERT
     ResourceRecordSet:
-      Name: _{{public}}._{{protocol}}.name.internal.
+      Name: _{{subdomain}}._{{protocol}}.name.internal.
       Type: SRV
       TTL: 60
       ResourceRecords:

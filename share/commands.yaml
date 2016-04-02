@@ -128,12 +128,12 @@ aws:
       attributes:
         - name: instanceId
           accessor: Reservations[0].Instances[0].InstanceId
-        - name: instanceIP
+        - name: ip
           accessor: Reservations[0].Instances[0].PrivateIpAddress
 
       test:
         instanceId: test-instance-00
-        instanceIP: '192.168.0.42'
+        ip: '192.168.0.42'
 
     describe-security-groups:
 

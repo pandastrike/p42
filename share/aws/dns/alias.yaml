@@ -5,6 +5,6 @@ Changes:
       Name: '{{domain}}.'
       Type: A
       AliasTarget:
-        HostedZoneId: '{{zone}}'
+        HostedZoneId: '{{zoneId}}'
         DNSName: '{{name}}'
         EvaluateTargetHealth: false

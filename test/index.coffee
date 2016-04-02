@@ -2,7 +2,7 @@ Amen = require "amen"
 foundationTests = require "./foundation-tests"
 dockerHelpers = require "./docker-helpers"
 CLIHelpers = require "./cli-helpers"
-global.p = -> console.error Date.now(), arguments...
+global.p = -> console.error arguments...
 
 
 

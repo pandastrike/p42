@@ -96,7 +96,6 @@ _exports = do async ->
 
       # Add to ELB, if applicable, based on subdomains
       if subdomains?
-
         AWSHelpers.registerInstanceWithELB {cluster: cluster.name, instanceId}
 
         # no point in adding an instance to the ELB

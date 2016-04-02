@@ -1,6 +1,7 @@
 assert = require "assert"
 {promise} = require "when"
-{async, sleep} = require "fairmont"
+F = require "fairmont"
+{async, sleep, zip, pair} = F
 {read} = require "panda-rw"
 
 # This ensures that when we're logging the commands for test A,
@@ -29,8 +30,14 @@ synchronize = do (waiting=[]) ->
 
 # Clean up any variability in the command logging so we can
 # reliably compare to expectations
+readFiles = async (s) ->
+  if (paths = s.match /file:\/\/\/[\w\/\-\.]+/)?
+    for path in paths
+      JSON.stringify JSON.parse (yield F.read (path.replace /file:\/\//g, ""))
+
+
 sanitize = (s) ->
-  s.replace /file:\/+[\w\/\-]+/g, "file:///***"
+  s.replace /file:\/+[\w\/\-]+/g, "file://<path>"
 
 # Run a test, comparing the command log to an expected command log
 command = (name, context, f) ->
@@ -54,17 +61,20 @@ command = (name, context, f) ->
       yield f()
 
       # Read the log and sanitize the results
-      actual = sanitize yield log.read()
+      actual = yield log.read()
+      contents = yield readFiles actual
 
       # Get the expectations for this test
       expectations = yield read shared.test.expectations
-      expected = expectations[name]
+      expected =
+        commands: expectations[name]
+        files: expectations["#{name}-files"]
 
       # Compare the expectation with the actual results
       # We catch failures and log them to the console in
       # detail to make it easier to debug.
       try
-        assert actual == expected
+        assert (sanitize actual) == expected.commands
       catch error
         console.error """
           [ #{name} ]
@@ -73,9 +83,34 @@ command = (name, context, f) ->
           #{actual}
 
           EXPECTED
-          #{expected}
+          #{expected.commands}
         """
         # rethrow the error so the test fails
         throw error
+
+      # now compare files
+      try
+        assert (!(contents?) && !(expected.files?)) ||
+          (contents.length == expected.files?.length)
+
+        if contents?
+          for [actual, _expected] in (zip pair, contents, expected.files)
+            assert.equal actual, _expected
+
+      catch error
+
+        console.error """
+
+          [ #{name} - files ]
+
+          ACTUAL
+          #{contents}
+
+          EXPECTED
+          #{expected.files}
+        """
+
+        throw error
+
 
 module.exports = {command, synchronize}
