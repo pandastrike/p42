@@ -33,6 +33,9 @@ _exports = do async ->
     push: ({registry, tag}) ->
       run "docker.push", tag: "#{registry}/#{tag}"
 
+    pull: ({registry, tag}) ->
+      run "docker.pull", tag: "#{registry}/#{tag}"
+
     run: ({name, tag, options}) -> run "docker.run", {name, tag, options}
 
     inspect: (name) -> run "docker.inspect", {name}
@@ -42,6 +45,7 @@ _exports = do async ->
     listContainers: (cluster) -> run "docker.ps",
       {cluster, format: "{{ .ID }}" }
 
+    # TODO: make "instance" consistent with "node"
     createInstance: ({name, cluster}) ->
       {region, vpcId, subnetId, zoneId} = cluster
       run "docker.machine.create",
@@ -65,7 +69,6 @@ _exports = do async ->
         candidate = sprintf "%s-%02d", cluster, counter++
         names.push candidate if ! (candidate in taken)
       names
-
 
     listSwarmNodes: (name) ->
       run "docker.machine.ls", {name, format: "{{ .Name }}" }

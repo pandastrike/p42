@@ -27,8 +27,8 @@ _exports = do async ->
 
   H =
 
-    a: ({cluster, node, ip, comment}) ->
-      update "a", cluster, {node, ip, comment}
+    a: ({cluster, name, ip, comment}) ->
+      update "a", cluster, {name, ip, comment}
 
     alias: async ({cluster, domain, subdomain, comment}) ->
       elb = yield getELB cluster.name

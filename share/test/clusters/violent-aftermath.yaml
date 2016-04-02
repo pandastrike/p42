@@ -1,6 +1,0 @@
-name: violent-aftermath
-vpcId: test-vpc-00
-subnetId: test-subnet-00
-region: us-west-1
-zone: a
-zoneId: test-zone-00

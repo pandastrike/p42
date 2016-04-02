@@ -1,5 +1,4 @@
-test:
-  fubar: this is a test {{name}}
+fubar: this is a test {{name}}
 
 help: |
 
@@ -14,6 +13,12 @@ help: |
 init:
 
   help: p42 init
+
+
+application:
+
+  nothing-to-run: Missing run directory.
+
 
   # Summary: Initialize an application for use with p42.
   # Help: Initialize an application for use with p42.

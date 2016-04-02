@@ -264,6 +264,11 @@ docker:
     template: |
       docker push {{tag}}
 
+  pull:
+
+    template: |
+      docker pull {{tag}}
+
   run:
 
     # TODO: may parameterize keys/region too?

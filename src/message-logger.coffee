@@ -28,7 +28,7 @@ Logger = require "./logger"
 
 logger = memoize async (name) ->
 
-  {dryRun} = shared = yield require "./shared"
+  shared = yield require "./shared"
   self = (Logger.dictionary[name] ?= yield Logger.create {name})
 
   {message} = yield messages shared.messages
@@ -38,10 +38,10 @@ logger = memoize async (name) ->
     log: -> Logger.log self, arguments...
 
     msg: (key, data = {}) ->
-      Logger.info self, message "#{name}.#{key}", data
+      Logger.info self, message key, data
 
     bye: (key, data = {}) ->
-      Logger.error self, message "#{name}.#{key}", data
+      Logger.error self, message key, data
       process.exit 1
 
   helpers.log.read = -> Logger.read self

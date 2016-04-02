@@ -108,3 +108,25 @@ cluster-expand: |
   aws ec2 describe-security-groups --filters Name=vpc-id,Values=test-vpc-00 Name=group-name,Values=docker-machine
   aws ec2 describe-instances --filters Name=tag-value,Values=violent-aftermath-05
   aws ec2 modify-instance-attribute --instance-id test-instance-00 --groups test-group-00 test-group-00
+
+start: |
+  docker-machine ls --format {{ .Name }} --filter name=violent-aftermath
+  eval $(docker-machine env violent-aftermath-00)
+  eval $(aws ecr get-login --region us-east-1)
+  docker pull 749621196531.dkr.ecr.us-east-1.amazonaws.com/blurb9-api
+  eval $(docker-machine env violent-aftermath-01)
+  eval $(aws ecr get-login --region us-east-1)
+  docker pull 749621196531.dkr.ecr.us-east-1.amazonaws.com/blurb9-api
+  eval $(docker-machine env violent-aftermath-02)
+  eval $(aws ecr get-login --region us-east-1)
+  docker pull 749621196531.dkr.ecr.us-east-1.amazonaws.com/blurb9-api
+  eval $(docker-machine env --swarm violent-aftermath-00)
+  eval $(aws ecr get-login --region us-east-1)
+  docker run -P --name blurb9-api-01 --restart always -e AWS_ACCESS_KEYId="$(aws configure get aws_access_keyId)" -e AWS_SECRET_ACCESS_KEY="$(aws configure get aws_secret_access_key)" -e AWS_DEFAULT_REGION="$(aws configure get region)" -d blurb9-api
+  docker inspect blurb9-api-01
+  aws ec2 describe-instances --filters Name=tag-value,Values=violent-aftermath-01
+  aws route53 change-resource-record-sets --hosted-zone-id test-zone-00 --change-batch file:///***.json
+  docker run -P --name blurb9-api-02 --restart always -e AWS_ACCESS_KEYId="$(aws configure get aws_access_keyId)" -e AWS_SECRET_ACCESS_KEY="$(aws configure get aws_secret_access_key)" -e AWS_DEFAULT_REGION="$(aws configure get region)" -d blurb9-api
+  docker inspect blurb9-api-02
+  aws ec2 describe-instances --filters Name=tag-value,Values=violent-aftermath-01
+  aws route53 change-resource-record-sets --hosted-zone-id test-zone-00 --change-batch file:///***.json

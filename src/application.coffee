@@ -1,47 +1,58 @@
-{async, isFile, isDirectory, ls, sh} = require "fairmont"
+{async, isFile, isDirectory, readdir, sh} = require "fairmont"
 {read, write} = require "panda-rw"
+logger = require "./message-logger"
 
-Git =
+_exports = do async ->
 
-  getBranch: async ->
-    (yield sh "git symbolic-ref --short -q HEAD")
-    .stdout
+  shared = yield require "./shared"
 
-Application =
+  Git =
 
-  create: (definition) -> write "./p42.yaml", definition
+    getBranch: async ->
+      if shared.dryRun
+        "master"
+      else
+        (yield sh "git symbolic-ref --short -q HEAD")
+        .stdout
 
-  load: async ->
 
-    bye "application.no-configuration" if ! yield isFile "./p42.yaml"
-    branch = yield Git.getBranch()
+  {bye} = yield logger "output"
 
-    bye "application.no-branch" if ! branch?
-    {name, domain, registry, clusters} = yield read "./p42.yaml"
-    cluster = clusters?[branch]
-    bye "application.no-target" if !cluster?
+  Application =
 
-    {name, domain, registry, cluster}
+    create: (definition) -> write "./p42.yaml", definition
 
-  Mixins: Mixins =
+    load: async ->
 
-    assert: async (name) ->
-      bye "application.bad-mixin" if ! yield isFile "./run/#{name}"
+      bye "application.no-configuration" if ! yield isFile "./p42.yaml"
+      branch = yield Git.getBranch()
 
-    list: async ->
-      bye "application.nothing-to-run" if ! yield isDirectory "./run"
-      yield readdir "./run"
+      bye "application.no-branch" if ! branch?
+      {name, domain, registry, clusters} = yield read "./p42.yaml"
+      cluster = clusters?[branch]
+      bye "application.no-target" if !cluster?
 
-    load: (name) -> read "./run/#{name}/config.yaml"
+      {name, domain, registry, cluster}
 
-    build: async (mixins...) ->
+    Mixins: Mixins =
 
-      application = yield Application.load()
-      mixins = if empty mixins then yield Mixins.list() else mixins
+      assert: async (name) ->
+        bye "application.bad-mixin" if ! yield isFile "./run/#{name}"
 
-      for name in mixins
-        yield Mixins.assert name
-        mixin = Mixins.load name
-        Decorators[mixin.style]? mixin
+      list: async ->
+        bye "application.nothing-to-run" if ! yield isDirectory "./run"
+        yield readdir "./run"
 
-module.exports = Application
+      load: (name) -> read "./run/#{name}/config.yaml"
+
+      build: async (mixins...) ->
+
+        application = yield Application.load()
+        mixins = if empty mixins then yield Mixins.list() else mixins
+
+        for name in mixins
+          yield Mixins.assert name
+          mixin = Mixins.load name
+          Decorators[mixin.style]? mixin
+
+module.exports = _exports

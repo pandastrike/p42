@@ -1,0 +1,5 @@
+name: blurb9
+domain: blurb9.com
+registry: 749621196531.dkr.ecr.us-east-1.amazonaws.com
+clusters:
+  master: violent-aftermath

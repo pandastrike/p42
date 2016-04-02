@@ -1,0 +1,8 @@
+status: CREATE_COMPLETE
+vpcId: test-vpc-00
+subnetId: test-subnet-00
+az: us-west-1a
+zoneId: test-zone-00
+name: violent-aftermath
+region: us-west-1
+zone: a
