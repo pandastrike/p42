@@ -1,4 +1,17 @@
-#!/usr/bin/env bash
+{all} = require "when"
+{async} = require "fairmont"
+_exports = do async ->
 
-p42 build $@
-p42 start $@
+  [
+    build
+    start
+  ] = yield all [
+    require "./build"
+    require "./start"
+  ]
+
+  async ->
+    yield build arguments...
+    start arguments...
+
+module.exports = _exports

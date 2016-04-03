@@ -11,7 +11,8 @@ _exports = do async ->
     docker: async (application, mixin) ->
       {registry} = application
       tag = "#{application.name}-#{mixin.name}"
-      createRepository tag
+      # TODO: eliminate the need for superfluous yields for testing
+      yield createRepository tag
       yield build {registry, tag, mixin}
       push {registry, tag}
 

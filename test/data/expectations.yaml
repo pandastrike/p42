@@ -196,4 +196,39 @@ CLI:
   build:
     commands: |
       aws ecr create-repository --repository-name blurb9-api --region us-east-1
+      aws ecr set-repository-policy --repository-name blurb9-api --region us-east-1 --policy-text {"Version":"2008-10-17","Statement":[{"Sid":"Allow Any/All","Effect":"Allow","Principal":"*","Action":["ecr:*"]}]}
       docker build -t 123456789.registry.test.com/blurb9-api -f run/api/Dockerfile .
+      docker push 123456789.registry.test.com/blurb9-api
+
+  run:
+    commands: |
+      aws ecr create-repository --repository-name blurb9-api --region us-east-1
+      aws ecr set-repository-policy --repository-name blurb9-api --region us-east-1 --policy-text {"Version":"2008-10-17","Statement":[{"Sid":"Allow Any/All","Effect":"Allow","Principal":"*","Action":["ecr:*"]}]}
+      docker build -t 123456789.registry.test.com/blurb9-api -f run/api/Dockerfile .
+      docker push 123456789.registry.test.com/blurb9-api
+      docker-machine ls --format {{ .Name }} --filter name=violent-aftermath
+      eval $(docker-machine env violent-aftermath-00)
+      eval $(aws ecr get-login --region us-east-1)
+      docker pull 123456789.registry.test.com/blurb9-api
+      eval $(docker-machine env violent-aftermath-01)
+      eval $(aws ecr get-login --region us-east-1)
+      docker pull 123456789.registry.test.com/blurb9-api
+      eval $(docker-machine env violent-aftermath-02)
+      eval $(aws ecr get-login --region us-east-1)
+      docker pull 123456789.registry.test.com/blurb9-api
+      eval $(docker-machine env --swarm violent-aftermath-00)
+      eval $(aws ecr get-login --region us-east-1)
+      docker run -P --name blurb9-api-01 --restart always -e AWS_ACCESS_KEYId="$(aws configure get aws_access_keyId)" -e AWS_SECRET_ACCESS_KEY="$(aws configure get aws_secret_access_key)" -e AWS_DEFAULT_REGION="$(aws configure get region)" -d blurb9-api
+      docker inspect blurb9-api-01
+      aws ec2 describe-instances --filters Name=tag-value,Values=violent-aftermath-01
+      aws route53 change-resource-record-sets --hosted-zone-id test-zone-00 --change-batch file://<path>.json
+      docker run -P --name blurb9-api-02 --restart always -e AWS_ACCESS_KEYId="$(aws configure get aws_access_keyId)" -e AWS_SECRET_ACCESS_KEY="$(aws configure get aws_secret_access_key)" -e AWS_DEFAULT_REGION="$(aws configure get region)" -d blurb9-api
+      docker inspect blurb9-api-02
+      aws ec2 describe-instances --filters Name=tag-value,Values=violent-aftermath-01
+      aws route53 change-resource-record-sets --hosted-zone-id test-zone-00 --change-batch file://<path>.json
+
+    files:
+      - |
+        {"Comment":"","Changes":[{"Action":"UPSERT","ResourceRecordSet":{"Name":"violent-aftermath-01.name.internal.","Type":"A","TTL":60,"ResourceRecords":[{"Value":"192.168.0.42"}]}}]}
+      - |
+        {"Comment":"","Changes":[{"Action":"UPSERT","ResourceRecordSet":{"Name":"violent-aftermath-01.name.internal.","Type":"A","TTL":60,"ResourceRecords":[{"Value":"192.168.0.42"}]}}]}

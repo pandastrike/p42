@@ -4,6 +4,7 @@ F = require "fairmont"
 {async, sleep, zip, pair} = F
 {read} = require "panda-rw"
 messages = require "panda-messages"
+Tmp = require "../src/tmp"
 
 # This ensures that when we're logging the commands for test A,
 # we don't interfere with the commands for test B.
@@ -75,14 +76,17 @@ command = (name, context, f) ->
       try
         assert (sanitize actual) == expected.commands
       catch error
+        _actual = sanitize actual
+
         console.error """
           [ #{name} ]
 
           ACTUAL
-          #{sanitize actual}
+          #{_actual}
 
           EXPECTED
           #{expected.commands}
+
         """
         # rethrow the error so the test fails
         throw error

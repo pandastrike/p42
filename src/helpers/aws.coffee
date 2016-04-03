@@ -39,7 +39,7 @@ _exports = do async ->
     createRepository: async (repository) ->
       yield run "aws.ecr.create-repository", {repository}
       policy = json yield read shared.aws.ecr.policy
-      yield run "aws.ecr.set-repository-policy", {repository, policy}
+      run "aws.ecr.set-repository-policy", {repository, policy}
 
     createStack: async (stack) ->
       file = yield Tmp.file() + ".json"

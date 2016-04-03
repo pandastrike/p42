@@ -7,11 +7,18 @@ module.exports = (context) ->
 
   context.test "CLI", (context) ->
 
-    [shared, Cluster, start, build] = yield all [
+    [
+      shared
+      Cluster
+      build
+      start
+      run
+    ] = yield all [
       require "../src/shared"
       require "../src/commands/cluster"
-      require "../src/commands/start"
       require "../src/commands/build"
+      require "../src/commands/start"
+      require "../src/commands/run"
     ]
 
     command "CLI.cluster.create", context, ->
@@ -20,10 +27,14 @@ module.exports = (context) ->
     command "CLI.cluster.expand", context, ->
       Cluster.expand cluster: "violent-aftermath", count: 3
 
+    command "CLI.build", context, ->
+      chdir shared.test.app.root
+      build()
+
     command "CLI.start", context, ->
       chdir shared.test.app.root
       start()
 
-    command "CLI.build", context, ->
+    command "CLI.run", context, ->
       chdir shared.test.app.root
-      build()
+      run()

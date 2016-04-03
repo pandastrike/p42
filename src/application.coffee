@@ -57,6 +57,6 @@ _exports = do async ->
         for name in mixins
           yield Mixins.assert name
           mixin = yield Mixins.load name
-          Decorators[mixin.style]? application, mixin
+          yield Decorators[mixin.style]? application, mixin
 
 module.exports = _exports
