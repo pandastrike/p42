@@ -1,14 +1,18 @@
-{createRepository} = require "aws-helpers"
-{build, push} = require "docker-helpers"
+{async} = require "fairmont"
 
-# The beginnings of an extensible mechanism
-Decorators =
+_exports = do async ->
 
-  docker: (application, mixin) ->
-    {registry} = application
-    tag = "#{application.name}-#{mixin.name}"
-    createRepository tag
-    yield build {registry, tag, mixin}
-    push {registry, tag}
+  {createRepository} = yield require "./helpers/aws"
+  {build, push} = yield require "./helpers/docker"
 
-module.exports = Decorators
+  # The beginnings of an extensible mechanism
+  Decorators =
+
+    docker: async (application, mixin) ->
+      {registry} = application
+      tag = "#{application.name}-#{mixin.name}"
+      createRepository tag
+      yield build {registry, tag, mixin}
+      push {registry, tag}
+
+module.exports = _exports

@@ -3,6 +3,7 @@ assert = require "assert"
 F = require "fairmont"
 {async, sleep, zip, pair} = F
 {read} = require "panda-rw"
+messages = require "panda-messages"
 
 # This ensures that when we're logging the commands for test A,
 # we don't interfere with the commands for test B.
@@ -31,13 +32,13 @@ synchronize = do (waiting=[]) ->
 # Clean up any variability in the command logging so we can
 # reliably compare to expectations
 readFiles = async (s) ->
-  if (paths = s.match /file:\/\/\/[\w\/\-\.]+/)?
+  if (paths = s.match /file:\/\/\/[\w\/\-\.\_]+/g)?
     for path in paths
       JSON.stringify JSON.parse (yield F.read (path.replace /file:\/\//g, ""))
 
 
 sanitize = (s) ->
-  s.replace /file:\/+[\w\/\-]+/g, "file://<path>"
+  s.replace /file:\/+[\w\/\-\_]+/g, "file://<path>"
 
 # Run a test, comparing the command log to an expected command log
 command = (name, context, f) ->
@@ -65,10 +66,8 @@ command = (name, context, f) ->
       contents = yield readFiles actual
 
       # Get the expectations for this test
-      expectations = yield read shared.test.expectations
-      expected =
-        commands: expectations[name]
-        files: expectations["#{name}-files"]
+      {lookup} = yield messages shared.test.expectations
+      expected = lookup name
 
       # Compare the expectation with the actual results
       # We catch failures and log them to the console in
@@ -80,7 +79,7 @@ command = (name, context, f) ->
           [ #{name} ]
 
           ACTUAL
-          #{actual}
+          #{sanitize actual}
 
           EXPECTED
           #{expected.commands}

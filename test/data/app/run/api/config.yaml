@@ -1,3 +1,4 @@
+style: docker
 count: 2
 discovery:
   - http

@@ -27,7 +27,7 @@ _exports = do async ->
     login: -> run "docker.login"
 
     build: ({registry, tag, mixin}) ->
-      file = join shared.run, mixin, "Dockerfile"
+      file = join mixin.path, "Dockerfile"
       run "docker.build", {tag: "#{registry}/#{tag}", file}
 
     push: ({registry, tag}) ->

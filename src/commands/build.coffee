@@ -1,5 +1,9 @@
-Application = require "application"
+{async} = require "fairmont"
 
-build = (mixins...) -> Application.build mixins...
+_exports = do async ->
 
-module.exports = build
+  Application = yield require "../application"
+
+  build = (mixins...) -> Application.Mixins.build mixins...
+
+module.exports = _exports

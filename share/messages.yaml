@@ -19,6 +19,9 @@ application:
 
   nothing-to-run: Missing run directory.
 
+  bad-mixin: |
+    [{{name}}] is not a valid mixin.
+
 
   # Summary: Initialize an application for use with p42.
   # Help: Initialize an application for use with p42.

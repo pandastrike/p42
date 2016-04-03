@@ -1,10 +1,12 @@
-{async, isFile, isDirectory, readdir, sh} = require "fairmont"
+{join} = require "path"
+{async, include, isFile, isDirectory, readdir, sh, empty} = require "fairmont"
 {read, write} = require "panda-rw"
 logger = require "./message-logger"
 
 _exports = do async ->
 
   shared = yield require "./shared"
+  Decorators = yield require "./decorators"
 
   Git =
 
@@ -37,22 +39,24 @@ _exports = do async ->
     Mixins: Mixins =
 
       assert: async (name) ->
-        bye "application.bad-mixin" if ! yield isFile "./run/#{name}"
+        if ! yield isFile "./run/#{name}/config.yaml"
+          bye "application.bad-mixin"
 
       list: async ->
         bye "application.nothing-to-run" if ! yield isDirectory "./run"
         yield readdir "./run"
 
-      load: (name) -> read "./run/#{name}/config.yaml"
+      load: async (name) ->
+        path = join shared.run, name
+        config = join path, "config.yaml"
+        include (yield read config), {name, path}
 
       build: async (mixins...) ->
-
         application = yield Application.load()
         mixins = if empty mixins then yield Mixins.list() else mixins
-
         for name in mixins
           yield Mixins.assert name
-          mixin = Mixins.load name
-          Decorators[mixin.style]? mixin
+          mixin = yield Mixins.load name
+          Decorators[mixin.style]? application, mixin
 
 module.exports = _exports

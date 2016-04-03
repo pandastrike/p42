@@ -1,4 +1,5 @@
 assert = require "assert"
+{join} = require "path"
 {async, isArray} = require "fairmont"
 {command} = require "./helpers"
 
@@ -6,6 +7,7 @@ module.exports = (context) ->
 
   context.test "Docker", (context) ->
 
+    shared = yield require "../src/shared"
     DockerHelpers = yield require "../src/helpers/docker"
 
     command "env", context, ->
@@ -21,7 +23,9 @@ module.exports = (context) ->
       DockerHelpers.build
         registry: '123456789.registry.test.com'
         tag: 'blurb9-api'
-        mixin: 'api'
+        mixin:
+          name: 'api'
+          path: join shared.run, "api"
 
     command "push", context, ->
       DockerHelpers.push
