@@ -1,21 +1,22 @@
 Amen = require "amen"
-foundationTests = require "./foundation-tests"
+foundation = require "./foundation"
+AWSHelpers = require "./aws-helpers"
+DNSHelpers = require "./dns-helpers"
 dockerHelpers = require "./docker-helpers"
 CLIHelpers = require "./cli-helpers"
 global.p = -> console.error arguments...
 
 
 
-# Helper tests test the p42 helpers, as opposed to the test
-# helpers in ./helpers
-helperTests = require "./helper-tests"
 
 Amen.describe "p42", (context) ->
 
-  foundationTests context
+  foundation context
 
-  helperTests context
+  context.test "helpers", (context) ->
 
-  dockerHelpers context
+    AWSHelpers context
+    DNSHelpers context
+    dockerHelpers context
 
   CLIHelpers context

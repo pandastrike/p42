@@ -10,16 +10,16 @@ module.exports = (context) ->
     shared = yield require "../src/shared"
     DockerHelpers = yield require "../src/helpers/docker"
 
-    command "env", context, ->
+    command "Docker.env", context, ->
       DockerHelpers.env "violent-aftermath-01"
 
-    command "swarmEnv", context, ->
+    command "Docker.swarmEnv", context, ->
       DockerHelpers.swarmEnv "violent-aftermath"
 
-    command "login", context, ->
+    command "Docker.login", context, ->
       DockerHelpers.login()
 
-    command "build", context, ->
+    command "Docker.build", context, ->
       DockerHelpers.build
         registry: '123456789.registry.test.com'
         tag: 'blurb9-api'
@@ -27,29 +27,29 @@ module.exports = (context) ->
           name: 'api'
           path: join shared.run, "api"
 
-    command "push", context, ->
+    command "Docker.push", context, ->
       DockerHelpers.push
         registry: '123456789.registry.test.com'
         tag: 'blurb9-api'
 
-    command "run", context, ->
+    command "Docker.run", context, ->
       DockerHelpers.run
         name: "api-00"
         tag: "blurb9-api"
         options: "-P"
 
-    command "inspect", context, async ->
+    command "Docker.inspect", context, async ->
       {name, ip, port} = yield DockerHelpers.inspect "api-00"
 
       assert name?
       assert ip?
       assert port?
 
-    command "listContainers", context, ->
+    command "Docker.listContainers", context, ->
       DockerHelpers.listContainers "violent-aftermath"
 
 
-    command "createInstance", context, ->
+    command "Docker.createInstance", context, ->
       DockerHelpers.createInstance
         cluster:
           vpcId: "test-vpc-00"
@@ -58,7 +58,7 @@ module.exports = (context) ->
           zoneId: "test-dns-00"
         name: "violent-aftermath-00"
 
-    command "createSwarmInstance", context, ->
+    command "Docker.createSwarmInstance", context, ->
       DockerHelpers.createInstance
         cluster:
           vpcId: "test-vpc-00"
@@ -67,13 +67,13 @@ module.exports = (context) ->
           zoneId: "test-dns-00"
         name: "violent-aftermath-00"
 
-    command "listSwarmNodes", context, async ->
+    command "Docker.listSwarmNodes", context, async ->
       nodes = yield DockerHelpers.listSwarmNodes "violent-aftermath"
       assert isArray nodes
 
-    command "findAvailableNames", context, async ->
+    command "Docker.findAvailableNames", context, async ->
       [name] = yield DockerHelpers.findAvailableNames "violent-aftermath", 1
       assert.equal name, "violent-aftermath-03"
 
-    command "removeSwarmNodes", context, ->
+    command "Docker.removeSwarmNodes", context, ->
       DockerHelpers.removeSwarmNodes "violent-aftermath"
