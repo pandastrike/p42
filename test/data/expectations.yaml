@@ -164,6 +164,23 @@ CLI:
         aws ec2 describe-instances --filters Name=tag-value,Values=violent-aftermath-05
         aws ec2 modify-instance-attribute --instance-id test-instance-00 --groups test-group-00 test-group-00
 
+    rm:
+      commands: |
+        docker-machine ls --format {{ .Name }} --filter name=violent-aftermath
+        docker-machine stop violent-aftermath-00 violent-aftermath-01 violent-aftermath-02
+        docker-machine rm violent-aftermath-00 violent-aftermath-01 violent-aftermath-02
+        aws cloudformation delete-stack --stack-name violent-aftermath
+
+    ls: ~ # intentionally null
+
+    ps:
+      commands: |
+        docker-machine ls --format {{ .Name }} --filter name=violent-aftermath
+
+    env:
+      commands: |
+        eval $(docker-machine env --swarm violent-aftermath-00)
+
   start:
     commands: |
       docker-machine ls --format {{ .Name }} --filter name=violent-aftermath

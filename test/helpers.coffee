@@ -44,76 +44,85 @@ sanitize = (s) ->
 # Run a test, comparing the command log to an expected command log
 command = (name, context, f) ->
 
-  # Define a test...
-  context.test name, ->
+  if !f?
 
-    # Synchronize the test...
-    yield synchronize async ->
+    context.test name
 
-      # Make sure the dryRun flag is set
-      shared = yield require "../src/shared"
-      shared.dryRun = true
+  else
 
-      # Get the command logger helpers and clear the log
-      logger = require "../src/message-logger"
-      {log} = yield logger "commands"
-      yield log.clear()
+    # Define a test...
+    context.test name, ->
 
-      # Actually run the test, and wait for the results
-      yield f()
+      # Synchronize the test...
+      yield synchronize async ->
 
-      # Read the log and sanitize the results
-      actual = yield log.read()
-      contents = yield readFiles actual
+        # Make sure the dryRun flag is set
+        shared = yield require "../src/shared"
+        shared.dryRun = true
 
-      # Get the expectations for this test
-      {lookup} = yield messages shared.test.expectations
-      expected = lookup name
+        # Get the command logger helpers and clear the log
+        logger = require "../src/message-logger"
+        {log} = yield logger "commands"
+        yield log.clear()
 
-      # Compare the expectation with the actual results
-      # We catch failures and log them to the console in
-      # detail to make it easier to debug.
-      try
-        assert (sanitize actual) == expected.commands
-      catch error
-        _actual = sanitize actual
+        # Actually run the test, and wait for the results
+        yield f()
 
-        console.error """
-          [ #{name} ]
+        # Read the log and sanitize the results
+        actual = yield log.read()
+        contents = yield readFiles actual
 
-          ACTUAL
-          #{_actual}
+        # Get the expectations for this test
+        {lookup} = yield messages shared.test.expectations
+        expected = lookup name
 
-          EXPECTED
-          #{expected.commands}
+        # Compare the expectation with the actual results
+        # We catch failures and log them to the console in
+        # detail to make it easier to debug.
 
-        """
-        # rethrow the error so the test fails
-        throw error
+        # TODO: maybe use JSDiff?
+        # https://github.com/kpdecker/jsdiff
+        try
+          assert (sanitize actual) == expected.commands
+        catch error
+          _actual = sanitize actual
 
-      # now compare files
-      try
-        assert (!(contents?) && !(expected.files?)) ||
-          (contents.length == expected.files?.length)
+          console.error """
+            [ #{name} ]
 
-        if contents?
-          for [actual, _expected] in (zip pair, contents, expected.files)
-            assert.equal actual, _expected
+            ACTUAL
+            #{_actual}
 
-      catch error
+            EXPECTED
+            #{expected.commands}
 
-        console.error """
+          """
+          # rethrow the error so the test fails
+          throw error
 
-          [ #{name} - files ]
+        # now compare files
+        try
+          assert (!(contents?) && !(expected.files?)) ||
+            (contents.length == expected.files?.length)
 
-          ACTUAL
-          #{contents}
+          if contents?
+            for [actual, _expected] in (zip pair, contents, expected.files)
+              assert.equal actual, _expected
 
-          EXPECTED
-          #{expected.files}
-        """
+        catch error
 
-        throw error
+          console.error """
+
+            [ #{name} - files ]
+
+            ACTUAL
+            #{contents}
+
+            EXPECTED
+            #{expected.files}
+          """
+
+          throw error
 
 
 module.exports = {command, synchronize}

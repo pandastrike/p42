@@ -1,5 +1,6 @@
-{join} = require "path"
-{async, isFile, mkdirp, rmDir, sleep} = require "fairmont"
+{basename, join} = require "path"
+{async, curry, collect, flow, map, isFile, mkdirp, rm, glob, sleep} = require "fairmont"
+basename = do (basename) -> curry (extension, path) -> basename path, extension
 {read, write} = require "panda-rw"
 Tmp = require "./tmp"
 {yaml, json} = require "./serialize"
@@ -8,14 +9,13 @@ _exports = do async ->
 
   shared = yield require "./shared"
   run = yield require "./run"
-  {createStack, getStack, deleteStack} = yield require "./helpers/aws"
-  shared.config.clusters = join shared.config, "clusters"
+  {createStack, getStack, removeStack} = yield require "./helpers/aws"
+  shared.clusters = join shared.config, "clusters"
   yield mkdirp shared.config.clusters
 
   Cluster =
 
-    join: (name) ->
-      join shared.config, "clusters", "#{name}.yaml"
+    join: (name) -> join shared.clusters, "#{name}.yaml"
 
     load: async (name) ->
       path = Cluster.join name
@@ -48,8 +48,16 @@ _exports = do async ->
         {cluster} = yield Application.load()
         cluster
 
-    remove: (name) ->
-      yield deleteStack name
-      rmDir Cluster.join name
+    remove: async (name) ->
+      yield removeStack name
+      # TODO: find a way to re-create the cluster
+      # YAML file for tests that depend on it
+      rm Cluster.join name unless shared.dryRun
+
+    list: ->
+      collect flow [
+        glob "*.yaml", shared.clusters
+        map basename ".yaml"
+      ]
 
 module.exports = _exports

@@ -27,6 +27,25 @@ module.exports = (context) ->
     command "CLI.cluster.expand", context, ->
       Cluster.expand cluster: "violent-aftermath", count: 3
 
+    command "CLI.cluster.contract", context #, ->
+      # Cluster.contract cluster: "violent-aftermath", count: 3
+
+    command "CLI.cluster.rm", context, ->
+      Cluster.rm "violent-aftermath"
+
+    context.test "CLI.cluster.ls", ->
+      assert "violent-aftermath" in (yield Cluster.ls())
+
+    command "CLI.cluster.ps", context, ->
+      Cluster.ps "violent-aftermath"
+
+    command "CLI.cluster.env", context, ->
+      Cluster.env "violent-aftermath"
+
+    context.test "CLI.cluster.get", ->
+      assert.equal "us-west-1",
+        yield Cluster.get "violent-aftermath", "region"
+
     command "CLI.build", context, ->
       chdir shared.test.app.root
       build()

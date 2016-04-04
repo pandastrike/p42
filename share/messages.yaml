@@ -1,4 +1,4 @@
-fubar: this is a test {{name}}
+not-implemented: Sorry, but this feature is not yet implemented.
 
 help: |
 
@@ -186,3 +186,7 @@ cluster-get:
 dns:
 
   elb-alias: Adding alias for subdomain [{{subdomain}}]
+
+
+# don't delete this -- it's used to test messages interface
+fubar: this is a test {{name}}

@@ -1,16 +1,24 @@
 {all} = require "when"
 {async} = require "fairmont"
 Application  = require "../application"
+logger = require "../message-logger"
+{yaml} = require "../serialize"
 
 _exports = do async ->
 
-  [Cluster, AWSHelpers, DockerHelpers, Name] =
-    yield all [
-      require "../cluster"
-      require "../helpers/aws"
-      require "../helpers/docker"
-      require "../name"
-    ]
+  [
+    Cluster
+    AWSHelpers
+    DockerHelpers
+    Name
+  ] = yield all [
+    require "../cluster"
+    require "../helpers/aws"
+    require "../helpers/docker"
+    require "../name"
+  ]
+
+  {bye, msg} = yield logger "output"
 
   Commands =
 
@@ -32,20 +40,19 @@ _exports = do async ->
     contract: (cluster, count=1) ->
       bye "not-implemented"
 
-    rm: (name) ->
-      cluster = yield Cluster.resolve name
-      yield AWSHelpers.removeSwarmNodes cluster
-      Cluster.remove cluster
+    rm: async (name) ->
+      # cluster = yield Cluster.resolve name
+      yield DockerHelpers.removeSwarmNodes name
+      Cluster.remove name
 
     ls: -> Cluster.list()
 
-    ps: (name) ->
-      DockerHelper.listSwarmNodes yield Cluster.resolve name
+    ps: (name) -> DockerHelpers.listSwarmNodes name
 
-    env: async (name) ->
-      DockerHelper.swarmEnv yield Cluster.resolve name
+    env: (name) -> DockerHelpers.swarmEnv name
 
-    get: (name, property) ->
-      (yield Cluster.resolve name)[property]
+    get: async (name, property) ->
+      cluster = yield Cluster.resolve name
+      if property? then cluster[property] else yaml cluster
 
 module.exports = _exports
