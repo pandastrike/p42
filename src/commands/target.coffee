@@ -1,13 +1,15 @@
-Commands =
+{async} = require "fairmont"
 
-  add: ->
+_exports = do async ->
 
-  remove: ->
+  Application = yield require "../application"
 
-  rename: ->
+  Commands =
 
+    add: -> Application.Targets.add arguments...
 
-module.exports = (subcomand, argv...) ->
+    remove: -> Application.Targets.remove arguments...
 
-  procesor = CLI.Processor.create Commands
-  processor subcommand, argv...
+    rename: -> Application.Targets.rename arguments...
+
+module.exports = _exports

@@ -1,10 +1,24 @@
-module.exports =
-  build: require "./build"
-  cluster: require "./cluster"
-  init: require "./init"
-  mixin: require "./mixin"
-  ps: require "./ps"
-  run: require "./run"
-  start: require "./start"
-  stop: require "./stop"
-  target: require "./target"
+{async} = require "fairmont"
+{all} = require "when"
+
+module.exports = do async ->
+
+  [
+    build
+    cluster
+    init
+    mixin
+    run
+    start
+    stop
+  ] = yield all [
+    require "./build"
+    require "./cluster"
+    require "./init"
+    # require "./mixin"
+    require "./run"
+    require "./start"
+    require "./stop"
+  ]
+
+  {build, cluster, init, run, mixin, start, stop}

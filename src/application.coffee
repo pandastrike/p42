@@ -59,4 +59,21 @@ _exports = do async ->
           mixin = yield Mixins.load name
           yield Decorators[mixin.style]? application, mixin
 
+    Targets:
+
+      add: (target, name) ->
+        application = yield Application.load()
+        application.clusters[target] = name
+        Application.save application
+
+      remove: (target) ->
+        application = yield Application.load()
+        delete application.clusters[target]
+        Application.save application
+
+      rename: (before, after) ->
+        application = yield Application.load()
+        application.clusters[after] = application.clusters[before]
+        Application.save application
+
 module.exports = _exports

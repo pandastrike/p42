@@ -132,11 +132,13 @@ cluster:
 
     Run 'p42 help <command>' for command specific help.
 
-cluster-create:
+  create:
 
-  help: |
-    Usage: p42 cluster create
-    Create a VPC and a master Swarm node.
+    begin: Creating cluster [{{name}}] ...
+
+    help: |
+      Usage: p42 cluster create
+      Create a VPC and a master Swarm node.
 
 cluster-add:
 

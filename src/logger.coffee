@@ -61,9 +61,9 @@ include Logger,
 
   read: maybe ({stream}) -> read stream.path
 
-  stream: maybe ({stream}) -> FS.createReadStream path
+  stream: maybe ({stream}) -> FS.createReadStream stream.path
 
-  show: maybe (logger, sink) -> (Logger.stream logger).pipe sink
+  pipe: maybe (logger, writeStream) -> (Logger.stream logger).pipe writeStream
 
   # TODO: I think we need to recreate the stream here
   clear: maybe async (logger) ->

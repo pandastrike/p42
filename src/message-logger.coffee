@@ -44,6 +44,7 @@ logger = memoize async (name) ->
       Logger.error self, message key, data
       process.exit 1
 
+  helpers.log.pipe = (stream) -> self.stream = stream
   helpers.log.read = -> Logger.read self
   helpers.log.clear = -> Logger.clear self
 

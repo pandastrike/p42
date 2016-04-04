@@ -25,7 +25,7 @@ module.exports = (context) ->
       Cluster.create()
 
     command "CLI.cluster.expand", context, ->
-      Cluster.expand cluster: "violent-aftermath", count: 3
+      Cluster.expand name: "violent-aftermath", count: 3
 
     command "CLI.cluster.contract", context #, ->
       # Cluster.contract cluster: "violent-aftermath", count: 3

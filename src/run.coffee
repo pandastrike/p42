@@ -32,6 +32,7 @@ _exports = do async ->
         {}, command.attributes
 
   run = async (key, data={}) ->
+
     command = build key, data
     if shared.dryRun
       yield C.log.info command.string

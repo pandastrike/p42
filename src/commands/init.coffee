@@ -1,10 +1,16 @@
 {basename, join} = require "path"
-Appliction = require "../application"
+{async} = require "fairmont"
 
-init = async ->
+module.exports = async ->
+
+  Appliction = yield require "../application"
+
   interview = Interview.create join share, "interviews", "init.yaml"
+
   defaults =
     name: basename Process.cwd()
     registry: AWSHelpers.getRegistryDomain()
+
   answers = yield interview.start defaults
+
   Application.create answers

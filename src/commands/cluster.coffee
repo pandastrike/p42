@@ -24,12 +24,13 @@ _exports = do async ->
 
     create: async ->
       name = yield Name.generate()
+      msg "cluster.create.begin", {name}
       cluster = yield Cluster.create name
       DockerHelpers.createSwarmInstance {cluster, name, master: true}
 
-    expand: async ({cluster, count}) ->
-      names = yield DockerHelpers.findAvailableNames cluster, count
-      cluster = yield Cluster.resolve cluster
+    expand: async ({name, count}) ->
+      names = yield DockerHelpers.findAvailableNames name, count
+      cluster = yield Cluster.resolve name
       # TODO: ideally we'd launch all three swarm instances in parallel
       # but that messes up the tests at the moment
       for name in names
@@ -54,5 +55,11 @@ _exports = do async ->
     get: async (name, property) ->
       cluster = yield Cluster.resolve name
       if property? then cluster[property] else yaml cluster
+
+  async (name, args...) ->
+    if (command = Commands[name])?
+      yield command args...
+    else
+      # usage
 
 module.exports = _exports
