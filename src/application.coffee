@@ -17,21 +17,19 @@ _exports = do async ->
         .stdout
 
 
-  {bye} = shared.loggers.output
-
   Application =
 
     create: (definition) -> write "./p42.yaml", definition
 
     load: async ->
 
-      bye "application.no-configuration" if ! yield isFile "./p42.yaml"
+      throw "application.no-configuration" if ! yield isFile "./p42.yaml"
       branch = yield Git.getBranch()
 
-      bye "application.no-branch" if ! branch?
+      throw "application.no-branch" if ! branch?
       {name, domain, registry, clusters} = yield read "./p42.yaml"
       cluster = clusters?[branch]
-      bye "application.no-target" if !cluster?
+      throw "application.no-target" if !cluster?
 
       {name, domain, registry, cluster}
 
@@ -39,10 +37,10 @@ _exports = do async ->
 
       assert: async (name) ->
         if ! yield isFile "./run/#{name}/config.yaml"
-          bye "application.bad-mixin"
+          throw "application.bad-mixin"
 
       list: async ->
-        bye "application.nothing-to-run" if ! yield isDirectory "./run"
+        throw "application.nothing-to-run" if ! yield isDirectory "./run"
         yield readdir "./run"
 
       load: async (name) ->

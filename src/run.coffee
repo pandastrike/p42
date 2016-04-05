@@ -39,9 +39,9 @@ _exports = do async ->
     else
       C.info command.string
       response = yield sh command.string
-      O._info command.string
+      O._debug command.string
       if response != ""
-        O._info response
+        O._debug response
         Processors[command.processor]? command, response
 
 module.exports = _exports

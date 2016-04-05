@@ -1,16 +1,21 @@
 {basename, join} = require "path"
 {async} = require "fairmont"
+{read} = require "panda-rw"
+Interview = require "../interview"
 
 module.exports = async ->
 
-  Appliction = yield require "../application"
-
-  interview = Interview.create join share, "interviews", "init.yaml"
+  shared = yield require "../shared"
+  Application = yield require "../application"
+  AWSHelpers = yield require "../helpers/aws"
 
   defaults =
-    name: basename Process.cwd()
-    registry: AWSHelpers.getRegistryDomain()
 
-  answers = yield interview.start defaults
+  interview = yield Interview.create
+    path: shared.interviews.init
+    defaults:
+      name: basename process.cwd()
+      registry: AWSHelpers.getRegistryDomain()
 
+  answers = yield Interview.start interview
   Application.create answers

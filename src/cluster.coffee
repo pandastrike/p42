@@ -22,7 +22,7 @@ _exports = do async ->
       if yield isFile path
         read path
       else
-        # bye "cluster.not-found", name
+        throw [ "cluster.not-found", {name} ]
 
     save: async (cluster) ->
       yield write (Cluster.join cluster.name), cluster
@@ -37,7 +37,7 @@ _exports = do async ->
         if cluster.status == "CREATE_COMPLETE"
           break
         else if cluster.status == "CREATE_FAILED"
-          bye "cluster.create-failed", {name}
+          throw [ "cluster.create-failed", {name} ]
 
       Cluster.save cluster
 
