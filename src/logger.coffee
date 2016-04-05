@@ -1,79 +1,112 @@
 FS = require "fs"
-{curry,
-async, include, merge, w,
-Type, isType,  isString,
-Method,
-read, write} = require "fairmont"
+{curry, go, map, pull, push, async, include, w, empty,
+Type, isType, isKind, isString, isArray, isWritable,
+toString, Method, read, write} = require "fairmont"
+
+# special version of include that won't
+# overwrite with a null value
+defaults = (target, objects...)->
+  for object in objects
+    for key, value of object when value?
+      target[key] = value
+  target
+
 Tmp = require "./tmp"
 
-createTempStream = async (name) ->
-  FS.createWriteStream (yield Tmp.file "#{name}.log")
-
-# TODO: formatter support
-# We don't use the level in the output, nor include a timestamp,
-# and so on. That's to avoid messing with the tests, which rely
-# on clean output. With a formatter, we could just set the
-# formatter when testing to be as below and otherwise more useful.
-log = (stream, level, thing) -> write stream, "#{thing}\n"
-
 Logger = Type.define()
-
-# This little bit of craziness effectively allows us to define
-# logger-based multimethods with parameterizable lookups,
-# so we can call them using a string key or a logger object.
-adapter = curry (K, F) ->
-  M = Method.create()
-  L = K M
-  Method.define M, (isType Logger), (-> true), F
-  Method.define M, (isType Logger), F
-  Method.define M, (isString), (-> true), L
-  Method.define M, (isString), L
-  M
-
-# Returns a multimethod that will create the logger if it doesn't exist.
-definitely = adapter (method) ->
-  async (name, args...) ->
-    logger = (Logger.dictionary[name] ?= yield Logger.create {name})
-    method logger, args...
-
-# Returns a multimethod that will do nothing if the logger doesn't exist.
-maybe = adapter (method) ->
-  (name, args...) ->
-    if (logger = Logger.dictionary[name])?
-      method logger, args...
 
 include Logger,
 
   defaults:
     level: "info"
 
-  levels: {} # see below
+  # RFC5424 syslog levels
+  levels: do (levels={}) ->
+    for level, index in w "emerg alert crit error warning notice info debug"
+      do (level, index) -> levels[level] = index
+    levels
 
-  dictionary: {}
+  create: async (type, options) ->
+    defaults (yield Type.create type), Logger.defaults, options
 
-  create: async ({name, stream}) ->
-    stream ?= yield createTempStream name
-    include (Type.create Logger), Logger.defaults, {name, stream}
+# TODO: formatter support
+# We don't use the level in the output, nor include a timestamp,
+# and so on. That's to avoid messing with the tests, which rely
+# on clean output. With a formatter, we could just set the
+# formatter when testing to be as below and otherwise more useful.
+Logger.log = log = Method.create()
 
-  log: definitely async (logger, level, things...) ->
+Method.define log, (isKind Logger), isString, (-> true),
+  (logger, level, data...) ->
     if Logger.levels[logger.level] >= Logger.levels[level]
-      (yield log logger.stream, level, thing) for thing in things
+      log logger.sink, level, data...
 
-  read: maybe ({stream}) -> read stream.path
+Method.define log, isWritable, isString, (-> true),
+  (stream, level, data...) ->
+    go [
+      data
+      map toString
+      map write stream
+      pull
+    ]
 
-  stream: maybe ({stream}) -> FS.createReadStream stream.path
+Logger.Stream = Type.define Logger
 
-  pipe: maybe (logger, writeStream) -> (Logger.stream logger).pipe writeStream
+include Logger.Stream,
 
-  # TODO: I think we need to recreate the stream here
-  clear: maybe async (logger) ->
-    yield write logger.stream.path, ''
-    logger.stream = FS.createWriteStream logger.stream.path
+  create: ({stream, level}) ->
+    sink = stream
+    Logger.create Logger.Stream, {stream, sink, level}
 
-# RFC5424 levels for syslog
-for level, index in w "emerg alert crit error warning notice info debug"
-  do (level, index) ->
-    Logger.levels[level] = index
-    Logger[level] = (logger, args...)-> Logger.log logger, level, args...
+Logger.File = Type.define Logger.Stream
+
+include Logger.File,
+
+  create: ({path, level}) ->
+    stream = sink = FS.createWriteStream path
+    Logger.create Logger.File, {stream, sink, path, level}
+
+Logger.TmpFile =
+
+  create: async ({name, level}) ->
+    Logger.File.create {path: yield Tmp.file "#{name}.log", level}
+
+Logger.Memory = Type.define Logger
+
+include Logger.Memory,
+
+  create: ({level} = {}) ->
+    content = sink = []
+    Logger.create Logger.Memory, {sink, content, level}
+
+Method.define log, isArray, isString, (-> true),
+  (array, level, data...) ->
+    for item in data
+      push array, toString item
+
+Logger.Composite = Type.define Logger
+
+include Logger.Composite,
+
+  create: ({loggers}) ->
+    Logger.create Logger.Composite, {loggers}
+
+Method.define log, (isKind Logger.Composite), isString, (-> true),
+  ({loggers}, level, data...) ->
+    (log logger, level, data...) for logger in loggers
+
+Logger.Helpers = do (helpers = {}) ->
+  for level, index of Logger.levels
+    do (level, index) ->
+      helpers[level] = (logger, data...) ->
+        log logger, level, data...
+  helpers
+
+Logger.helpers = (logger, helpers = {}) ->
+  for name, fn of Logger.Helpers
+    helpers._self = logger
+    do (name, fn) ->
+      helpers[name] = -> fn logger, arguments...
+  helpers
 
 module.exports = Logger

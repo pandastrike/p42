@@ -2,7 +2,6 @@
 messages = require "panda-messages"
 {yaml, json} = require "./serialize"
 render = require "./template"
-logger = require "./message-logger"
 
 unquote = (s) ->
   s
@@ -13,8 +12,8 @@ _exports = do async ->
 
   shared = yield require "./shared"
   {lookup} = yield messages shared.commands
-  C = yield logger "commands"
-  O = yield logger "output"
+  C = shared.loggers.dryRun
+  O = shared.loggers.output
 
   build = (key, data={}) ->
     {template, processor, attributes, test} = lookup key
@@ -35,14 +34,14 @@ _exports = do async ->
 
     command = build key, data
     if shared.dryRun
-      yield C.log.info command.string
+      yield C.info command.string
       command.test
     else
-      C.log.info command.string
+      C.info command.string
       response = yield sh command.string
-      O.log.info command.string
+      O._info command.string
       if response != ""
-        O.log.info response
+        O._info response
         Processors[command.processor]? command, response
 
 module.exports = _exports

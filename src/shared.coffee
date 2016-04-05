@@ -1,11 +1,12 @@
 Path = require "path"
 {reduce, reject, async, lsR, include, mkdirp} = require "fairmont"
+messages = require "panda-messages"
 
 expand = (current, part) -> current[part] ?= {}
 blank = (part) -> part == ''
 
 # Build an object whose properties correspond to paths
-build = async (root) ->
+paths = async (root) ->
   object = {root}
   # Go through all the files in root...
   for path in (yield lsR root)
@@ -20,6 +21,36 @@ build = async (root) ->
     parent[name] = path
   object
 
+loggers = async (shared, loggers = {}) ->
+
+  {message} = yield messages shared.messages
+
+  {helpers, TmpFile, Stream, Memory, Composite} = yield require "./logger"
+
+  wrap = (helpers, wrapped = {}) ->
+    for name, fn of helpers
+      wrapped["_#{name}"] = fn
+      wrapped[name] = (key, data = {}) ->
+        fn (message key, data)
+
+    wrapped.bye = (key, data = {}) ->
+      wrapped.error key, data
+      process.exit 1
+
+    wrapped
+
+  # create basic loggers
+  debug = yield TmpFile.create name: "debug", level: "debug"
+  tty = Stream.create stream: process.stderr, level: "error"
+
+  # composite loggers
+  output = wrap helpers Composite.create loggers: [ debug, tty ]
+
+  # dry-run command logger
+  dryRun = helpers yield Memory.create()
+
+  {output, dryRun}
+
 _exports = do async ->
 
   # each p42 user has their own config directory
@@ -30,10 +61,12 @@ _exports = do async ->
   # global dry run setting
   dryRun = false
   # paths to various shared files
-  share = yield build Path.join __dirname, "..", "share"
-  test = yield build Path.join __dirname, "..", "test", "data"
+  share = yield paths Path.join __dirname, "..", "share"
+  test = yield paths Path.join __dirname, "..", "test", "data"
   test.app.root = Path.join test.root, "app"
+  # set up loggers
+  loggers = yield loggers share
   # build the shared object
-  include share, {config, run, dryRun, test}
+  include share, {config, run, dryRun, test, loggers}
 
 module.exports = _exports

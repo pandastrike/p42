@@ -1,7 +1,6 @@
 {join} = require "path"
 {async, include, isFile, isDirectory, readdir, sh, empty} = require "fairmont"
 {read, write} = require "panda-rw"
-logger = require "./message-logger"
 
 _exports = do async ->
 
@@ -18,7 +17,7 @@ _exports = do async ->
         .stdout
 
 
-  {bye} = yield logger "output"
+  {bye} = shared.loggers.output
 
   Application =
 

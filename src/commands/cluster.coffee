@@ -1,30 +1,31 @@
 {all} = require "when"
 {async} = require "fairmont"
 Application  = require "../application"
-logger = require "../message-logger"
 {yaml} = require "../serialize"
 
 _exports = do async ->
 
   [
+    shared
     Cluster
     AWSHelpers
     DockerHelpers
     Name
   ] = yield all [
+    require "../shared"
     require "../cluster"
     require "../helpers/aws"
     require "../helpers/docker"
     require "../name"
   ]
 
-  {bye, msg} = yield logger "output"
+  {bye, info} = shared.loggers.output
 
   Commands =
 
     create: async ->
       name = yield Name.generate()
-      msg "cluster.create.begin", {name}
+      info "cluster.create.begin", {name}
       cluster = yield Cluster.create name
       DockerHelpers.createSwarmInstance {cluster, name, master: true}
 

@@ -5,6 +5,7 @@ F = require "fairmont"
 {read} = require "panda-rw"
 messages = require "panda-messages"
 Tmp = require "../src/tmp"
+trim = (s) -> s.trim()
 
 # This ensures that when we're logging the commands for test A,
 # we don't interfere with the commands for test B.
@@ -61,15 +62,14 @@ command = (name, context, f) ->
         shared.dryRun = true
 
         # Get the command logger helpers and clear the log
-        logger = require "../src/message-logger"
-        {log} = yield logger "commands"
-        yield log.clear()
+        logger = shared.loggers.dryRun
+        logger._self.content = logger._self.sink = []
 
         # Actually run the test, and wait for the results
         yield f()
 
         # Read the log and sanitize the results
-        actual = yield log.read()
+        actual = logger._self.content.join("\n")
         contents = yield readFiles actual
 
         # Get the expectations for this test
@@ -83,7 +83,7 @@ command = (name, context, f) ->
         # TODO: maybe use JSDiff?
         # https://github.com/kpdecker/jsdiff
         try
-          assert (sanitize actual) == expected.commands
+          assert (sanitize actual) == (trim expected.commands)
         catch error
           _actual = sanitize actual
 

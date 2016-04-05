@@ -34,19 +34,15 @@ module.exports = (context) ->
       assert.equal true, (yield isDirectory dir)
 
     context.test "logger", ->
-      Logger = require "../src/logger"
-      yield Logger.info "fubar", "this is a test"
-      yield Logger.info "fubar", "this is not a test"
-      content = yield Logger.read "fubar"
-      assert.equal content, "this is a test\nthis is not a test\n"
+      Logger = yield require "../src/logger"
+      logger = Logger.Memory.create()
+      {info} = Logger.helpers logger
+      info "this is a test"
+      info "this is not a test"
+      {content} = logger
+      assert.equal content.toString(), "this is a test,this is not a test"
 
-    context.test "message logger", ->
-      logger = require "../src/message-logger"
-      {msg, log} = yield logger "test"
-      yield msg "fubar", name: "baz"
-      yield log.error "oops"
-      content = yield log.read "test"
-      assert.equal content, "this is a test baz\noops\n"
+    context.test "message logger"
 
     context.test "shell runner", ->
       shared = yield require "../src/shared"
