@@ -63,12 +63,14 @@ command = (name, context, f) ->
 
         # Get the command logger helpers and clear the log
         logger = shared.loggers.dryRun
+        # TODO: it would be nice if there was a cleaner interface for this
         logger._self.content = logger._self.sink = []
 
         # Actually run the test, and wait for the results
         yield f()
 
         # Read the log and sanitize the results
+        # TODO: ... and this
         actual = logger._self.content.join("\n")
         contents = yield readFiles actual
 

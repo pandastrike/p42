@@ -1,5 +1,5 @@
 Path = require "path"
-{reduce, reject, async, lsR, include, mkdirp} = require "fairmont"
+{reduce, reject, async, isFunction, lsR, include, mkdirp} = require "fairmont"
 messages = require "panda-messages"
 
 expand = (current, part) -> current[part] ?= {}
@@ -28,20 +28,22 @@ loggers = async (shared, loggers = {}) ->
   {helpers, TmpFile, Stream, Memory, Composite} = yield require "./logger"
 
   wrap = (helpers, wrapped = {}) ->
-    for name, fn of helpers
-      wrapped["_#{name}"] = fn
-      wrapped[name] = (key, data = {}) ->
-        fn (message key, data)
+    for name, fn of helpers when isFunction fn
+      do (name, fn) ->
+        wrapped["_#{name}"] = fn
+        wrapped[name] = (key, data = {}) ->
+          fn (message key, data)
 
     wrapped.bye = (key, data = {}) ->
       wrapped.error key, data
       process.exit 1
 
+    wrapped._self = helpers._self
     wrapped
 
   # create basic loggers
   debug = yield TmpFile.create name: "debug", level: "debug"
-  tty = Stream.create stream: process.stderr, level: "error"
+  tty = Stream.create stream: process.stderr, level: "info"
 
   # composite loggers
   output = wrap helpers Composite.create loggers: [ debug, tty ]

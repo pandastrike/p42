@@ -26,6 +26,7 @@ include Logger,
       do (level, index) -> levels[level] = index
     levels
 
+  # using yield allows for async logger create fns
   create: async (type, options) ->
     defaults (yield Type.create type), Logger.defaults, options
 
@@ -39,13 +40,17 @@ Logger.log = log = Method.create()
 Method.define log, (isKind Logger), isString, (-> true),
   (logger, level, data...) ->
     if Logger.levels[logger.level] >= Logger.levels[level]
-      log logger.sink, level, data...
+      try
+        log logger.sink, level, data...
+      catch
+        p isWritable logger.sink
 
 Method.define log, isWritable, isString, (-> true),
   (stream, level, data...) ->
     go [
       data
       map toString
+      map (s) -> s + "\n"
       map write stream
       pull
     ]

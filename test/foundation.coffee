@@ -1,6 +1,6 @@
 assert = require "assert"
 Path = require "path"
-{async, isDirectory} = require "fairmont"
+{async, isDirectory, read} = require "fairmont"
 {synchronize} = require "./helpers"
 
 # These tests mostly just make sure all the underlying mechanics
@@ -33,14 +33,42 @@ module.exports = (context) ->
       assert.equal base, "test.txt"
       assert.equal true, (yield isDirectory dir)
 
-    context.test "logger", ->
+    context.test "logger", (context) ->
+
       Logger = yield require "../src/logger"
-      logger = Logger.Memory.create()
-      {info} = Logger.helpers logger
-      info "this is a test"
-      info "this is not a test"
-      {content} = logger
-      assert.equal content.toString(), "this is a test,this is not a test"
+
+      context.test "memory", ->
+        logger = Logger.Memory.create()
+        {info} = Logger.helpers logger
+        info "this is a test"
+        info "this is not a test"
+        {content} = logger
+        assert.equal content.toString(), "this is a test,this is not a test"
+
+      context.test "file", ->
+        logger = yield Logger.TmpFile.create name: "test"
+        {info} = Logger.helpers logger
+        yield info "this is a test"
+        yield info "this is not a test"
+        content = yield read logger.path
+        assert.equal content, "this is a test\nthis is not a test\n"
+
+      context.test "stream"
+      # context.test "stream", ->
+        # logger = Logger.Stream.create stream: process.stdout
+        # {info} = Logger.helpers logger
+        # yield info "this is a test"
+        # yield info "this is not a test"
+
+      context.test "composite"
+      # context.test "composite", ->
+      #   stdout = yield Logger.Stream.create stream: process.stdout
+      #   tmpfile = yield Logger.TmpFile.create name: "test"
+      #   logger = Logger.Composite.create loggers: [ stdout, tmpfile ]
+      #   {info} = Logger.helpers logger
+      #   info "this is a test"
+      #   info "this is not a test"
+
 
     context.test "message logger"
 
