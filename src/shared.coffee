@@ -32,7 +32,7 @@ loggers = async (shared, loggers = {}) ->
       do (name, fn) ->
         wrapped["_#{name}"] = fn
         wrapped[name] = (key, data = {}) ->
-          fn (message key, data)
+          fn message key, data
 
     wrapped.bye = (key, data = {}) ->
       wrapped.error key, data

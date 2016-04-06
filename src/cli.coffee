@@ -16,15 +16,21 @@ module.exports = async (name, args...) ->
   # TODO: set this as an option
   shared.dryRun = true
 
-  {info, bye} = shared.loggers.output
+  {bye, _bye, error} = shared.loggers.output
 
   if (command = Commands[name])?
     # Options.parse "cluster-#{name}", argv
     try
       yield command args...
-    catch error
-      if isArray error.info
-        bye error.info...
+    catch e
+      # errors expected by p42
+      # have a p42 attribute
+      if isArray e.p42
+        bye e.p42...
+      else
+        # otherwise, this is unexpected, just re-throw
+        error "unexpected-error"
+        throw e
   else
-    info "bad-command", {name}
+    error "bad-command", {name}
     bye "usage"
