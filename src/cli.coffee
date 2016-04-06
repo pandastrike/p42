@@ -1,4 +1,4 @@
-{async} = require "fairmont"
+{async, isArray} = require "fairmont"
 {all} = require "when"
 
 global.p = -> console.error arguments...
@@ -16,8 +16,15 @@ module.exports = async (name, args...) ->
   # TODO: set this as an option
   shared.dryRun = true
 
+  {info, bye} = shared.loggers.output
+
   if (command = Commands[name])?
     # Options.parse "cluster-#{name}", argv
-    yield command args...
+    try
+      yield command args...
+    catch error
+      if isArray error.info
+        bye error.info...
   else
-    # usage "bad-command", {name}
+    info "bad-command", {name}
+    bye "usage"

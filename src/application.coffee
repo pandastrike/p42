@@ -1,6 +1,7 @@
 {join} = require "path"
 {async, include, isFile, isDirectory, readdir, sh, empty} = require "fairmont"
 {read, write} = require "panda-rw"
+raise = require "./raise"
 
 _exports = do async ->
 
@@ -23,13 +24,13 @@ _exports = do async ->
 
     load: async ->
 
-      throw "application.no-configuration" if ! yield isFile "./p42.yaml"
+      raise "application.no-configuration" if ! yield isFile "./p42.yaml"
       branch = yield Git.getBranch()
 
-      throw "application.no-branch" if ! branch?
+      raise "application.no-branch" if ! branch?
       {name, domain, registry, clusters} = yield read "./p42.yaml"
       cluster = clusters?[branch]
-      throw "application.no-target" if !cluster?
+      raise "application.no-target" if !cluster?
 
       {name, domain, registry, cluster}
 
@@ -37,10 +38,10 @@ _exports = do async ->
 
       assert: async (name) ->
         if ! yield isFile "./run/#{name}/config.yaml"
-          throw "application.bad-mixin"
+          raise "application.bad-mixin"
 
       list: async ->
-        throw "application.nothing-to-run" if ! yield isDirectory "./run"
+        raise "application.nothing-to-run" if ! yield isDirectory "./run"
         yield readdir "./run"
 
       load: async (name) ->

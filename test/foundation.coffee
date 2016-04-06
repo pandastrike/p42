@@ -70,7 +70,7 @@ module.exports = (context) ->
       #   info "this is not a test"
 
 
-    context.test "message logger"
+      context.test "message logger"
 
     context.test "shell runner", ->
       shared = yield require "../src/shared"

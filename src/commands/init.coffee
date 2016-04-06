@@ -18,4 +18,5 @@ module.exports = async ->
       registry: AWSHelpers.getRegistryDomain()
 
   answers = yield Interview.start interview
+
   Application.create answers

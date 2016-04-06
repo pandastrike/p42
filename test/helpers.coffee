@@ -61,9 +61,15 @@ command = (name, context, f) ->
         shared = yield require "../src/shared"
         shared.dryRun = true
 
+        # silence output and logging except for the
+        # dry-run logging...
+        # TODO: come up with a nicer interface for this
+        for logger in shared.loggers.output._self.loggers
+          logger.level = "emerg"
+
         # Get the command logger helpers and clear the log
         logger = shared.loggers.dryRun
-        # TODO: it would be nice if there was a cleaner interface for this
+        # TODO: come up with a nicer interface for this
         logger._self.content = logger._self.sink = []
 
         # Actually run the test, and wait for the results

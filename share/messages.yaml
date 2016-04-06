@@ -1,11 +1,13 @@
+bad-command: "'{{name}}' is not a valid command."
+
 not-implemented: Sorry, but this feature is not yet implemented.
 
-help: |
+usage: |
 
   Usage: p42 <command> <options...>
   Available commands are:
 
-    build, cluster, help, init, mixin, ls, ps,
+    build, cluster, help, init, mixin,
     run, start, stop, target
 
   Run 'p42 help <command>' for command specific help.

@@ -4,6 +4,7 @@ basename = do (basename) -> curry (extension, path) -> basename path, extension
 {read, write} = require "panda-rw"
 Tmp = require "./tmp"
 {yaml, json} = require "./serialize"
+raise = require "./raise"
 
 _exports = do async ->
 
@@ -22,7 +23,7 @@ _exports = do async ->
       if yield isFile path
         read path
       else
-        throw [ "cluster.not-found", {name} ]
+        raise "cluster.not-found", {name}
 
     save: async (cluster) ->
       yield write (Cluster.join cluster.name), cluster
@@ -37,7 +38,7 @@ _exports = do async ->
         if cluster.status == "CREATE_COMPLETE"
           break
         else if cluster.status == "CREATE_FAILED"
-          throw [ "cluster.create-failed", {name} ]
+          raise "cluster.create-failed", {name}
 
       Cluster.save cluster
 
