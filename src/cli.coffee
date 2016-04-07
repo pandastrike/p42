@@ -8,18 +8,28 @@ module.exports = async (name, args...) ->
   [
     shared
     Commands
+    Options
   ] = yield all [
     require "./shared"
     require "./commands"
+    require "./options"
   ]
 
-  # TODO: set this as an option
+
+  {bye, error, _error} = shared.loggers.output
+
+  options = Options.parse "main", process.argv
+
+  # shared.dryRun = options.dry_run
+  # TODO: use option for this
   shared.dryRun = true
 
-  {bye, _bye, error} = shared.loggers.output
+  # TODO: use this to set logging level
+  # verbosity = options.verbose.length
+
+  [command, args...] = options._args.sort().reverse()
 
   if (command = Commands[name])?
-    # Options.parse "cluster-#{name}", argv
     try
       yield command args...
     catch e
@@ -32,5 +42,4 @@ module.exports = async (name, args...) ->
         error "unexpected-error"
         throw e
   else
-    error "bad-command", {name}
-    bye "usage"
+    bye "bad-command", {name}

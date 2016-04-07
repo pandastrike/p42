@@ -1,18 +1,25 @@
 unexpected-error: "p42: unexpected error"
 
-bad-command: "p42: '{{name}}' is not a valid command."
+bad-command: |
+  p42: '{{name}}' is not a valid command.
+
+  Run `p42 --help` for help.
 
 not-implemented: "p42: Sorry, but this feature is not yet implemented."
 
-usage: |
+main:
+  help: |
 
-  Usage: p42 <command> <options...>
-  Available commands are:
+    Usage: p42 <command> <options...>
+    Available commands are:
 
-    build, cluster, help, init, mixin,
-    run, start, stop, target
+        build, cluster, help, init, mixin, run, start, stop, target
 
-  Run 'p42 help <command>' for command specific help.
+    Run 'p42 help <command>' for command specific help.
+
+    Valid options for all commands include:
+
+    {{options}}
 
 init:
 
