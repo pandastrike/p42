@@ -1,14 +1,18 @@
 dryRun:
-  type: toggle
+  type: switch
   flags:
     - dry-run
+  help: |-
+    Show the commands that would be run, but don't actually run them.
   default: false
 
 verbose:
-  type: toggle
+  type: switch
   flags:
     - verbose
     - v
+  help: |-
+    Log debug statements to the console.
   default: false
 
 build:
@@ -30,7 +34,7 @@ cluster:
       type: word
       key: subcommand
 
-    expand: &expand
+    expand:
       type: word
       key: subcommand
       options:
@@ -44,7 +48,9 @@ cluster:
             - n
           default: 1
 
-    contract: *expand
+    contract:
+      type: word
+      key: subcommand
 
     ls:
       type: word

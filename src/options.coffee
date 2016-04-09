@@ -1,6 +1,5 @@
 {async} = require "fairmont"
 {all} = require "when"
-# messages = require "panda-messages"
 {read} = require "panda-rw"
 
 _exports = do async ->
@@ -16,7 +15,7 @@ _exports = do async ->
   definitions = yield read shared.options
 
   {all, any, many, optional, rule} = require "bartlett"
-  {merge, first, second, empty} = require "fairmont"
+  {include, merge, first, second, empty, collect, map} = require "fairmont"
 
   # take a key and a value and return an object
   _kv = (k,v, o = {}) -> o[k] = v ; o
@@ -53,45 +52,45 @@ _exports = do async ->
           rx.push p
       {value: values, rest: s}
 
-  # flag parsing rules
-
-  longFlag = (flag) -> rule (word "--#{flag}"), -> true
-
-  shortFlag = (flag) -> rule (word "-#{flag}"), -> true
-
-  flag = (flag) ->
-    switch flag.length
-      when 0 then (throw new RangeError)
-      when 1 then (shortFlag flag)
-      else (longFlag flag)
-
-  flags = (ax...) -> any ((flag a) for a in ax)...
-
-  # an option is a flag plus a parameter
-  option = (ax...) ->
-    rule (all (flags ax...), parameter), ({value}) -> second value
-
   # a parameter is anything that isn't a flag
   parameter = ([value, rest...]) -> {value, rest} if !value.match /^\-/
 
   # a word here means a specific string
   word = (w) -> ([value, rest...]) -> {value, rest} if value == w
 
-  # Generate rules based on the type attributes in the definitions
-  Adapters =
+  flag = (s) ->
+    switch s.length
+      when 0 then (throw new RangeError)
+      when 1 then "-#{s}"
+      else "--#{s}"
 
-    toggle: (d) -> flags d.flags...
+  normalize = (definitions) ->
 
-    option: (d) -> option d.flags...
+    for name, d of definitions
 
-    word: ({name}) -> word name
+      # with YAML refs its possible to see the same
+      # definition more than once...
+      if !(d.__processed)?
 
-    list: ({subtype: {type, options}}) ->
-      many Adapters[type] options
+        d.__processed = true
 
-    parameter: -> parameter
+        # The "key" is what we use to save the resulting value,
+        # and we default it to the name (which is the property name).
+        d.name = name
+        d.key ?= name
 
-  createRules = (definitions) ->
+        # add dashes in front of flags
+        if d.flags?
+          d.flags = collect map flag, d.flags
+        if d.options?
+          normalize d.options
+        if d.help? && d.default?
+          d.help += " Defaults to #{d.default}."
+          $P d.help
+
+    definitions
+
+  build = (definitions) ->
 
     # As we process definitions, we're going to
     # compile a list of required options and defaults
@@ -102,13 +101,8 @@ _exports = do async ->
     # an array of rules that we're going to place in `ax`
     px = for name, d of definitions
 
-      # The "key" is what we use to save the resulting value,
-      # and we default it to the name (which is the property name).
-      d.name = name
-      d.key ?= name
-
       # Create a base rule based on the definition type...
-      p = Adapters[d.type] d
+      p = build[d.type] d
 
       # Wrap it in a rule that converts the result into an
       # object with one property...
@@ -120,7 +114,7 @@ _exports = do async ->
       # the current option and the nested options to match,
       # merging the resulting objects...
       if d.options?
-        p = rule (all p, (createRules d.options)), _merge
+        p = rule (all p, (build d.options)), _merge
 
       # Save default values and required options...
       # Defaults take precedence.
@@ -140,9 +134,11 @@ _exports = do async ->
     # of the options. We still need to layer in the defaults and
     # check for required options.
     do (defaults, required) ->
+
       (s) ->
+
         # If we don't match to begin with, nevermind...
-        if (match=q(s))?
+        if (match = q(s))?
 
           {value, rest} = match
 
@@ -155,11 +151,34 @@ _exports = do async ->
           # If we're still here, we have a valid result
           {value, rest}
 
-  parser = grammar createRules definitions
+
+  # helper for generating a rule for flags
+  _flags = (flags) -> any (collect map word, flags)...
+  _options = (flags) -> all (_flags flags), parameter
+
+  # Generate rules based on the type attributes in the definitions
+  include build,
+    switch: (d) -> rule (_flags d.flags), -> true
+    option: (d) -> rule (_options d.flags), ({value}) -> second value
+    word: ({name}) -> word name
+    list: ({subtype: {type, options}}) -> many build[type] options
+    parameter: -> parameter
+
+  parser = grammar build normalize definitions
 
   parse = -> parser process.argv[2..]
 
+  render = require "./template"
+  messages = yield read shared.messages
+
   help = (name) ->
+    if name?
+      render messages[name].help, definitions[name]
+    else
+      render messages.help, definitions
+
+  $P help()
+  # $P values definitions["cluster"].options
 
   {parse, help}
 
