@@ -34,6 +34,7 @@
     "json": "^9.0.3"
   },
   "dependencies": {
+    "bartlett": "^1.0.0-alpha-02",
     "dashdash": "^1.13.0",
     "fairmont": "^1.0.0-beta-40",
     "js-yaml": "^3.5.3",

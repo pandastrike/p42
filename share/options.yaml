@@ -1,19 +1,77 @@
-main:
-  - name: dry-run
-    type: bool
-    default: false
-    help: Show commands that would have been run, but don't actually run them.
+dryRun:
+  type: toggle
+  flags:
+    - dry-run
+  default: false
 
-  - names:
-      - help
-      - h
-      - z
-    type: bool
-    help: Show this help.
-
-  - names:
+verbose:
+  type: toggle
+  flags:
     - verbose
     - v
-    default: []
-    type: arrayOfBool
-    help: Verbose output. Use multiple times for more verbose.
+  default: false
+
+build:
+  type: word
+  key: command
+  options:
+    mixins:
+      type: list
+      subtype:
+        type: parameter
+      optional: true
+
+cluster:
+  type: word
+  key: command
+  options:
+
+    create:
+      type: word
+      key: subcommand
+
+    expand: &expand
+      type: word
+      key: subcommand
+      options:
+        cluster: &cluster
+          type: parameter
+          optional: true
+        number:
+          type: option
+          flags:
+            - number
+            - n
+          default: 1
+
+    contract: *expand
+
+    ls:
+      type: word
+      key: subcommand
+      options:
+        cluster: *cluster
+
+    ps:
+      type: word
+      key: subcommand
+      options:
+        cluster: *cluster
+
+    env:
+      type: word
+      key: subcommand
+      options:
+        cluster: *cluster
+
+    get:
+      type: word
+      key: subcommand
+      options:
+        cluster: *cluster
+        property:
+          type: parameter
+
+init:
+  type: word
+  key: command

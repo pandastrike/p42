@@ -7,12 +7,14 @@ _exports = do async ->
 
   [
     shared
+    Options
     Cluster
     AWSHelpers
     DockerHelpers
     Name
   ] = yield all [
     require "../shared"
+    require "../options"
     require "../cluster"
     require "../helpers/aws"
     require "../helpers/docker"
@@ -25,9 +27,10 @@ _exports = do async ->
 
     create: async ->
       name = yield Name.generate()
-      info "cluster.create.begin", {name}
+      info "cluster.create.starting", {name}
       cluster = yield Cluster.create name
-      DockerHelpers.createSwarmInstance {cluster, name, master: true}
+      yield DockerHelpers.createSwarmInstance {cluster, name, master: true}
+      info "cluster.create.complete", {name}
 
     expand: async ({name, count}) ->
       names = yield DockerHelpers.findAvailableNames name, count
@@ -57,10 +60,23 @@ _exports = do async ->
       cluster = yield Cluster.resolve name
       if property? then cluster[property] else yaml cluster
 
-  async (name, args...) ->
+  async (args...) ->
+
+    _options = Options.parse "cluster.main", args
+    [name, args...] = _options._args
+
     if (command = Commands[name])?
-      yield command args...
+      _options = Options.parse "cluster.#{name}", args
+      [name, bad] = _options._args
+      if bad?
+        bye "bad-option", name: bad
+      else
+        options = {name}
+        for key, value of _options when ! key.match /^_/
+          options[key] = value
+        p options
+        # yield command options
     else
-      # usage
+      bye "bad-subcommand", {name}
 
 module.exports = _exports

@@ -1,7 +1,7 @@
 {async, isArray} = require "fairmont"
 {all} = require "when"
 
-global.p = -> console.error arguments...
+global.$P = -> console.error arguments...
 
 module.exports = async (name, args...) ->
 
@@ -18,16 +18,14 @@ module.exports = async (name, args...) ->
 
   {bye, error, _error} = shared.loggers.output
 
-  options = Options.parse "main", process.argv
+  options = Options.parse "main", process.argv[2..]
 
-  # shared.dryRun = options.dry_run
-  # TODO: use option for this
-  shared.dryRun = true
+  shared.dryRun = options.dry_run
 
   # TODO: use this to set logging level
   # verbosity = options.verbose.length
 
-  [command, args...] = options._args.sort().reverse()
+  [command, args...] = options._args
 
   if (command = Commands[name])?
     try

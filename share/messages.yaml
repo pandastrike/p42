@@ -3,28 +3,63 @@ unexpected-error: "p42: unexpected error"
 bad-command: |
   p42: '{{name}}' is not a valid command.
 
-  Run `p42 --help` for help.
+  Run `p42 help` for help.
+
+bad-subcommand: |
+  p42: '{{name}}' is not a valid subcommand.
+
+  Run `p42 help <command>` for help on a specific command.
 
 not-implemented: "p42: Sorry, but this feature is not yet implemented."
 
+bad-option: |
+  p42: '{{name}}' is not a valid option.
+
 main:
+
   help: |
 
-    Usage: p42 <command> <options...>
+    usage: p42 <command> <options...>
+
+    Run Docker containers in an AWS VPC.
+
     Available commands are:
 
         build, cluster, help, init, mixin, run, start, stop, target
 
-    Run 'p42 help <command>' for command specific help.
-
-    Valid options for all commands include:
+    Options valid for all commands:
 
     {{options}}
+
+    Run `p42 help <command>` for help on a specific command.
+
+cluster:
+
+  help: |
+
+    usage: p42 cluster <command> <options>
+
+    Create, manage, or remove clusters.
+
+    Available subcommands are:
+
+      create, expand, contract, rm, ls, ps, env, get
+
+    Run 'p42 cluster help <subcommand>' for command specific help.
+
+  create:
+
+    starting: Creating cluster [{{name}}] ...
+
+    complete: Cluster [{{name}}] created.
+
+    help: |
+      Usage: p42 cluster create
+      Create a VPC and a master Swarm node.
 
 init:
 
   help: p42 init
-
 
 application:
 
@@ -132,24 +167,6 @@ target-rename:
 
   help: p42 target [rename|mv] <branch> <branch>
 
-cluster:
-
-  help: |
-    Usage: p42 cluster <command> <options>
-    Create, manage, or remove clusters.
-
-    Valid commands include:
-      create, add, rm, ls, ps, env, get
-
-    Run 'p42 help <command>' for command specific help.
-
-  create:
-
-    begin: Creating cluster [{{name}}] ...
-
-    help: |
-      Usage: p42 cluster create
-      Create a VPC and a master Swarm node.
 
 cluster-add:
 
