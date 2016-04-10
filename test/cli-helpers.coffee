@@ -15,39 +15,41 @@ module.exports = (context) ->
       require "../src/cli"
     ]
 
+    run = (string) -> CLI w "#{string} --dry-run"
+
     command "CLI.cluster.create", context, ->
-      CLI w "cluster create"
+      run "cluster create"
 
     command "CLI.cluster.expand", context, ->
-      CLI w "cluster expand violent-aftermath -n 3"
+      run "cluster expand violent-aftermath -n 3"
 
     command "CLI.cluster.contract", context #, ->
-      # CLI w "cluster contract violent-aftermath --count 2"
+      # run "cluster contract violent-aftermath --count 2"
 
     command "CLI.cluster.rm", context, ->
-      CLI w "cluster rm violent-aftermath"
+      run "cluster rm violent-aftermath"
 
     context.test "CLI.cluster.ls", ->
-      assert "violent-aftermath" in (yield CLI w "cluster ls")
+      assert "violent-aftermath" in (yield run "cluster ls")
 
     command "CLI.cluster.ps", context, ->
-      CLI w "cluster ps violent-aftermath"
+      run "cluster ps violent-aftermath"
 
     command "CLI.cluster.env", context, ->
-      CLI w "cluster env violent-aftermath"
+      run "cluster env violent-aftermath"
 
     context.test "CLI.cluster.get", ->
       assert.equal "us-west-1",
-        yield CLI w "cluster get violent-aftermath region"
+        yield run "cluster get violent-aftermath region"
 
     command "CLI.build", context, ->
       chdir shared.test.app.root
-      CLI w "build"
+      run "build"
 
     command "CLI.start", context, ->
       chdir shared.test.app.root
-      CLI w "start"
+      run "start"
 
     command "CLI.run", context, ->
       chdir shared.test.app.root
-      CLI w "run"
+      run "run"

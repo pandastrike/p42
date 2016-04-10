@@ -46,12 +46,15 @@ loggers = async (shared, loggers = {}) ->
   tty = Stream.create stream: process.stderr, level: "info"
 
   # composite loggers
-  output = wrap helpers Composite.create loggers: [ debug, tty ]
+  output = wrap helpers Composite.create loggers: { debug, tty }
 
   # dry-run command logger
-  dryRun = helpers yield Memory.create()
+  command = helpers Composite.create
+    loggers:
+      test: yield Memory.create()
+      tty: Stream.create stream: process.stderr, level: "emerg"
 
-  {output, dryRun}
+  {output, command}
 
 _exports = do async ->
 

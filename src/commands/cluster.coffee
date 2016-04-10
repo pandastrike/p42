@@ -33,14 +33,16 @@ _exports = do async ->
       info "cluster.create.complete", {name}
 
     expand: async ({name, count}) ->
+      info "cluster.expand.starting", {name, count}
       names = yield DockerHelpers.findAvailableNames name, count
       cluster = yield Cluster.resolve name
       # TODO: ideally we'd launch all three swarm instances in parallel
       # but that messes up the tests at the moment
-      for name in names
+      for _name in names
         yield DockerHelpers.createSwarmInstance
-          name: name
+          name: _name
           cluster: cluster
+      info "cluster.expand.complete", {name, count}
 
     contract: ({name, count}) ->
       bye "not-implemented"

@@ -23,8 +23,9 @@ module.exports = async (args) ->
     options = Options.parse args
 
     include shared.settings, options
-    # TODO: get rid of hard-coded override
-    shared.settings.dryRun = true
+
+    if shared.settings.dryRun
+      shared.loggers.command._self.loggers.tty.level = "debug"
 
     if (command = Commands[options.command])?
       yield command options

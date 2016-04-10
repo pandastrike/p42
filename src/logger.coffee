@@ -98,7 +98,7 @@ include Logger.Composite,
 
 Method.define log, (isKind Logger.Composite), isString, (-> true),
   ({loggers}, level, data...) ->
-    (log logger, level, data...) for logger in loggers
+    (log logger, level, data...) for key, logger of loggers
 
 Logger.Helpers = do (helpers = {}) ->
   for level, index of Logger.levels

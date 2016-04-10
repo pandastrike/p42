@@ -53,6 +53,12 @@ cluster:
       Usage: p42 cluster create
       Create a VPC and a master Swarm node.
 
+  expand:
+
+    starting: Expanding cluster [{{name}}] by {{count}} node(s) ...
+
+    complete: Cluster [{{name}}] expanded by {{count}} node(s).
+
 init:
 
   help: p42 init

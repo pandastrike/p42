@@ -5,6 +5,7 @@ F = require "fairmont"
 {read} = require "panda-rw"
 messages = require "panda-messages"
 Tmp = require "../src/tmp"
+Logger = require "../src/logger"
 trim = (s) -> s.trim()
 
 # This ensures that when we're logging the commands for test A,
@@ -57,27 +58,24 @@ command = (name, context, f) ->
       # Synchronize the test...
       yield synchronize async ->
 
-        # Make sure the dryRun flag is set
         shared = yield require "../src/shared"
-        shared.settings.dryRun = true
-
-        # silence output and logging except for the
-        # dry-run logging...
-        # TODO: come up with a nicer interface for this
-        for logger in shared.loggers.output._self.loggers
-          logger.level = "emerg"
 
         # Get the command logger helpers and clear the log
-        logger = shared.loggers.dryRun
         # TODO: come up with a nicer interface for this
-        logger._self.content = logger._self.sink = []
+        logger = shared.loggers.command._self.loggers.test
+        logger.content = logger.sink = []
+
+        # silence output
+        # TODO: come up with a nicer interface for this
+        # shared.loggers.command._self.loggers.tty = logger
+        shared.loggers.output._self.loggers.tty.level = "emerg"
 
         # Actually run the test, and wait for the results
         yield f()
 
         # Read the log and sanitize the results
         # TODO: ... and this
-        actual = logger._self.content.join("\n")
+        actual = logger.content.join("\n")
         contents = yield readFiles actual
 
         # Get the expectations for this test

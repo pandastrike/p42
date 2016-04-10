@@ -12,7 +12,7 @@ _exports = do async ->
 
   shared = yield require "./shared"
   {lookup} = yield messages shared.commands
-  C = shared.loggers.dryRun
+  C = shared.loggers.command
   O = shared.loggers.output
 
   build = (key, data={}) ->
@@ -33,6 +33,7 @@ _exports = do async ->
   run = async (key, data={}) ->
 
     command = build key, data
+
     if shared.settings.dryRun
       yield C.info command.string
       command.test
