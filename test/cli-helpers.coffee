@@ -27,27 +27,27 @@ module.exports = (context) ->
     command "CLI.cluster.rm", context, ->
       CLI w "cluster rm violent-aftermath"
 
-    # context.test "CLI.cluster.ls", ->
-    #   assert "violent-aftermath" in (yield cluster "ls")
-    #
-    # command "CLI.cluster.ps", context, ->
-    #   cluster "ps", "violent-aftermath"
-    #
-    # command "CLI.cluster.env", context, ->
-    #   cluster "env", "violent-aftermath"
-    #
-    # context.test "CLI.cluster.get", ->
-    #   assert.equal "us-west-1",
-    #     yield cluster "get", "violent-aftermath", "region"
-    #
-    # command "CLI.build", context, ->
-    #   chdir shared.test.app.root
-    #   build()
-    #
-    # command "CLI.start", context, ->
-    #   chdir shared.test.app.root
-    #   start()
-    #
-    # command "CLI.run", context, ->
-    #   chdir shared.test.app.root
-    #   run()
+    context.test "CLI.cluster.ls", ->
+      assert "violent-aftermath" in (yield CLI w "cluster ls")
+
+    command "CLI.cluster.ps", context, ->
+      CLI w "cluster ps violent-aftermath"
+
+    command "CLI.cluster.env", context, ->
+      CLI w "cluster env violent-aftermath"
+
+    context.test "CLI.cluster.get", ->
+      assert.equal "us-west-1",
+        yield CLI w "cluster get violent-aftermath region"
+
+    command "CLI.build", context, ->
+      chdir shared.test.app.root
+      CLI w "build"
+
+    command "CLI.start", context, ->
+      chdir shared.test.app.root
+      CLI w "start"
+
+    command "CLI.run", context, ->
+      chdir shared.test.app.root
+      CLI w "run"

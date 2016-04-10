@@ -19,11 +19,33 @@ build:
   type: word
   key: command
   options:
-    mixins:
+    mixins: &mixins
       type: list
       subtype:
         type: parameter
       optional: true
+
+run:
+  type: word
+  key: command
+  options:
+    mixins: *mixins
+
+start:
+  type: word
+  key: command
+  options:
+    mixins: *mixins
+
+stop:
+  type: word
+  key: command
+  options:
+    mixins: *mixins
+
+init:
+  type: word
+  key: command
 
 cluster:
 
@@ -85,7 +107,3 @@ cluster:
         cluster: *cluster
         property:
           type: parameter
-
-init:
-  type: word
-  key: command

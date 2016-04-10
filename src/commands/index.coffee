@@ -17,7 +17,7 @@ module.exports = do async ->
     require "./cluster"
     require "./help"
     require "./init"
-    # require "./mixin"
+    require "./mixin"
     require "./run"
     require "./start"
     require "./stop"

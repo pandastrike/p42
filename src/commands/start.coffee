@@ -108,7 +108,7 @@ _exports = do async ->
     for protocol in discovery
       DNSHelpers.srv {protocol, subdomain: mixin, targets, comment}
 
-  async (mixins...) ->
+  async ({mixins}) ->
     if empty mixins
       mixins = yield Mixins.list()
 

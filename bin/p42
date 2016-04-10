@@ -2,4 +2,4 @@
 
 CLI = require "../src/cli"
 
-CLI process.argv[2..]...
+CLI process.argv[2..]

@@ -1,6 +1,7 @@
 {async} = require "fairmont"
 {all} = require "when"
 {read} = require "panda-rw"
+raise = require "./raise"
 
 _exports = do async ->
 
@@ -31,9 +32,9 @@ _exports = do async ->
         if empty rest
           value
         else
-          throw "invalid option: #{first rest}"
+          raise "bad-option", name: first rest
       else
-        throw "unexpected error parsing: #{first s}"
+        raise "bad-command", name: s.join ' '
 
   # match a set of rules in any order, but only
   # once per rule...

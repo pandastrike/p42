@@ -1,9 +1,7 @@
 unexpected-error: "p42: unexpected error"
 
 bad-command: |
-  p42: '{{name}}' is not a valid command.
-
-  Run `p42 help` for help.
+  p42: '{{name}}' is not a valid command. Run `p42 help` for help.
 
 bad-subcommand: |
   p42: '{{name}}' is not a valid subcommand.
