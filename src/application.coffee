@@ -11,7 +11,7 @@ _exports = do async ->
   Git =
 
     getBranch: async ->
-      if shared.dryRun
+      if shared.settings.dryRun
         "master"
       else
         (yield sh "git symbolic-ref --short -q HEAD")

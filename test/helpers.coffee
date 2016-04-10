@@ -59,7 +59,7 @@ command = (name, context, f) ->
 
         # Make sure the dryRun flag is set
         shared = yield require "../src/shared"
-        shared.dryRun = true
+        shared.settings.dryRun = true
 
         # silence output and logging except for the
         # dry-run logging...

@@ -33,7 +33,7 @@ _exports = do async ->
   run = async (key, data={}) ->
 
     command = build key, data
-    if shared.dryRun
+    if shared.settings.dryRun
       yield C.info command.string
       command.test
     else

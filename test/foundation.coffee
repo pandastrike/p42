@@ -75,7 +75,7 @@ module.exports = (context) ->
     context.test "shell runner", ->
       shared = yield require "../src/shared"
       yield synchronize async ->
-        shared.dryRun = true
+        shared.settings.dryRun = true
         run = yield require "../src/run"
         {zoneId} = yield run "aws.route53.list-hosted-zones-by-name",
           domain: "fubar.com"

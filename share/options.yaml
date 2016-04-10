@@ -2,7 +2,7 @@ dryRun:
   type: switch
   flags:
     - dry-run
-  help: |-
+  help: >-
     Show the commands that would be run, but don't actually run them.
   default: false
 
@@ -11,7 +11,7 @@ verbose:
   flags:
     - verbose
     - v
-  help: |-
+  help: >-
     Log debug statements to the console.
   default: false
 
@@ -26,8 +26,10 @@ build:
       optional: true
 
 cluster:
+
   type: word
   key: command
+
   options:
 
     create:
@@ -41,10 +43,10 @@ cluster:
         cluster: &cluster
           type: parameter
           optional: true
-        number:
+        count:
           type: option
           flags:
-            - number
+            - count
             - n
           default: 1
 
@@ -53,6 +55,12 @@ cluster:
       key: subcommand
 
     ls:
+      type: word
+      key: subcommand
+      options:
+        cluster: *cluster
+
+    rm:
       type: word
       key: subcommand
       options:

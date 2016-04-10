@@ -12,7 +12,7 @@ _exports = do async ->
 
     # Generate a name from our list of adjectives and nouns.
     generate: ->
-      if shared.dryRun
+      if shared.settings.dryRun
         "violent-aftermath"
       else
         "#{pluck adjectives}-#{pluck nouns}"

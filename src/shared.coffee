@@ -58,10 +58,10 @@ _exports = do async ->
   # each p42 user has their own config directory
   config = Path.join process.env.HOME, ".config", "p42"
   yield mkdirp config
+  # global settings
+  settings = {}
   # each application has a run directory
   run = "run"
-  # global dry run setting
-  dryRun = false
   # paths to various shared files
   share = yield paths Path.join __dirname, "..", "share"
   test = yield paths Path.join __dirname, "..", "test", "data"
@@ -69,6 +69,6 @@ _exports = do async ->
   # set up loggers
   loggers = yield loggers share
   # build the shared object
-  include share, {config, run, dryRun, test, loggers}
+  include share, {config, run, settings, test, loggers}
 
 module.exports = _exports

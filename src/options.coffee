@@ -32,25 +32,35 @@ _exports = do async ->
           value
         else
           throw "invalid option: #{first rest}"
+      else
+        throw "unexpected error parsing: #{first s}"
 
   # match a set of rules in any order, but only
   # once per rule...
+
   set = (px...) ->
-    (s) ->
-      values = []
-      rx = []
-      until (empty px) || (empty s)
-        [p, qx...] = px
-        if (match = p(s))?
+
+    (sx) ->
+
+      qx = px # don't mess with the original ruleset
+      rx = [] # as yet unmatched rules
+      vx = [] # matched values
+
+      # try until there are no rules left to try
+      # or until there is nothing left to match
+      until (empty qx) || (empty sx)
+        [p, qrest...] = qx
+        if (match = p(sx))?       # .... found a match
           {value, rest} = match
-          values.push value
-          s = rest
-          px = [qx..., rx...]
-          rx = []
-        else
-          px = qx
-          rx.push p
-      {value: values, rest: s}
+          vx.push value           # save the value
+          sx = rest               # continue matching
+          qx = [qrest..., rx...]  # reconsider unmatched rules
+          rx = []                 # and emptyt the unmatched list
+        else                      # ... no match yet
+          qx = qrest              # move to the next rule
+          rx.push p               # saving the unmatched rule
+
+      {value: vx, rest: sx}
 
   # a parameter is anything that isn't a flag
   parameter = ([value, rest...]) -> {value, rest} if !value.match /^\-/
@@ -84,9 +94,12 @@ _exports = do async ->
           d.flags = collect map flag, d.flags
         if d.options?
           normalize d.options
-        if d.help? && d.default?
-          d.help += " Defaults to #{d.default}."
-          $P d.help
+        # TODO: less hacky way to generate supplementary help text
+        if d.help?
+          if d.default?
+            d.help += " Defaults to #{d.default}."
+          else if d.required || !d.optional?
+            d.help += " Required."
 
     definitions
 
@@ -121,7 +134,7 @@ _exports = do async ->
       if d.default?
         defaults[d.key] = d.default
       else if d.required? || !d.optional?
-        required.push d.key
+        required.push d.key unless d.key in required
 
       # Return that rule, so it ends up in our rule array px
       p
@@ -146,6 +159,10 @@ _exports = do async ->
           value = merge defaults, value
 
           # Make sure we have all the required values...
+          # The reason this works for a set is because each
+          # item in the set will get marked as required
+          # unless explicitly marked as optional, using the
+          # same _key_ ...
           return undefined for key in required when !(value[key]?)
 
           # If we're still here, we have a valid result
@@ -165,8 +182,15 @@ _exports = do async ->
     parameter: -> parameter
 
   parser = grammar build normalize definitions
+  # parser = build normalize definitions
 
-  parse = -> parser process.argv[2..]
+  parse = (args) -> parser args
+
+  # {w} = require "fairmont"
+  # $P parse w "cluster create"
+  # $P parse w "cluster expand violent-aftermath -n 3"
+  # $P parse w "cluster rm violent-aftermath"
+  # $P parse w "cluster create"
 
   render = require "./template"
   messages = yield read shared.messages
@@ -176,9 +200,6 @@ _exports = do async ->
       render messages[name].help, definitions[name]
     else
       render messages.help, definitions
-
-  $P help()
-  # $P values definitions["cluster"].options
 
   {parse, help}
 

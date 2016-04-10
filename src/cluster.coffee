@@ -33,7 +33,7 @@ _exports = do async ->
       yield createStack name
       loop
         # wait 5 seconds before querying status
-        yield sleep 5000 unless shared.dryRun
+        yield sleep 5000 unless shared.settings.dryRun
         cluster = yield getStack name
         if cluster.status == "CREATE_COMPLETE"
           break
@@ -53,7 +53,7 @@ _exports = do async ->
       yield removeStack name
       # TODO: find a way to re-create the cluster
       # YAML file for tests that depend on it
-      rm Cluster.join name unless shared.dryRun
+      rm Cluster.join name unless shared.settings.dryRun
 
     list: ->
       collect flow [
