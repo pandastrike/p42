@@ -11,13 +11,12 @@ _exports = do async ->
     require "../options"
   ]
 
-  {bye, _error} = shared.loggers.output
+  {bye, _error} = shared.loggers.status
 
   ({name}) ->
-    _error Options.help name
-    # try
-    #   _error Options.help name
-    # catch
-    #   bye "bad-command", {name}
+    try
+      _error Options.help name
+    catch
+      bye "bad-command", {name}
 
 module.exports = _exports

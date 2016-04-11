@@ -99,6 +99,17 @@ application:
   bad-mixin: |
     [{{name}}] is not a valid mixin.
 
+  no-target: >-
+    p42: no target for this branch.
+    Try: [ p42 target add <branch> <cluster> ].
+
+start:
+
+  starting: >-
+    Starting [{{mixin}}] ...
+
+  complete: >-
+    [{{mixin}}] started.
 
   # Summary: Initialize an application for use with p42.
   # Help: Initialize an application for use with p42.

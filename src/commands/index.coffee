@@ -12,6 +12,7 @@ module.exports = do async ->
     run
     start
     stop
+    target
   ] = yield all [
     require "./build"
     require "./cluster"
@@ -21,6 +22,7 @@ module.exports = do async ->
     require "./run"
     require "./start"
     require "./stop"
+    require "./target"
   ]
 
-  {build, cluster, help, init, run, mixin, start, stop}
+  {build, cluster, help, init, run, mixin, start, stop, target}

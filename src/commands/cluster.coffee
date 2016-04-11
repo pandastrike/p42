@@ -50,10 +50,10 @@ _exports = do async ->
     rm: async ({name}) ->
       info "cluster.rm.starting", {name}
       yield DockerHelpers.removeSwarmNodes name
-      Cluster.remove name
+      yield Cluster.remove name
       info "cluster.rm.complete", {name}
 
-    ls: async -> yield Cluster.list()
+    ls: -> Cluster.list()
 
     ps: ({name}) -> DockerHelpers.listSwarmNodes name
 

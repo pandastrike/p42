@@ -7,7 +7,7 @@
     "share"
   ],
   "bin": {
-    "p42": "libexec/p42"
+    "p42": "bin/p42"
   },
   "scripts": {
     "test": "coffee test/index.coffee",

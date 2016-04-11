@@ -118,7 +118,13 @@ _exports = do async ->
 
       # Wrap it in a rule that converts the result into an
       # object with one property...
-      p = do (d) -> (rule p, ({value}) -> _kv d.key, value)
+      p = do (d) ->
+        # if there is a value override, use that
+        if d.value?
+          (rule p, -> _kv d.key, d.value)
+        # otherwise just use whatever value we parsed
+        else
+          (rule p, ({value}) -> _kv d.key, value)
 
       # If this definition itself has an options definition,
       # recursively generate rules for those options,

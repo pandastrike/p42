@@ -9,8 +9,6 @@ module.exports = async ->
   Application = yield require "../application"
   AWSHelpers = yield require "../helpers/aws"
 
-  defaults =
-
   interview = yield Interview.create
     path: shared.interviews.init
     defaults:

@@ -1,5 +1,5 @@
 {join} = require "path"
-{async, include, isFile, isDirectory, readdir, sh, empty} = require "fairmont"
+{async, include, isFile, isDirectory, readdir, shell, empty} = require "fairmont"
 {read, write} = require "panda-rw"
 raise = require "./raise"
 
@@ -14,13 +14,13 @@ _exports = do async ->
       if shared.settings.dryRun
         "master"
       else
-        (yield sh "git symbolic-ref --short -q HEAD")
+        (yield shell "git symbolic-ref --short -q HEAD")
         .stdout
 
 
   Application =
 
-    create: (definition) -> write "./p42.yaml", definition
+    create: (definition) -> Application.save definition
 
     load: async ->
 
@@ -29,10 +29,12 @@ _exports = do async ->
 
       raise "application.no-branch" if ! branch?
       {name, domain, registry, clusters} = yield read "./p42.yaml"
+      clusters ?= {}
       cluster = clusters?[branch]
-      raise "application.no-target" if !cluster?
+      {name, domain, registry, clusters, cluster}
 
-      {name, domain, registry, cluster}
+    save: ({name, domain, registry, clusters}) ->
+      write "./p42.yaml", {name, domain, registry, clusters}
 
     Mixins: Mixins =
 
@@ -59,19 +61,20 @@ _exports = do async ->
 
     Targets:
 
-      add: (target, name) ->
+      add: async ({branch, cluster}) ->
         application = yield Application.load()
-        application.clusters[target] = name
+        application.clusters[branch] = cluster
         Application.save application
 
-      remove: (target) ->
+      remove: async ({branch}) ->
         application = yield Application.load()
-        delete application.clusters[target]
+        delete application.clusters[branch]
         Application.save application
 
-      rename: (before, after) ->
+      rename: async ({before, after}) ->
         application = yield Application.load()
         application.clusters[after] = application.clusters[before]
+        delete application.clusters[before]
         Application.save application
 
 module.exports = _exports

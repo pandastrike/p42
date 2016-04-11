@@ -5,18 +5,22 @@ sprintf = require "sprintf"
 _exports = do async ->
 
   [
+    shared
     AWSHelpers
     DockerHelpers
     DNSHelpers
     Application
     Cluster
   ] = yield all [
+    require "../shared"
     require "../helpers/aws"
     require "../helpers/docker"
     require "../helpers/dns"
     require "../application"
     require "../cluster"
   ]
+
+  {info} = shared.loggers.status
 
   {Mixins} = Application
 
@@ -27,6 +31,8 @@ _exports = do async ->
       yield DockerHelpers.pull {registry, tag}
 
   start = async (mixin) ->
+
+    info "start.starting", {mixin}
 
     {registry, domain} = application = yield Application.load()
     {subdomains, count, discovery} = yield Mixins.load mixin

@@ -51,6 +51,58 @@ init:
   type: word
   key: command
 
+target:
+
+  type: word
+  key: command
+
+  options:
+
+    add:
+
+      type: word
+      key: subcommand
+
+      options:
+
+        branch:
+          type: parameter
+
+        cluster:
+          type: parameter
+
+    remove: &target-remove
+
+      type: word
+      key: subcommand
+      # fix the value so we can create rm alias
+      value: remove
+
+      options:
+
+        target:
+          type: parameter
+
+    rm: *target-remove
+
+    rename: &target-rename
+
+      type: word
+      key: subcommand
+      # fix the value so we can create mv alias
+      value: rename
+
+      options:
+
+        before:
+          type: parameter
+
+        after:
+          type: parameter
+
+    mv: *target-rename
+
+
 cluster:
 
   type: word
@@ -83,8 +135,6 @@ cluster:
     ls:
       type: word
       key: subcommand
-      options:
-        cluster: *cluster
 
     rm:
       type: word
