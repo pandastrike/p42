@@ -1,17 +1,17 @@
-{all} = require "when"
-{async} = require "fairmont"
+# {all} = require "when"
+{async, collect, pull} = require "fairmont"
 
 _exports = do async ->
 
   [
     shared
     Application
-  ] = yield all [
+  ] = yield collect pull [
     require "../shared"
     require "../application"
   ]
 
-  {info} = shared.loggers.output
+  {info} = shared.loggers.status
 
   build = async ({mixins}) ->
     info "build.starting", {mixins}

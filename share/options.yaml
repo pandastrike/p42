@@ -110,4 +110,5 @@ cluster:
       options:
         cluster: *cluster
         property:
+          optional: true
           type: parameter

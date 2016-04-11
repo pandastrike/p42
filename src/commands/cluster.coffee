@@ -21,7 +21,7 @@ _exports = do async ->
     require "../name"
   ]
 
-  {bye, info, error} = shared.loggers.output
+  {bye, info, error} = shared.loggers.status
 
   Commands =
 
@@ -53,7 +53,7 @@ _exports = do async ->
       Cluster.remove name
       info "cluster.rm.complete", {name}
 
-    ls: -> Cluster.list()
+    ls: async -> yield Cluster.list()
 
     ps: ({name}) -> DockerHelpers.listSwarmNodes name
 
@@ -61,7 +61,7 @@ _exports = do async ->
 
     get: async ({name, property}) ->
       cluster = yield Cluster.resolve name
-      if property? then cluster[property] else yaml cluster
+      if property? then cluster[property] else cluster
 
   async (options) ->
 

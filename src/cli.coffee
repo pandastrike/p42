@@ -1,5 +1,6 @@
-{async, include, isArray} = require "fairmont"
+{async, include, isObject, isString, isArray, isDefined, isUndefined, isPromise, Method} = require "fairmont"
 {all} = require "when"
+{yaml} = require "./serialize"
 
 global.$P = -> console.log arguments...
 $P.hi = -> $P "----> hola <-----"
@@ -16,7 +17,18 @@ module.exports = async (args) ->
     require "./options"
   ]
 
-  {bye, error, _error} = shared.loggers.output
+  {bye, error, _error} = shared.loggers.status
+  O = shared.loggers.output
+
+  show = Method.create()
+
+  Method.define show, isUndefined, ->
+  Method.define show, isDefined, (x) -> show x.toString()
+  Method.define show, isPromise, (p) -> p.then (x) -> show x
+  Method.define show, isString, (s) -> O.info s
+  Method.define show, isArray, (ax) -> show a for a in ax ;;
+  # could support JSON flag here
+  Method.define show, isObject, (o) -> show yaml o
 
   try
 
@@ -25,10 +37,10 @@ module.exports = async (args) ->
     include shared.settings, options
 
     if shared.settings.dryRun
-      shared.loggers.command._self.loggers.tty.level = "debug"
+      shared.loggers.command._self.loggers.stderr.level = "debug"
 
     if (command = Commands[options.command])?
-      yield command options
+      show yield command options
     else
       bye "bad-command", name: options.command
 

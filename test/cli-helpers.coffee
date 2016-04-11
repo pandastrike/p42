@@ -1,6 +1,7 @@
 assert = require "assert"
 {all} = require "when"
 {async, isArray, chdir, w} = require "fairmont"
+Logger = require "../src/logger"
 {command} = require "./helpers"
 
 module.exports = (context) ->
@@ -15,7 +16,13 @@ module.exports = (context) ->
       require "../src/cli"
     ]
 
-    run = (string) -> CLI w "#{string} --dry-run"
+
+    run = async (string) ->
+      # Redirect command output so we can inspect it
+      logger = Logger.Memory.create()
+      shared.loggers.output._self.loggers.stdout = logger
+      yield CLI w "#{string} --dry-run"
+      logger.sink
 
     command "CLI.cluster.create", context, ->
       run "cluster create"
@@ -29,7 +36,7 @@ module.exports = (context) ->
     command "CLI.cluster.rm", context, ->
       run "cluster rm violent-aftermath"
 
-    context.test "CLI.cluster.ls", ->
+    command "CLI.cluster.ls", context, async ->
       assert "violent-aftermath" in (yield run "cluster ls")
 
     command "CLI.cluster.ps", context, ->
@@ -38,7 +45,7 @@ module.exports = (context) ->
     command "CLI.cluster.env", context, ->
       run "cluster env violent-aftermath"
 
-    context.test "CLI.cluster.get", ->
+    command "CLI.cluster.get", context, async ->
       assert.equal "us-west-1",
         yield run "cluster get violent-aftermath region"
 

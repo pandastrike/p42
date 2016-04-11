@@ -15,12 +15,6 @@ Amen.describe "p42", (context) ->
     shared = yield require "../src/shared"
     shared.settings.dryRun = true
 
-    # silence tty logging for commands
-    # (we can't simply delete the tty logger, because the
-    # CLI will try to set it when --dry-run is set)
-    Logger = require "../src/logger"
-    shared.loggers.command._self.loggers.tty = Logger.Memory.create()
-
     AWSHelpers context
     DNSHelpers context
     dockerHelpers context

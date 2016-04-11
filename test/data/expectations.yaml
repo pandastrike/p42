@@ -1,35 +1,35 @@
 AWS:
 
   getRepository:
-    commands: |
+    commands: |-
       aws ecr describe-repositories --repository-name blurb9-api --region us-east-1
 
   createRepository:
-    commands: |
+    commands: |-
       aws ecr create-repository --repository-name blurb9-api --region us-east-1
       aws ecr set-repository-policy --repository-name blurb9-api --region us-east-1 --policy-text {"Version":"2008-10-17","Statement":[{"Sid":"Allow Any/All","Effect":"Allow","Principal":"*","Action":["ecr:*"]}]}
 
   setSecurityGroups:
-    commands: |
+    commands: |-
       aws ec2 describe-security-groups --filters Name=vpc-id,Values=test-vpc-00 Name=group-name,Values=default
       aws ec2 describe-security-groups --filters Name=vpc-id,Values=test-vpc-00 Name=group-name,Values=docker-machine
       aws ec2 describe-instances --filters Name=tag-value,Values=preventative-malpractice-01
       aws ec2 modify-instance-attribute --instance-id test-instance-00 --groups test-group-00 test-group-00
 
   getRegistryDomain:
-    commands: |
+    commands: |-
       aws ecr get-authorization-token --region us-east-1
 
   getELB:
-    commands: |
+    commands: |-
       aws elb describe-load-balancers --load-balancer-name violent-aftermath
 
   registerWithELB:
-    commands: |
+    commands: |-
       aws elb register-instances-with-load-balancer --load-balancer-name vodka-martini --instances test-instance-00
 
   createStack:
-    commands: |
+    commands: |-
       aws cloudformation create-stack --stack-name preventative-malpractice --template-body file://<path>.json
 
     files: &vpc
@@ -37,16 +37,16 @@ AWS:
         {"AWSTemplateFormatVersion":"2010-09-09","Description":"AWS CloudFormation Template for use with p42.","Parameters":{"SSHLocation":{"Description":"Lockdown SSH access to the bastion host (default can be accessed from anywhere)","Type":"String","MinLength":"9","MaxLength":"18","Default":"0.0.0.0/0","AllowedPattern":"(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})","ConstraintDescription":"must be a valid CIDR range of the form x.x.x.x/x."}},"Mappings":{"SubnetConfig":{"VPC":{"CIDR":"10.0.0.0/16"},"Public":{"CIDR":"10.0.0.0/24"}}},"Resources":{"VPC":{"Type":"AWS::EC2::VPC","Properties":{"EnableDnsSupport":"true","EnableDnsHostnames":"true","CidrBlock":{"Fn::FindInMap":["SubnetConfig","VPC","CIDR"]},"Tags":[{"Key":"Application","Value":{"Ref":"AWS::StackName"}},{"Key":"Network","Value":"Public"}]}},"PublicSubnet":{"Type":"AWS::EC2::Subnet","Properties":{"VpcId":{"Ref":"VPC"},"CidrBlock":{"Fn::FindInMap":["SubnetConfig","Public","CIDR"]},"Tags":[{"Key":"Application","Value":{"Ref":"AWS::StackName"}},{"Key":"Network","Value":"Public"}]}},"InternetGateway":{"Type":"AWS::EC2::InternetGateway","Properties":{"Tags":[{"Key":"Application","Value":{"Ref":"AWS::StackName"}},{"Key":"Network","Value":"Public"}]}},"GatewayToInternet":{"Type":"AWS::EC2::VPCGatewayAttachment","Properties":{"VpcId":{"Ref":"VPC"},"InternetGatewayId":{"Ref":"InternetGateway"}}},"PublicRouteTable":{"Type":"AWS::EC2::RouteTable","Properties":{"VpcId":{"Ref":"VPC"},"Tags":[{"Key":"Application","Value":{"Ref":"AWS::StackName"}},{"Key":"Network","Value":"Public"}]}},"PublicRoute":{"Type":"AWS::EC2::Route","DependsOn":"GatewayToInternet","Properties":{"RouteTableId":{"Ref":"PublicRouteTable"},"DestinationCidrBlock":"0.0.0.0/0","GatewayId":{"Ref":"InternetGateway"}}},"PublicSubnetRouteTableAssociation":{"Type":"AWS::EC2::SubnetRouteTableAssociation","Properties":{"SubnetId":{"Ref":"PublicSubnet"},"RouteTableId":{"Ref":"PublicRouteTable"}}},"PublicNetworkAcl":{"Type":"AWS::EC2::NetworkAcl","Properties":{"VpcId":{"Ref":"VPC"},"Tags":[{"Key":"Application","Value":{"Ref":"AWS::StackName"}},{"Key":"Network","Value":"Public"}]}},"InboundHTTPPublicNetworkAclEntry":{"Type":"AWS::EC2::NetworkAclEntry","Properties":{"NetworkAclId":{"Ref":"PublicNetworkAcl"},"RuleNumber":"100","Protocol":"6","RuleAction":"allow","Egress":"false","CidrBlock":"0.0.0.0/0","PortRange":{"From":"80","To":"80"}}},"InboundHTTPSPublicNetworkAclEntry":{"Type":"AWS::EC2::NetworkAclEntry","Properties":{"NetworkAclId":{"Ref":"PublicNetworkAcl"},"RuleNumber":"101","Protocol":"6","RuleAction":"allow","Egress":"false","CidrBlock":"0.0.0.0/0","PortRange":{"From":"443","To":"443"}}},"InboundSSHPublicNetworkAclEntry":{"Type":"AWS::EC2::NetworkAclEntry","Properties":{"NetworkAclId":{"Ref":"PublicNetworkAcl"},"RuleNumber":"102","Protocol":"6","RuleAction":"allow","Egress":"false","CidrBlock":{"Ref":"SSHLocation"},"PortRange":{"From":"22","To":"22"}}},"InboundEphemeralPublicNetworkAclEntry":{"Type":"AWS::EC2::NetworkAclEntry","Properties":{"NetworkAclId":{"Ref":"PublicNetworkAcl"},"RuleNumber":"103","Protocol":"6","RuleAction":"allow","Egress":"false","CidrBlock":"0.0.0.0/0","PortRange":{"From":"1024","To":"65535"}}},"OutboundPublicNetworkAclEntry":{"Type":"AWS::EC2::NetworkAclEntry","Properties":{"NetworkAclId":{"Ref":"PublicNetworkAcl"},"RuleNumber":"100","Protocol":"6","RuleAction":"allow","Egress":"true","CidrBlock":"0.0.0.0/0","PortRange":{"From":"0","To":"65535"}}},"PublicSubnetNetworkAclAssociation":{"Type":"AWS::EC2::SubnetNetworkAclAssociation","Properties":{"SubnetId":{"Ref":"PublicSubnet"},"NetworkAclId":{"Ref":"PublicNetworkAcl"}}},"PrivateDNS":{"Type":"AWS::Route53::HostedZone","DependsOn":"VPC","Properties":{"Name":"name.internal.","VPCs":[{"VPCId":{"Ref":"VPC"},"VPCRegion":{"Ref":"AWS::Region"}}]}},"DHCPOptions":{"Type":"AWS::EC2::DHCPOptions","Properties":{"DomainName":"name.internal","DomainNameServers":["AmazonProvidedDNS"]}},"ELBSecurityGroup":{"Type":"AWS::EC2::SecurityGroup","Properties":{"GroupDescription":"Allow ELB to accept traffic from the public Web","VpcId":{"Ref":"VPC"},"SecurityGroupIngress":[{"IpProtocol":"tcp","FromPort":"80","ToPort":"80","CidrIp":"0.0.0.0/0"}]}},"ELB":{"Type":"AWS::ElasticLoadBalancing::LoadBalancer","DependsOn":"GatewayToInternet","Properties":{"LoadBalancerName":{"Ref":"AWS::StackName"},"SecurityGroups":[{"Ref":"ELBSecurityGroup"},{"Fn::GetAtt":["VPC","DefaultSecurityGroup"]}],"Listeners":[{"LoadBalancerPort":80,"Protocol":"HTTP","InstancePort":80}],"Subnets":[{"Ref":"PublicSubnet"}],"HealthCheck":{"HealthyThreshold":2,"Interval":30,"Target":"TCP:80","Timeout":5,"UnhealthyThreshold":2}}}},"Outputs":{"VPCId":{"Description":"VPCId of the newly created VPC","Value":{"Ref":"VPC"}},"PublicSubnet":{"Description":"SubnetId of the public subnet","Value":{"Ref":"PublicSubnet"}},"AvailabilityZone":{"Description":"Availability Zone of the public subnet","Value":{"Fn::GetAtt":["PublicSubnet","AvailabilityZone"]}},"HostedZoneId":{"Description":"HostedZoneId of the private HostedZone","Value":{"Ref":"PrivateDNS"}},"DefaultSecurityGroupId":{"Description":"Default security group ID for the VPC","Value":{"Fn::GetAtt":["VPC","DefaultSecurityGroup"]}}}}
 
   getStack:
-    commands: |
+    commands: |-
       aws cloudformation describe-stacks --stack-name preventative-malpractice
 
   removeStack:
-    commands: |
+    commands: |-
       aws cloudformation delete-stack --stack-name preventative-malpractice
 
 DNS:
   A:
-    commands: |
+    commands: |-
       aws route53 change-resource-record-sets --hosted-zone-id test-zone-00 --change-batch file://<path>.json
 
     files:
@@ -54,7 +54,7 @@ DNS:
         {"Comment":"this is a test","Changes":[{"Action":"UPSERT","ResourceRecordSet":{"Name":"blurb9-www-00.name.internal.","Type":"A","TTL":60,"ResourceRecords":[{"Value":"192.168.0.42"}]}}]}
 
   Alias:
-    commands: |
+    commands: |-
       aws elb describe-load-balancers --load-balancer-name violent-aftermath
       aws route53 list-hosted-zones-by-name --dns-name bar.com --max-items 1
       aws route53 change-resource-record-sets --hosted-zone-id test-zone-00 --change-batch file://<path>.json
@@ -64,7 +64,7 @@ DNS:
         {"Comment":"this is a test","Changes":[{"Action":"UPSERT","ResourceRecordSet":{"Name":"foo.bar.com.","Type":"A","AliasTarget":{"HostedZoneId":"test-zone-00","DNSName":"violent-aftermath","EvaluateTargetHealth":false}}}]}
 
   SRV:
-    commands: |
+    commands: |-
       aws route53 change-resource-record-sets --hosted-zone-id test-zone-00 --change-batch file://<path>.json
       aws route53 change-resource-record-sets --hosted-zone-id test-zone-00 --change-batch file://<path>.json
 
@@ -77,55 +77,55 @@ DNS:
 Docker:
 
   env:
-    commands: |
+    commands: |-
       eval $(docker-machine env violent-aftermath-01)
 
   swarmEnv:
-    commands: |
+    commands: |-
       eval $(docker-machine env --swarm violent-aftermath-00)
 
   login:
-    commands: |
+    commands: |-
       eval $(aws ecr get-login --region us-east-1)
 
   build:
-    commands: |
+    commands: |-
       docker build -t 123456789.registry.test.com/blurb9-api -f run/api/Dockerfile .
 
   push:
-    commands: |
+    commands: |-
       docker push 123456789.registry.test.com/blurb9-api
 
   run:
-    commands: |
+    commands: |-
       docker run -P --name api-00 --restart always -e AWS_ACCESS_KEYId="$(aws configure get aws_access_keyId)" -e AWS_SECRET_ACCESS_KEY="$(aws configure get aws_secret_access_key)" -e AWS_DEFAULT_REGION="$(aws configure get region)" -d blurb9-api
 
   inspect:
-    commands: |
+    commands: |-
       docker inspect api-00
 
   listContainers:
-    commands: |
+    commands: |-
       docker ps --filter name=violent-aftermath --format {{ .ID }}
 
   createInstance:
-    commands: |
+    commands: |-
       docker-machine create violent-aftermath-00 --driver amazonec2 --amazonec2-region us-west-1 --amazonec2-vpc-id test-vpc-00 --amazonec2-subnet-id test-subnet-00 --amazonec2-zone test-dns-00
 
   createSwarmInstance:
-    commands: |
+    commands: |-
       docker-machine create violent-aftermath-00 --driver amazonec2 --amazonec2-region us-west-1 --amazonec2-vpc-id test-vpc-00 --amazonec2-subnet-id test-subnet-00 --amazonec2-zone test-dns-00
 
   listSwarmNodes:
-    commands: |
+    commands: |-
       docker-machine ls --format {{ .Name }} --filter name=violent-aftermath
 
   findAvailableNames:
-    commands: |
+    commands: |-
       docker-machine ls --format {{ .Name }} --filter name=violent-aftermath
 
   removeSwarmNodes:
-    commands: |
+    commands: |-
       docker-machine ls --format {{ .Name }} --filter name=violent-aftermath
       docker-machine stop violent-aftermath-00 violent-aftermath-01 violent-aftermath-02
       docker-machine rm violent-aftermath-00 violent-aftermath-01 violent-aftermath-02
@@ -134,7 +134,7 @@ CLI:
 
   cluster:
     create:
-      commands: |
+      commands: |-
         aws cloudformation create-stack --stack-name violent-aftermath --template-body file://<path>.json
         aws cloudformation describe-stacks --stack-name violent-aftermath
         docker-machine create violent-aftermath --driver amazonec2 --amazonec2-region us-west-1 --amazonec2-vpc-id test-vpc-00 --amazonec2-subnet-id test-subnet-00 --amazonec2-zone test-zone-00 --swarm --swarm-discovery nodes://10.0.[0:255].[0:255]:2375 --swarm-master
@@ -146,7 +146,7 @@ CLI:
       files: *vpc
 
     expand:
-      commands: |
+      commands: |-
         docker-machine ls --format {{ .Name }} --filter name=violent-aftermath
         docker-machine create violent-aftermath-03 --driver amazonec2 --amazonec2-region us-west-1 --amazonec2-vpc-id test-vpc-00 --amazonec2-subnet-id test-subnet-00 --amazonec2-zone test-zone-00 --swarm --swarm-discovery nodes://10.0.[0:255].[0:255]:2375
         aws ec2 describe-security-groups --filters Name=vpc-id,Values=test-vpc-00 Name=group-name,Values=default
@@ -165,24 +165,27 @@ CLI:
         aws ec2 modify-instance-attribute --instance-id test-instance-00 --groups test-group-00 test-group-00
 
     rm:
-      commands: |
+      commands: |-
         docker-machine ls --format {{ .Name }} --filter name=violent-aftermath
         docker-machine stop violent-aftermath-00 violent-aftermath-01 violent-aftermath-02
         docker-machine rm violent-aftermath-00 violent-aftermath-01 violent-aftermath-02
         aws cloudformation delete-stack --stack-name violent-aftermath
 
-    ls: ~ # intentionally null
+    ls:
+      commands: ''
 
     ps:
-      commands: |
+      commands: |-
         docker-machine ls --format {{ .Name }} --filter name=violent-aftermath
 
     env:
-      commands: |
+      commands: |-
         eval $(docker-machine env --swarm violent-aftermath-00)
 
+    get:
+      commands: ''
   start:
-    commands: |
+    commands: |-
       docker-machine ls --format {{ .Name }} --filter name=violent-aftermath
       eval $(docker-machine env violent-aftermath-00)
       eval $(aws ecr get-login --region us-east-1)
@@ -211,14 +214,14 @@ CLI:
         {"Comment":"","Changes":[{"Action":"UPSERT","ResourceRecordSet":{"Name":"violent-aftermath-01.name.internal.","Type":"A","TTL":60,"ResourceRecords":[{"Value":"192.168.0.42"}]}}]}
 
   build:
-    commands: |
+    commands: |-
       aws ecr create-repository --repository-name blurb9-api --region us-east-1
       aws ecr set-repository-policy --repository-name blurb9-api --region us-east-1 --policy-text {"Version":"2008-10-17","Statement":[{"Sid":"Allow Any/All","Effect":"Allow","Principal":"*","Action":["ecr:*"]}]}
       docker build -t 123456789.registry.test.com/blurb9-api -f run/api/Dockerfile .
       docker push 123456789.registry.test.com/blurb9-api
 
   run:
-    commands: |
+    commands: |-
       aws ecr create-repository --repository-name blurb9-api --region us-east-1
       aws ecr set-repository-policy --repository-name blurb9-api --region us-east-1 --policy-text {"Version":"2008-10-17","Statement":[{"Sid":"Allow Any/All","Effect":"Allow","Principal":"*","Action":["ecr:*"]}]}
       docker build -t 123456789.registry.test.com/blurb9-api -f run/api/Dockerfile .

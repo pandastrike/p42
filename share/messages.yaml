@@ -75,15 +75,15 @@ build:
     {{#empty mixins~}}
     Starting application ...
     {{else~}}
-    Starting mixins {{join mixins ", "}} ...
+    Starting mixins {{join ", " mixins}} ...
     {{/empty}}
 
-  # complete: >-
-  #   {{if mixins|empty}}
-  #   Application started.
-  #   {{else}}
-  #   Application mixins {{mixins|join>, }} started.
-  #   {{/if}}
+  complete: >-
+    {{#empty mixins~}}
+    Application started.
+    {{else~}}
+    Application mixins {{join ", " mixins}} started.
+    {{/empty}}
 
 init:
 

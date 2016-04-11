@@ -11,8 +11,6 @@ _exports = do async ->
     require "./shared"
   ]
 
-  {bye} = shared.loggers.output
-
   definitions = yield read shared.options
 
   {all, any, many, optional, rule} = require "bartlett"

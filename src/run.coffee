@@ -13,7 +13,7 @@ _exports = do async ->
   shared = yield require "./shared"
   {lookup} = yield messages shared.commands
   C = shared.loggers.command
-  O = shared.loggers.output
+  S = shared.loggers.status
 
   build = (key, data={}) ->
     {template, processor, attributes, test} = lookup key
@@ -40,9 +40,9 @@ _exports = do async ->
     else
       C.info command.string
       response = yield sh command.string
-      O._debug command.string
+      S._debug command.string
       if response != ""
-        O._debug response
+        S._debug response
         Processors[command.processor]? command, response
 
 module.exports = _exports

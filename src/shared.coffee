@@ -41,20 +41,22 @@ loggers = async (shared, loggers = {}) ->
     wrapped._self = helpers._self
     wrapped
 
-  # create basic loggers
-  debug = yield TmpFile.create name: "debug", level: "debug"
-  tty = Stream.create stream: process.stderr, level: "info"
-
   # composite loggers
-  output = wrap helpers Composite.create loggers: { debug, tty }
+  status = wrap helpers Composite.create loggers:
+    debug: yield TmpFile.create name: "debug", level: "debug"
+    stderr: Stream.create stream: process.stderr, level: "info"
 
-  # dry-run command logger
+  # command logger
   command = helpers Composite.create
     loggers:
-      test: yield Memory.create()
-      tty: Stream.create stream: process.stderr, level: "emerg"
+      stderr: Stream.create stream: process.stderr, level: "emerg"
 
-  {output, command}
+  # output logger for actual command output, ex: list of clusters
+  output = helpers Composite.create
+    loggers:
+      stdout: Stream.create stream: process.stdout, level: "info"
+
+  {output, status, command}
 
 _exports = do async ->
 
