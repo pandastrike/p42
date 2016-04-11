@@ -157,7 +157,7 @@ aws:
       template: |
         aws ec2 modify-instance-attribute
           --instance-id {{instanceId}}
-          --groups {{groupIds|join> }}
+          --groups {{join " " groupIds}}
 
   route53:
 
@@ -225,11 +225,11 @@ docker:
 
     stop:
       template: |
-        docker-machine stop {{nodes|join> }}
+        docker-machine stop {{join " " nodes}}
 
     rm:
       template: |
-        docker-machine rm {{nodes|join> }}
+        docker-machine rm {{join " " nodes}}
 
     swarm:
 
@@ -249,7 +249,7 @@ docker:
             --amazonec2-zone {{zoneId}}
             --swarm
             --swarm-discovery nodes://10.0.[0:255].[0:255]:2375
-            {{if master}}--swarm-master{{/if}}
+            {{#if master}}--swarm-master{{/if}}
 
   build:
 

@@ -6,6 +6,6 @@ Changes:
       Type: SRV
       TTL: 60
       ResourceRecords:
-        {{targets}}
+        {{#targets}}
         - Value: '0 0 {{port}} {{host}}.name.internal'
         {{/targets}}

@@ -48,9 +48,10 @@ _exports = do async ->
       bye "not-implemented"
 
     rm: async ({name}) ->
-      # cluster = yield Cluster.resolve name
+      info "cluster.rm.starting", {name}
       yield DockerHelpers.removeSwarmNodes name
       Cluster.remove name
+      info "cluster.rm.complete", {name}
 
     ls: -> Cluster.list()
 

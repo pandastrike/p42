@@ -1,3 +1,7 @@
+help:
+  type: word
+  key: command
+
 dryRun:
   type: switch
   flags:

@@ -1,9 +1,21 @@
+{all} = require "when"
 {async} = require "fairmont"
 
 _exports = do async ->
 
-  Application = yield require "../application"
+  [
+    shared
+    Application
+  ] = yield all [
+    require "../shared"
+    require "../application"
+  ]
 
-  build = ({mixins}) -> Application.Mixins.build mixins...
+  {info} = shared.loggers.output
+
+  build = async ({mixins}) ->
+    info "build.starting", {mixins}
+    yield Application.Mixins.build mixins...
+    info "build.complete", {mixins}
 
 module.exports = _exports

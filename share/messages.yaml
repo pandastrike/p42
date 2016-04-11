@@ -21,27 +21,31 @@ help: |
 
   Available commands are:
 
-      {{.|values|filter>key>command|pluck>name|join>, }}
+      {{join ", " (pluck "name" (filter "key" "command" (values .)))}}
 
   Options valid for all commands:
-  {{.|values|filter>type>switch|set>switches}}{{switches}}
-  {{flags|join>, |sprintf>%20s}}    {{help|hang>24}}
-  {{/switches}}
+
+    {{#filter "type" "switch" (values .)}}
+    {{sprintf "%16s  " (join ", " flags) ~}}
+    {{hang 20 80 help}}
+
+    {{/filter~}}
+
   Run `p42 help <command>` for help on a specific command.
 
 cluster:
 
-  help: |
-
-    usage: p42 cluster <command> <options>
-
-    Create, manage, or remove clusters.
-
-    Available subcommands are:
-
-      {{options|values|filter>key>subcommand|pluck>name|join>, }}
-
-    Run 'p42 cluster help <subcommand>' for command specific help.
+  # help: |
+  #
+  #   usage: p42 cluster <command> <options>
+  #
+  #   Create, manage, or remove clusters.
+  #
+  #   Available subcommands are:
+  #
+  #     {{options|values|filter>key>subcommand|pluck>name|join>, }}
+  #
+  #   Run 'p42 cluster help <subcommand>' for command specific help.
 
   create:
 
@@ -59,11 +63,36 @@ cluster:
 
     complete: Cluster [{{name}}] expanded by {{count}} node(s).
 
+  rm:
+
+    starting: Removing cluster [{{name}}] ...
+
+    complete: Cluster [{{name}}] removed.
+
+build:
+
+  starting: >-
+    {{#empty mixins~}}
+    Starting application ...
+    {{else~}}
+    Starting mixins {{join mixins ", "}} ...
+    {{/empty}}
+
+  # complete: >-
+  #   {{if mixins|empty}}
+  #   Application started.
+  #   {{else}}
+  #   Application mixins {{mixins|join>, }} started.
+  #   {{/if}}
+
 init:
 
   help: p42 init
 
 application:
+
+  no-configuration: >-
+    p42: missing application configuration. Try running 'p42 init'.
 
   nothing-to-run: Missing run directory.
 
