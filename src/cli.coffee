@@ -53,3 +53,6 @@ module.exports = async (args) ->
       # otherwise, this is unexpected, just re-throw
       error "unexpected-error"
       throw e
+
+  finally
+    process.exit 0

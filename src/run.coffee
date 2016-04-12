@@ -2,6 +2,7 @@
 messages = require "panda-messages"
 {yaml, json} = require "./serialize"
 render = require "./template"
+createShell = require "./sh"
 
 unquote = (s) ->
   s
@@ -15,6 +16,12 @@ _exports = do async ->
   C = shared.loggers.command
   S = shared.loggers.status
 
+  # TODO: elegant way to access logger streams?
+  if !shared.settings.dryRun
+    shell = createShell S._self.loggers.stderr, S._self.loggers.stderr
+    sh = shell.run
+    process.on "exit", -> shell.close()
+
   build = (key, data={}) ->
     {template, processor, attributes, test} = lookup key
     string = unquote render template, data
@@ -22,8 +29,7 @@ _exports = do async ->
 
   Processors =
 
-    line: (command, reponse) ->
-      # TODO: implement line processor
+    line: (command, response) -> response.split "\n"
 
     json: (command, response) ->
       response = json response

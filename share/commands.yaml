@@ -210,9 +210,9 @@ docker:
 
     ls:
 
-      template: |
+      template: >-
         docker-machine ls
-          --format {{ format }}
+          --format '{{ format }}'
           --filter name={{ name }}
 
       processor: line

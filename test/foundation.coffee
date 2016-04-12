@@ -72,6 +72,12 @@ module.exports = (context) ->
 
       context.test "message logger"
 
+      context.test "shell subprocess",# ->
+        # createShell = require "../src/sh"
+        # shell = createShell process.stdout, process.stderr
+        # yield shell.run "ls"
+        # shell.close()
+
     context.test "shell runner", ->
       shared = yield require "../src/shared"
       yield synchronize async ->
