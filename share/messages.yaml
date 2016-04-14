@@ -1,4 +1,5 @@
-unexpected-error: "p42: unexpected error"
+unexpected-error: >-
+  p42: unexpected error: {{message}}
 
 bad-command: |
   p42: '{{name}}' is not a valid command. Run `p42 help` for help.
@@ -73,21 +74,24 @@ build:
 
   starting: >-
     {{#empty mixins~}}
-    Starting application ...
+    Building application mixins ...
     {{else~}}
-    Starting mixins {{join ", " mixins}} ...
+    Building mixins {{join ", " mixins}} ...
     {{/empty}}
 
   complete: >-
     {{#empty mixins~}}
-    Application started.
+    Application mixins built.
     {{else~}}
-    Application mixins {{join ", " mixins}} started.
+    Application mixins {{join ", " mixins}} built.
     {{/empty}}
 
 init:
 
   help: p42 init
+
+  determining-registry: >-
+    Determining default registry domain ...
 
 application:
 

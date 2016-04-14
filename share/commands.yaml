@@ -110,7 +110,7 @@ aws:
 
       attributes:
         - name: url
-          accessor: json authorizationData[0].proxyEndpoint
+          accessor: authorizationData.0.proxyEndpoint
 
       test:
         url: 'https://123.registry.test.com'

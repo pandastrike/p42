@@ -34,6 +34,7 @@ _exports = do async ->
       {name, domain, registry, clusters, cluster}
 
     save: ({name, domain, registry, clusters}) ->
+      clusters ?= {}
       write "./p42.yaml", {name, domain, registry, clusters}
 
     Mixins: Mixins =

@@ -1,9 +1,10 @@
 {promise} = require "when"
 {spawn} = require "child_process"
+{EventEmitter} = require "events"
 
-module.exports = (stdout, stderr) ->
+module.exports = ({stdout, stderr}) ->
 
-  # Run commands from stdin within a single subprocess, using the
+  # Run commands from stdin within a single process, using the
   # file separate character (\u001c) to indicate that a command has
   # completed
   p = spawn "bash",
@@ -12,26 +13,29 @@ module.exports = (stdout, stderr) ->
       "while true ; do read -r line; eval $line; printf '\u001c'; done"
     ]
 
-  # p.stdout.pipe process.stdout
-  # p.stderr.pipe process.stderr
+  p.stdout.pipe stdout if stdout?
+  p.stderr.pipe stderr if stderr?
 
   p.on "error", (e) -> console.error e
 
+  events = new EventEmitter()
+  do (result = "") ->
+    p.stdout.on "data", (buffer) ->
+      string = buffer.toString()
+      if (match = string.match /\u001c/)?
+        {index} = match
+        result += string[...index]
+        events.emit "result", result
+        result = string[(index+1)..]
+      else
+        result += string
+
+  # Each call to run MUST WAIT on the promise to resolve
+  # before the next call can be made. Otherwise, two
+  # commands can potentially get the same result event.
   run: (s) ->
     promise (resolve, reject) ->
       p.stdin.write s + "\n"
-      results = ""
-      listener = (d) ->
-        s = d.toString()
-        if (match = s.match /\u001c/)?
-          p.stdout.removeListener "data", listener
-          {index} = match
-          s = s[...index] + s[(index+1)..]
-          results += s
-          resolve results
-        else
-          results += s
-
-      p.stdout.on "data", listener
+      events.once "result", resolve
 
   close: -> p.kill()

@@ -18,7 +18,7 @@ _exports = do async ->
 
   # TODO: elegant way to access logger streams?
   if !shared.settings.dryRun
-    shell = createShell S._self.loggers.stderr, S._self.loggers.stderr
+    shell = createShell stderr: S._self.loggers.stderr.stream
     sh = shell.run
     process.on "exit", -> shell.close()
 
@@ -31,10 +31,18 @@ _exports = do async ->
 
     line: (command, response) -> response.split "\n"
 
+    # TODO: Object reference parsing should be in Fairmont
+    # or something...
     json: (command, response) ->
-      response = json response
-      reduce ((result, {name, accessor}) -> data[name] = response[accessor]),
-        {}, command.attributes
+      data = json response
+      result = {}
+      for {name, accessor} in command.attributes
+        current = data
+        for key in accessor.split(".")
+          current = current[key]
+          break if ! current?
+        result[name] = current
+      result
 
   run = async (key, data={}) ->
 

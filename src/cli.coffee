@@ -3,7 +3,7 @@
 {yaml} = require "./serialize"
 
 global.$P = -> console.log arguments...
-$P.hi = -> $P "----> hola <-----"
+$P.p = (x = "hola")-> $P "----> #{x} <-----"
 
 module.exports = async (args) ->
 
@@ -39,6 +39,9 @@ module.exports = async (args) ->
     if shared.settings.dryRun
       shared.loggers.command._self.loggers.stderr.level = "debug"
 
+    if shared.settings.verbose
+      shared.loggers.status._self.loggers.stderr.level = "debug"
+
     if (command = Commands[options.command])?
       show yield command options
     else
@@ -51,7 +54,8 @@ module.exports = async (args) ->
       bye e.p42...
     else
       # otherwise, this is unexpected, just re-throw
-      error "unexpected-error"
+      error "unexpected-error", e
+      _error e.stack
       throw e
 
   finally
