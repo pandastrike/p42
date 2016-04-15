@@ -18,10 +18,7 @@ _exports = do async ->
     # DockerHelpers.stopContainers "#{name}-#{mixin}-"
 
   async ({mixins}) ->
-    $P.hi()
-    if empty mixins
-      mixins = yield Mixins.list()
-
+    mixins ?= yield Mixins.list()
     (yield stop mixin) for mixin in mixins
 
 module.exports = _exports

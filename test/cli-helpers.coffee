@@ -37,7 +37,7 @@ module.exports = (context) ->
       run "cluster rm violent-aftermath"
 
     command "CLI.cluster.ls", context, async ->
-      assert "violent-aftermath" in (yield run "cluster ls")
+      assert (yield run "cluster ls").indexOf("violent-aftermath") != -1
 
     command "CLI.cluster.ps", context, ->
       run "cluster ps violent-aftermath"

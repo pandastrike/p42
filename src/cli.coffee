@@ -59,4 +59,7 @@ module.exports = async (args) ->
       throw e
 
   finally
-    process.exit 0
+
+    # be sure to shut down the shell process
+    if !shared.settings.dryRun
+      process.exit 0

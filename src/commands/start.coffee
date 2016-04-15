@@ -1,5 +1,5 @@
 {all} = require "when"
-{async, empty, isArray} = require "fairmont"
+{async, isArray} = require "fairmont"
 sprintf = require "sprintf"
 
 _exports = do async ->
@@ -115,9 +115,7 @@ _exports = do async ->
       DNSHelpers.srv {protocol, subdomain: mixin, targets, comment}
 
   async ({mixins}) ->
-    if empty mixins
-      mixins = yield Mixins.list()
-
+    mixins ?= yield Mixins.list()
     (yield start mixin) for mixin in mixins
 
 module.exports = _exports

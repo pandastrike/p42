@@ -118,15 +118,15 @@ Docker:
 
   listSwarmNodes:
     commands: |-
-      docker-machine ls --format {{ .Name }} --filter name=violent-aftermath
+      docker-machine ls --format '{{ .Name }}' --filter name=violent-aftermath
 
   findAvailableNames:
     commands: |-
-      docker-machine ls --format {{ .Name }} --filter name=violent-aftermath
+      docker-machine ls --format '{{ .Name }}' --filter name=violent-aftermath
 
   removeSwarmNodes:
     commands: |-
-      docker-machine ls --format {{ .Name }} --filter name=violent-aftermath
+      docker-machine ls --format '{{ .Name }}' --filter name=violent-aftermath
       docker-machine stop violent-aftermath-00 violent-aftermath-01 violent-aftermath-02
       docker-machine rm violent-aftermath-00 violent-aftermath-01 violent-aftermath-02
 
@@ -147,7 +147,7 @@ CLI:
 
     expand:
       commands: |-
-        docker-machine ls --format {{ .Name }} --filter name=violent-aftermath
+        docker-machine ls --format '{{ .Name }}' --filter name=violent-aftermath
         docker-machine create violent-aftermath-03 --driver amazonec2 --amazonec2-region us-west-1 --amazonec2-vpc-id test-vpc-00 --amazonec2-subnet-id test-subnet-00 --amazonec2-zone test-zone-00 --swarm --swarm-discovery nodes://10.0.[0:255].[0:255]:2375
         aws ec2 describe-security-groups --filters Name=vpc-id,Values=test-vpc-00 Name=group-name,Values=default
         aws ec2 describe-security-groups --filters Name=vpc-id,Values=test-vpc-00 Name=group-name,Values=docker-machine
@@ -166,7 +166,7 @@ CLI:
 
     rm:
       commands: |-
-        docker-machine ls --format {{ .Name }} --filter name=violent-aftermath
+        docker-machine ls --format '{{ .Name }}' --filter name=violent-aftermath
         docker-machine stop violent-aftermath-00 violent-aftermath-01 violent-aftermath-02
         docker-machine rm violent-aftermath-00 violent-aftermath-01 violent-aftermath-02
         aws cloudformation delete-stack --stack-name violent-aftermath
@@ -176,7 +176,7 @@ CLI:
 
     ps:
       commands: |-
-        docker-machine ls --format {{ .Name }} --filter name=violent-aftermath
+        docker-machine ls --format '{{ .Name }}' --filter name=violent-aftermath
 
     env:
       commands: |-
@@ -186,7 +186,7 @@ CLI:
       commands: ''
   start:
     commands: |-
-      docker-machine ls --format {{ .Name }} --filter name=violent-aftermath
+      docker-machine ls --format '{{ .Name }}' --filter name=violent-aftermath
       eval $(docker-machine env violent-aftermath-00)
       eval $(aws ecr get-login --region us-east-1)
       docker pull 123456789.registry.test.com/blurb9-api
@@ -226,7 +226,7 @@ CLI:
       aws ecr set-repository-policy --repository-name blurb9-api --region us-east-1 --policy-text {"Version":"2008-10-17","Statement":[{"Sid":"Allow Any/All","Effect":"Allow","Principal":"*","Action":["ecr:*"]}]}
       docker build -t 123456789.registry.test.com/blurb9-api -f run/api/Dockerfile .
       docker push 123456789.registry.test.com/blurb9-api
-      docker-machine ls --format {{ .Name }} --filter name=violent-aftermath
+      docker-machine ls --format '{{ .Name }}' --filter name=violent-aftermath
       eval $(docker-machine env violent-aftermath-00)
       eval $(aws ecr get-login --region us-east-1)
       docker pull 123456789.registry.test.com/blurb9-api
