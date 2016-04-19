@@ -16,12 +16,6 @@ _exports = do async ->
   C = shared.loggers.command
   S = shared.loggers.status
 
-  # TODO: elegant way to access logger streams?
-  if !shared.settings.dryRun
-    shell = createShell stderr: S._self.loggers.stderr.stream
-    sh = shell.run
-    process.on "exit", -> shell.close()
-
   build = (key, data={}) ->
     {template, processor, attributes, test} = lookup key
     string = unquote render template, data
@@ -44,7 +38,14 @@ _exports = do async ->
         result[name] = current
       result
 
+  [sh] = []
   run = async (key, data={}) ->
+    # TODO: elegant way to access logger streams?
+    if !shared.settings.dryRun
+      sh ?= do ([shell]=[]) ->
+        shell = createShell stderr: S._self.loggers.stderr.stream
+        process.on "exit", -> shell.close()
+        shell.run
 
     command = build key, data
 

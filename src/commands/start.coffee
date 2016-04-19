@@ -88,9 +88,9 @@ _exports = do async ->
       name = "#{application.name}-#{mixin}-#{sprintf '%02d', i}"
       yield DockerHelpers.run {name, tag, options}
 
-      # get the IP for the newly launched instance
+      # get the IP and instance for the newly launched container
       {name} = yield DockerHelpers.inspect name
-      {ip} = yield AWSHelpers.getInstance name
+      {ip, instanceId} = yield AWSHelpers.getInstance name
 
       # Add private DNS A record associating the name with the IP
       yield DNSHelpers.a {cluster, name, ip, comment}
@@ -102,7 +102,7 @@ _exports = do async ->
 
       # Add to ELB, if applicable, based on subdomains
       if subdomains?
-        AWSHelpers.registerInstanceWithELB {cluster: cluster.name, instanceId}
+        AWSHelpers.registerWithELB {cluster: cluster.name, instanceId}
 
         # no point in adding an instance to the ELB
         # if we can't find it via public DNS...

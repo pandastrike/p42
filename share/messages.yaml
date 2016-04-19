@@ -48,6 +48,9 @@ cluster:
   #
   #   Run 'p42 cluster help <subcommand>' for command specific help.
 
+  not-found: |
+    p42: can't find cluster [{{name}}].
+    
   create:
 
     starting: Creating cluster [{{name}}] ...
