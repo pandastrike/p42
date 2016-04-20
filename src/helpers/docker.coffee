@@ -40,10 +40,9 @@ _exports = do async ->
 
     inspect: (name) -> run "docker.inspect", {name}
 
-    # TODO: figure out how to escape Markup.js tags
-    # SEe also listSwarmNodes below
-    listContainers: (cluster) -> run "docker.ps",
-      {cluster, format: "{{ .ID }}" }
+    listContainers: (cluster) -> run "docker.ps", {cluster}
+
+    stopContainers: (name) -> run "docker.stop", {name} 
 
     # TODO: make "instance" consistent with "node"
     createInstance: ({name, cluster}) ->
@@ -70,8 +69,7 @@ _exports = do async ->
         names.push candidate if ! (candidate in taken)
       names
 
-    listSwarmNodes: (name) ->
-      run "docker.machine.ls", {name, format: "{{ .Name }}" }
+    listSwarmNodes: (name) -> run "docker.machine.ls", {name}
 
     removeSwarmNodes: async (cluster) ->
       nodes = yield H.listSwarmNodes cluster

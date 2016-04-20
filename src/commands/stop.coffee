@@ -15,7 +15,7 @@ _exports = do async ->
 
   stop = (mixin) ->
     # TODO: make sure we can do it this way
-    # DockerHelpers.stopContainers "#{name}-#{mixin}-"
+    DockerHelpers.stopContainers "#{name}-#{mixin}"
 
   async ({mixins}) ->
     mixins ?= yield Mixins.list()

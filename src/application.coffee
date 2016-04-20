@@ -15,7 +15,7 @@ _exports = do async ->
         "master"
       else
         (yield shell "git symbolic-ref --short -q HEAD")
-        .stdout
+        .stdout.trim()
 
 
   Application =

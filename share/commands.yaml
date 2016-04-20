@@ -212,7 +212,7 @@ docker:
 
       template: >-
         docker-machine ls
-          --format '{{ format }}'
+          --format '\{{ .Name }}'
           --filter name={{ name }}
 
       processor: line
@@ -307,7 +307,7 @@ docker:
   ps:
 
     template: |
-      docker ps --filter name={{cluster}} --format {{format}}
+      docker ps --filter name={{cluster}} --format \{{ .ID }}
 
 
 
