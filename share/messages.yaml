@@ -81,11 +81,9 @@ build:
     ...
 
   complete: >-
-    {{#empty mixins~}}
-    Application mixins built.
-    {{else~}}
-    Application mixins {{join ", " mixins}} built.
-    {{/empty}}
+    Application mixins
+    {{#mixins~}} [{{.}}] {{/mixins~}}
+    built.
 
 init:
 

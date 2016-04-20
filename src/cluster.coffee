@@ -1,4 +1,5 @@
 {basename, join} = require "path"
+{all} = require "when"
 {async, curry, collect, flow, map, isFile, mkdirp, rm, glob, sleep} = require "fairmont"
 basename = do (basename) -> curry (extension, path) -> basename path, extension
 {read, write} = require "panda-rw"
@@ -8,9 +9,19 @@ raise = require "./raise"
 
 _exports = do async ->
 
-  shared = yield require "./shared"
-  run = yield require "./run"
-  {createStack, getStack, removeStack} = yield require "./helpers/aws"
+  [
+    shared
+    AWSHelpers
+    # TODO: somehow there's a circular dependency here
+    # Application
+  ] = yield all [
+    require "./shared"
+    require "./helpers/aws"
+    # require "./application"
+  ]
+
+  {createStack, getStack, removeStack} = AWSHelpers
+
   shared.clusters = join shared.config, "clusters"
   yield mkdirp shared.config.clusters
 
@@ -43,17 +54,18 @@ _exports = do async ->
       Cluster.save cluster
 
     resolve: async (name) ->
-      if name?
-        yield Cluster.load name
-      else
+      name ?= yield do async ->
+        # see above re inline require
+        Application = yield require "./application"
         {cluster} = yield Application.load()
         cluster
+      yield Cluster.load name
 
     remove: async (name) ->
       yield removeStack name
       # TODO: find a way to re-create the cluster
       # YAML file for tests that depend on it
-      rm Cluster.join name unless shared.settings.dryRun
+      (rm Cluster.join name) unless shared.settings.dryRun
 
     list: ->
       collect flow [

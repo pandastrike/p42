@@ -6,7 +6,6 @@ global.$P = -> console.log arguments...
 $P.p = (x = "hola")-> $P "----> #{x} <-----"
 
 module.exports = async (args) ->
-
   [
     shared
     Commands
@@ -29,6 +28,7 @@ module.exports = async (args) ->
   Method.define show, isArray, (ax) -> show a for a in ax ;;
   # could support JSON flag here
   Method.define show, isObject, (o) -> show yaml o
+
 
   try
 
