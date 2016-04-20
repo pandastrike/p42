@@ -6,8 +6,10 @@ render = require "./template"
 
 Interview =
 
-  create: async ({path, defaults}) ->
-    questions: yaml render (yield read path), defaults
+  create: ({questions, defaults}) ->
+    for question in questions when defaults[question.name]?
+      question.default = defaults[question.name]
+    {questions}
 
   start: ({questions}) ->
 

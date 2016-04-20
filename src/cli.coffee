@@ -6,6 +6,7 @@ global.$P = -> console.log arguments...
 $P.p = (x = "hola")-> $P "----> #{x} <-----"
 
 module.exports = async (args) ->
+
   [
     shared
     Commands

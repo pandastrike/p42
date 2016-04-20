@@ -1,6 +1,7 @@
 help:
   type: word
   key: command
+  default: help
 
 dryRun:
   type: switch
@@ -161,4 +162,17 @@ cluster:
         cluster: *cluster
         property:
           optional: true
+          type: parameter
+
+mixin:
+  type: word
+  key: command
+  options:
+    add:
+      type: word
+      key: subcommand
+      options:
+        mixin:
+          type: parameter
+        name:
           type: parameter

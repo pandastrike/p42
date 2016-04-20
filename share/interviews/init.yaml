@@ -1,17 +1,14 @@
 - name: name
   description: Application name
   type: string
-  default: '{{name}}'
   required: true
 
 - name: domain
   description: Domain name
   type: string
-  default: '{{name}}.com'
   require: true
 
 - name: registry
   description: Private registry domain
   type: string
-  default: '{{registry}}'
   require: true

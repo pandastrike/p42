@@ -18,10 +18,11 @@ module.exports = async ->
   registry = yield AWSHelpers.getRegistryDomain()
 
   name = basename process.cwd()
+  domain = "#{name}.com"
 
   interview = yield Interview.create
-    path: shared.interviews.init
-    defaults: {name, registry}
+    questions: yield read shared.interviews.init
+    defaults: {name, domain, registry}
 
   try
     answers = yield Interview.start interview
