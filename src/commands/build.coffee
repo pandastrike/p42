@@ -12,10 +12,12 @@ _exports = do async ->
   ]
 
   {info} = shared.loggers.status
+  {Mixins} = Application
 
   build = async ({mixins}) ->
+    mixins ?= yield Mixins.list()
     info "build.starting", {mixins}
-    yield Application.Mixins.build mixins...
+    yield Mixins.build {mixins}
     info "build.complete", {mixins}
 
 module.exports = _exports

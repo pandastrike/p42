@@ -50,7 +50,7 @@ cluster:
 
   not-found: |
     p42: can't find cluster [{{name}}].
-    
+
   create:
 
     starting: Creating cluster [{{name}}] ...
@@ -76,11 +76,9 @@ cluster:
 build:
 
   starting: >-
-    {{#empty mixins~}}
-    Building application mixins ...
-    {{else~}}
-    Building mixins {{join ", " mixins}} ...
-    {{/empty}}
+    Building mixins
+    {{#mixins~}} [{{.}}] {{/mixins~}}
+    ...
 
   complete: >-
     {{#empty mixins~}}

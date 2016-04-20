@@ -52,12 +52,12 @@ _exports = do async ->
         config = join path, "config.yaml"
         include (yield read config), {name, path}
 
-      build: async (mixins...) ->
+      build: async ({mixins}) ->
         application = yield Application.load()
-        mixins = if empty mixins then yield Mixins.list() else mixins
         for name in mixins
           yield Mixins.assert name
           mixin = yield Mixins.load name
+          mixin.style ?= "docker"
           yield Decorators[mixin.style]? application, mixin
 
     Targets:
