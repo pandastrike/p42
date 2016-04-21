@@ -176,3 +176,9 @@ mixin:
           type: parameter
         name:
           type: parameter
+    rm:
+      type: word
+      key: subcommand
+      options:
+        mixin:
+          type: parameter

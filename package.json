@@ -35,15 +35,13 @@
   },
   "dependencies": {
     "bartlett": "^1.0.0-alpha-02",
-    "dashdash": "^1.13.0",
     "fairmont": "^1.0.x",
     "handlebars": "^4.0.5",
     "js-yaml": "^3.5.3",
-    "markup-js": "^1.5.21",
-    "memory-streams": "^0.1.0",
     "panda-messages": "0.0.1",
     "panda-rw": "^1.0.0-beta-02",
     "prompt": "^1.0.0",
+    "rimraf": "^2.5.2",
     "sprintf": "^0.1.5",
     "swag": "^0.7.0",
     "when": "^3.7.7"

@@ -1,6 +1,7 @@
 {basename, dirname, join} = require "path"
 {mkdirp, cp, lsR, async, collect, pull, isArray, include} = require "fairmont"
 {read, write} = require "panda-rw"
+{lift} = require "when/node"
 Interview = require "../interview"
 
 # TODO: add this to Fairmont
@@ -15,6 +16,11 @@ cpR = do ([_cp] = []) ->
   async (from, to) ->
     _from = yield lsR from
     collect pull _cp _from..., to
+
+# TODO: why isn't this in Fairmont already
+rmRF = do ([f] = []) ->
+  f = lift require "rimraf"
+  (directory) -> f directory
 
 _exports = do async ->
 
@@ -46,6 +52,9 @@ _exports = do async ->
       # - add the defaults in cases where there was no question
       include answers, defaults
       write (join destination, "config.yaml"), answers
+
+    rm: ({mixin}) ->
+      rmRF join ".", "run", mixin
 
   async (options) ->
 
