@@ -1,6 +1,8 @@
-{join} = require "path"
-{async, include, isFile, isDirectory, readdir, shell, empty} = require "fairmont"
+{basename, join} = require "path"
+F = {async, include, isFile, isDirectory, glob,
+readdir, shell, empty} = require "fairmont"
 {read, write} = require "panda-rw"
+render = require "./template"
 raise = require "./raise"
 
 _exports = do async ->
@@ -58,6 +60,12 @@ _exports = do async ->
           yield Mixins.assert name
           mixin = yield Mixins.load name
           mixin.style ?= "docker"
+          directory = join ".", "run", name
+          for path in yield glob "**/*.tmpl", directory
+            destination = join directory, basename path, ".tmpl"
+            template = yield F.read path
+            content = render template, mixin
+            yield F.write destination, content
           yield Decorators[mixin.style]? application, mixin
 
     Targets:

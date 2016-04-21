@@ -40,6 +40,7 @@ _exports = do async ->
 
     # normalize the mixin config properties
     subdomains = if isArray subdomains then subdomains
+    # TODO: discovery is now an array
     discovery = discovery == true
 
     # comment for DNS records
