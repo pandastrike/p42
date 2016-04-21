@@ -2,7 +2,7 @@
 
 _exports = do async ->
 
-  {createRepository} = yield require "./helpers/aws"
+  {getRepository, createRepository} = yield require "./helpers/aws"
   {build, push} = yield require "./helpers/docker"
 
   # The beginnings of an extensible mechanism
@@ -11,8 +11,8 @@ _exports = do async ->
     docker: async (application, mixin) ->
       {registry} = application
       tag = "#{application.name}-#{mixin.name}"
-      # TODO: eliminate the need for superfluous yields for testing
-      yield createRepository tag
+      if !(yield getRepository tag)?
+        yield createRepository tag
       yield build {registry, tag, mixin}
       push {registry, tag}
 

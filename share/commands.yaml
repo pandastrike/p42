@@ -94,8 +94,8 @@ aws:
       processor: json
 
       attributes:
-        - name: repositoryId
-          accessor: repositories[0].registryId
+        - name: registryId
+          accessor: repositories.0.registryId
 
       test:
         repositoryId: test-repo-00
