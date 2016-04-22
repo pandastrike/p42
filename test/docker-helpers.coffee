@@ -55,16 +55,16 @@ module.exports = (context) ->
           vpcId: "test-vpc-00"
           subnetId: "test-subnet-00"
           region: "us-west-1"
-          zoneId: "test-dns-00"
+          zone: "a"
         name: "violent-aftermath-00"
 
     command "Docker.createSwarmInstance", context, ->
-      DockerHelpers.createInstance
+      DockerHelpers.createSwarmInstance
         cluster:
           vpcId: "test-vpc-00"
           subnetId: "test-subnet-00"
           region: "us-west-1"
-          zoneId: "test-dns-00"
+          zone: "a"
         name: "violent-aftermath-00"
 
     command "Docker.listSwarmNodes", context, async ->

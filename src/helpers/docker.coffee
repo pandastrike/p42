@@ -46,9 +46,9 @@ _exports = do async ->
 
     # TODO: make "instance" consistent with "node"
     createInstance: ({name, cluster}) ->
-      {region, vpcId, subnetId, zoneId} = cluster
+      {region, vpcId, subnetId, zone} = cluster
       run "docker.machine.create",
-        {name, region, vpcId, subnetId, zoneId}
+        {name, region, vpcId, subnetId, zone}
 
     createSwarmInstance: async ({name, cluster, master}) ->
       master ?= false
