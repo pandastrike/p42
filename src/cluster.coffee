@@ -48,7 +48,7 @@ _exports = do async ->
         cluster = yield getStack name
         if cluster.status == "CREATE_COMPLETE"
           break
-        else if cluster.status == "CREATE_FAILED"
+        else if cluster.status != "CREATE_IN_PROGRESS"
           raise "cluster.create-failed", {name}
 
       Cluster.save cluster

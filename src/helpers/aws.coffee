@@ -52,8 +52,9 @@ _exports = do async ->
     getStack: async (stack) ->
       stackData = yield run "aws.cloudformation.describe-stacks", {stack}
       stackData.name = stack
-      stackData.region = stackData.az[..-2]
-      stackData.zone = stackData.az[-1..-1]
+      if stackData.az?
+        stackData.region = stackData.az[..-2]
+        stackData.zone = stackData.az[-1..-1]
       stackData
 
 module.exports = _exports

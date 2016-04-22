@@ -42,7 +42,7 @@ _exports = do async ->
 
     listContainers: (cluster) -> run "docker.ps", {cluster}
 
-    stopContainers: (name) -> run "docker.stop", {name} 
+    stopContainers: (name) -> run "docker.stop", {name}
 
     # TODO: make "instance" consistent with "node"
     createInstance: ({name, cluster}) ->
@@ -50,11 +50,11 @@ _exports = do async ->
       run "docker.machine.create",
         {name, region, vpcId, subnetId, zoneId}
 
-    createSwarmInstance: ({name, cluster, master}) ->
+    createSwarmInstance: async ({name, cluster, master}) ->
       master ?= false
-      {region, vpcId, subnetId, zoneId} = cluster
-      run "docker.machine.swarm.create",
-        {name, region, vpcId, subnetId, zoneId, master}
+      {region, vpcId, subnetId, zone} = cluster
+      yield run "docker.machine.swarm.create",
+        {name, region, vpcId, subnetId, zone, master}
       AWSHelpers.setSecurityGroups
         vpcId: vpcId
         instance: name

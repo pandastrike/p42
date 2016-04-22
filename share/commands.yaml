@@ -17,15 +17,15 @@ aws:
 
       attributes:
         - name: status
-          accessor: json Stacks[0].StackStatus
+          accessor: Stacks.0.StackStatus
         - name: vpcId
-          accessor: Stacks[0].Outputs[0].OutputValue
+          accessor: Stacks.0.Outputs.0.OutputValue
         - name: subnetId
-          accessor: Stacks[0].Outputs[1].OutputValue
+          accessor: Stacks.0.Outputs.1.OutputValue
         - name: az
-          accessor: Stacks[0].Outputs[2].OutputValue
+          accessor: Stacks.0.Outputs.2.OutputValue
         - name: zoneId
-          accessor: Stacks[0].Outputs[3].OutputValue
+          accessor: Stacks.0.Outputs.3.OutputValue
 
       test:
         status: CREATE_COMPLETE
@@ -51,9 +51,9 @@ aws:
 
       attributes:
         - name: zoneId
-          accessor: LoadBalancerDescriptions[0].CanonicalHostedZoneNameID
+          accessor: LoadBalancerDescriptions.0.CanonicalHostedZoneNameID
         - name: domain
-          accessor: LoadBalancerDescriptions[0].CanonicalHostedZoneName
+          accessor: LoadBalancerDescriptions.0.CanonicalHostedZoneName
 
       test:
         zoneId: test-zone-00
@@ -127,9 +127,9 @@ aws:
 
       attributes:
         - name: instanceId
-          accessor: Reservations[0].Instances[0].InstanceId
+          accessor: Reservations.0.Instances.0.InstanceId
         - name: ip
-          accessor: Reservations[0].Instances[0].PrivateIpAddress
+          accessor: Reservations.0.Instances.0.PrivateIpAddress
 
       test:
         instanceId: test-instance-00
@@ -147,7 +147,7 @@ aws:
 
       attributes:
         - name: groupId
-          accessor: SecurityGroups[0].GroupId
+          accessor: SecurityGroups.0.GroupId
 
       test:
         groupId: test-group-00
@@ -172,7 +172,7 @@ aws:
 
       attributes:
         - name: zoneId
-          accessor: HostedZones[0].Id
+          accessor: HostedZones.0.Id
 
       test:
         zoneId: test-zone-00
@@ -206,7 +206,7 @@ docker:
           --amazonec2-region {{region}}
           --amazonec2-vpc-id {{vpcId}}
           --amazonec2-subnet-id {{subnetId}}
-          --amazonec2-zone {{zoneId}}
+          --amazonec2-zone {{zone}}
 
     ls:
 
@@ -246,10 +246,10 @@ docker:
             --amazonec2-region {{region}}
             --amazonec2-vpc-id {{vpcId}}
             --amazonec2-subnet-id {{subnetId}}
-            --amazonec2-zone {{zoneId}}
+            --amazonec2-zone {{zone}}
             --swarm
             --swarm-discovery nodes://10.0.[0:255].[0:255]:2375
-            {{#if master}}--swarm-master{{/if}}
+            {{#master}}--swarm-master{{/master}}
 
   build:
 
@@ -293,11 +293,11 @@ docker:
     attributes:
 
       - name: name
-        accessor: '[0].Node.Name'
+        accessor: '.0.Node.Name'
       - name: ip
-        accessor: '[0].Node.IP'
+        accessor: '.0..Node.IP'
       - name: port
-        accessor: '[0].NetworkSettings.Ports["80/tcp"][0].HostPort'
+        accessor: '.0.NetworkSettings.Ports["80/tcp"].0.HostPort'
 
     test:
       name: violent-aftermath-01

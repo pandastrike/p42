@@ -13,7 +13,7 @@ module.exports = ({stdout, stderr}) ->
       "while true ; do read -r line; eval $line; printf '\u001c'; done"
     ]
 
-  p.stdout.pipe stdout if stdout?
+  # p.stdout.pipe stdout if stdout?
   p.stderr.pipe stderr if stderr?
 
   p.on "error", (e) -> console.error e

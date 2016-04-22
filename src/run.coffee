@@ -43,7 +43,9 @@ _exports = do async ->
     # TODO: elegant way to access logger streams?
     if !shared.settings.dryRun
       sh ?= do ([shell]=[]) ->
-        shell = createShell stderr: S._self.loggers.stderr.stream
+        shell = createShell
+          stdout: S._self.loggers.stderr.stream
+          stderr: S._self.loggers.stderr.stream
         process.on "exit", -> shell.close()
         shell.run
 
@@ -54,10 +56,9 @@ _exports = do async ->
       command.test
     else
       C.info command.string
-      response = yield sh command.string
       S._debug command.string
+      response = yield sh command.string
       if response != ""
-        S._debug response
         Processors[command.processor]? command, response
 
 module.exports = _exports

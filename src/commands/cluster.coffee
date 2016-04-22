@@ -28,8 +28,10 @@ _exports = do async ->
     create: async ->
       name = yield Name.generate()
       info "cluster.create.starting", {name}
-      cluster = yield Cluster.create name
-      yield DockerHelpers.createSwarmInstance {cluster, name, master: true}
+      yield DockerHelpers.createSwarmInstance
+        cluster: yield Cluster.create name
+        name: "#{name}-00"
+        master: true
       info "cluster.create.complete", {name}
 
     expand: async ({name, count}) ->
