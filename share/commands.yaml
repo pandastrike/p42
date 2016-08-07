@@ -1,0 +1,336 @@
+aws:
+
+  cloudformation:
+
+    create-stack:
+      template: |
+        aws cloudformation create-stack
+          --stack-name {{stack}}
+          --template-body file://{{file}}
+
+    describe-stacks:
+
+      template: |
+        aws cloudformation describe-stacks --stack-name {{stack}}
+
+      processor: json
+
+      attributes:
+        - name: status
+          accessor: Stacks.0.StackStatus
+        - name: vpcId
+          accessor: Stacks.0.Outputs.0.OutputValue
+        - name: subnetId
+          accessor: Stacks.0.Outputs.1.OutputValue
+        - name: az
+          accessor: Stacks.0.Outputs.2.OutputValue
+        - name: zoneId
+          accessor: Stacks.0.Outputs.3.OutputValue
+
+      test:
+        status: CREATE_COMPLETE
+        vpcId: test-vpc-00
+        subnetId: test-subnet-00
+        az: us-west-1a
+        zoneId: test-zone-00
+
+    delete-stack:
+
+      template: |
+        aws cloudformation delete-stack --stack-name {{stack}}
+
+  elb:
+
+    describe-load-balancers:
+
+      template: |
+        aws elb describe-load-balancers
+          --load-balancer-name {{cluster}}
+
+      processor: json
+
+      attributes:
+        - name: zoneId
+          accessor: LoadBalancerDescriptions.0.CanonicalHostedZoneNameID
+        - name: domain
+          accessor: LoadBalancerDescriptions.0.CanonicalHostedZoneName
+
+      test:
+        zoneId: test-zone-00
+        domain: '123.elb.test.com'
+
+    register-instances-with-load-balancer:
+
+      template: |
+        aws elb register-instances-with-load-balancer
+            --load-balancer-name {{cluster}}
+            --instances {{instanceId}}
+
+  ecr:
+
+    create-repository:
+
+      template: |
+        aws ecr create-repository
+          --repository-name {{repository}}
+          --region us-east-1
+
+    set-repository-policy:
+
+      template: |
+        aws ecr set-repository-policy
+          --repository-name {{repository}}
+          --region us-east-1
+          --policy-text {{policy}}
+
+
+    describe-repositories:
+
+      template: |
+        aws ecr describe-repositories
+          --repository-name {{repository}}
+          --region us-east-1
+
+      processor: json
+
+      attributes:
+        - name: registryId
+          accessor: repositories.0.registryId
+
+      test:
+        repositoryId: test-repo-00
+
+    # actually processord to get the registry URL
+    get-authorization-token:
+      template: |
+        aws ecr get-authorization-token
+          --region us-east-1
+
+      processor: json
+
+      attributes:
+        - name: url
+          accessor: authorizationData.0.proxyEndpoint
+
+      test:
+        url: 'https://123.registry.test.com'
+
+  ec2:
+
+    describe-instances:
+
+      template: |
+        aws ec2 describe-instances
+          --filters Name=tag-value,Values={{instance}}
+
+      processor: json
+
+      attributes:
+        - name: instanceId
+          accessor: Reservations.0.Instances.0.InstanceId
+        - name: ip
+          accessor: Reservations.0.Instances.0.PrivateIpAddress
+
+      test:
+        instanceId: test-instance-00
+        ip: '192.168.0.42'
+
+    describe-security-groups:
+
+      template: |
+        aws ec2 describe-security-groups
+          --filters
+            Name=vpc-id,Values={{vpcId}}
+            Name=group-name,Values={{group}}
+
+      processor: json
+
+      attributes:
+        - name: groupId
+          accessor: SecurityGroups.0.GroupId
+
+      test:
+        groupId: test-group-00
+
+    modify-instance-attribute:
+
+      template: |
+        aws ec2 modify-instance-attribute
+          --instance-id {{instanceId}}
+          --groups {{join " " groupIds}}
+
+  route53:
+
+    list-hosted-zones-by-name:
+
+      template: |
+        aws route53 list-hosted-zones-by-name
+          --dns-name {{domain}}
+          --max-items 1
+
+      processor: json
+
+      attributes:
+        - name: zoneId
+          accessor: HostedZones.0.Id
+
+      test:
+        zoneId: test-zone-00
+
+    change-resource-record-sets:
+
+      template: |
+        aws route53 change-resource-record-sets
+          --hosted-zone-id {{zoneId}}
+          --change-batch file://{{file}}
+
+docker:
+
+  login:
+
+    template: |
+      eval $(aws ecr get-login --region us-east-1)
+
+  machine:
+
+    env:
+
+      template: |
+        eval $(docker-machine env {{name}})
+
+    create:
+
+      template: |
+        docker-machine create {{name}}
+          --driver amazonec2
+          --amazonec2-region {{region}}
+          --amazonec2-vpc-id {{vpcId}}
+          --amazonec2-subnet-id {{subnetId}}
+          --amazonec2-zone {{zone}}
+
+    ls:
+
+      template: >-
+        docker-machine ls
+          --format '\{{ .Name }}'
+          --filter name={{ name }}
+
+      processor: line
+
+      test:
+        - violent-aftermath-00
+        - violent-aftermath-01
+        - violent-aftermath-02
+
+
+    stop:
+      template: |
+        docker-machine stop {{join " " nodes}}
+
+    rm:
+      template: |
+        docker-machine rm {{join " " nodes}}
+
+    swarm:
+
+      env:
+
+        template: |
+          eval $(docker-machine env --swarm {{name}})
+
+      create:
+
+        template: |
+          docker-machine create {{name}}
+            --driver amazonec2
+            --amazonec2-region {{region}}
+            --amazonec2-vpc-id {{vpcId}}
+            --amazonec2-subnet-id {{subnetId}}
+            --amazonec2-zone {{zone}}
+            --swarm
+            --swarm-discovery nodes://10.0.[0:255].[0:255]:2375
+            {{#master}}--swarm-master{{/master}}
+
+  build:
+
+    template: |
+      docker build
+        -t {{tag}}
+        -f {{file}}
+        .
+
+  push:
+
+    template: |
+      docker push {{tag}}
+
+  pull:
+
+    template: |
+      docker pull {{tag}}
+
+  run:
+
+    # TODO: may parameterize keys/region too?
+    # Doesn't seem like high-value coverage.
+    template: |
+      docker run
+        {{options}}
+        --name {{name}}
+        --restart always
+        -e AWS_ACCESS_KEYId="$(aws configure get aws_access_keyId)"
+        -e AWS_SECRET_ACCESS_KEY="$(aws configure get aws_secret_access_key)"
+        -e AWS_DEFAULT_REGION="$(aws configure get region)"
+        -d {{tag}}
+
+  inspect:
+
+    template: |
+        docker inspect {{name}}
+
+    processor: json
+
+    attributes:
+
+      - name: name
+        accessor: '.0.Node.Name'
+      - name: ip
+        accessor: '.0..Node.IP'
+      - name: port
+        accessor: '.0.NetworkSettings.Ports["80/tcp"].0.HostPort'
+
+    test:
+      name: violent-aftermath-01
+      ip: 192.168.0.42
+      port: 32768
+
+  ps:
+
+    template: |
+      docker ps --filter name={{cluster}} --format \{{ .ID }}
+
+
+
+#
+# find_available_name() {
+#   local cluster="${1}"
+#   local candidates=$(printf '%s\n' $(echo ${cluster}-{0..9}{0..9}))
+#   local taken=$(list-nodes ${cluster})
+#   # return the first element from candidates list that
+#   # isn't in the taken list...
+#   comm -23 <(echo "${candidates}") <(echo "${taken}") | head -n 1
+# }
+#
+# list_swarm_nodes() {
+#   docker-machine ls \
+#     --format '{{ .Name }}' \
+#     --filter "name=${1}"
+# }
+#
+# remove_swarm_nodes() {
+#   local cluster="${1}"
+#   echo "Removing Swarm nodes for cluster <${cluster}>"
+#   local machines=$(list_swarm_nodes ${cluster})
+#   docker-machine stop $machines
+#   docker-machine rm $machines
+# }

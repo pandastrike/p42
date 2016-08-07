@@ -1,0 +1,267 @@
+unexpected-error: >-
+  p42: unexpected error: {{message}}
+
+bad-command: |
+  p42: '{{name}}' is not a valid command. Run `p42 help` for help.
+
+bad-subcommand: |
+  p42: '{{name}}' is not a valid subcommand.
+
+  Run `p42 help <command>` for help on a specific command.
+
+not-implemented: "p42: Sorry, but this feature is not yet implemented."
+
+bad-option: |
+  p42: '{{name}}' is not a valid option.
+
+help: |
+
+  usage: p42 <command> <options...>
+
+  Run Docker containers in an AWS VPC.
+
+  Available commands are:
+
+      {{join ", " (pluck "name" (filter "key" "command" (values .)))}}
+
+  Options valid for all commands:
+
+    {{#filter "type" "switch" (values .)}}
+    {{sprintf "%16s  " (join ", " flags) ~}}
+    {{hang 20 80 help}}
+
+    {{/filter~}}
+
+  Run `p42 help <command>` for help on a specific command.
+
+cluster:
+
+  # help: |
+  #
+  #   usage: p42 cluster <command> <options>
+  #
+  #   Create, manage, or remove clusters.
+  #
+  #   Available subcommands are:
+  #
+  #     {{options|values|filter>key>subcommand|pluck>name|join>, }}
+  #
+  #   Run 'p42 cluster help <subcommand>' for command specific help.
+
+  not-found: |
+    p42: can't find cluster [{{name}}].
+
+  create:
+
+    starting: Creating cluster [{{name}}] ...
+
+    complete: Cluster [{{name}}] created.
+
+    help: |
+      Usage: p42 cluster create
+      Create a VPC and a master Swarm node.
+
+  expand:
+
+    starting: Expanding cluster [{{name}}] by {{count}} node(s) ...
+
+    complete: Cluster [{{name}}] expanded by {{count}} node(s).
+
+  rm:
+
+    starting: Removing cluster [{{name}}] ...
+
+    complete: Cluster [{{name}}] removed.
+
+build:
+
+  starting: >-
+    Building mixins
+    {{#mixins~}} [{{.}}] {{/mixins~}}
+    ...
+
+  complete: >-
+    Application mixins
+    {{#mixins~}} [{{.}}] {{/mixins~}}
+    built.
+
+init:
+
+  help: p42 init
+
+  determining-registry: >-
+    Determining default registry domain ...
+
+application:
+
+  no-configuration: >-
+    p42: missing application configuration. Try running 'p42 init'.
+
+  nothing-to-run: Missing run directory.
+
+  bad-mixin: |
+    [{{name}}] is not a valid mixin.
+
+  no-target: >-
+    p42: no target for this branch.
+    Try: [ p42 target add <branch> <cluster> ].
+
+start:
+
+  starting: >-
+    Starting [{{mixin}}] ...
+
+  complete: >-
+    [{{mixin}}] started.
+
+  # Summary: Initialize an application for use with p42.
+  # Help: Initialize an application for use with p42.
+  # This interactive command will ask you a few questions
+  # about your application and then write a corresponding
+  # configuration file.
+
+
+# Usage: p42 mixin [add] [<option>...]
+# Summary: Add/manage mixins for an application.
+# Help: To find out about a specific subcommand:
+#
+#    p42 mixin help <command>
+#
+
+# Usage: p42 mixin add <component> <git-repo>
+# Add a mixin based on a git repo path or URL.
+#
+#     p42 mixin add www https://github.com/pandastrike/p42-mixin-nginx.git
+#
+# Mixins write to your applications launch directory. Mixins may define a
+# configuration based on interactive prompts.
+#
+
+# Usage: p42 name
+# Summary: Generate a name.
+# Help: Generate a name.
+#     $ p42 name
+#     yellow-ghost
+
+# Usage: p42 ps
+# Summary: List deployed containers and their IP/port.
+# Help: List deployed containers and their IP/port.
+
+# Usage: p42 run [<component>]
+# Summary: Build images and start application containers.
+# Help: Build images and start application containers.
+# You can run the entire application or just a given set of components.
+#
+#     p42 run
+#     p42 run www redis
+#
+
+# Usage: p42 start [<component>]
+# Summary: Start application component.
+# Help: Start application component.
+# You can start component for the entire application
+# or just a given set of components. Images for each
+# container must already exist.
+#
+#     p42 start
+#     p42 start www redis
+#
+# You can build images first using the build subcommand.
+# The run subcommand will build and start component for you.
+#
+
+# Usage: p42 stop [<component>]
+# Summary: Stop application containers and remove them.
+# Help: Stop application containers and remove them.
+# You can stop an entire application or just a given set of components.
+#
+#     p42 stop
+#     p42 stop www redis
+#
+# Usage: p42 target [add|rm|remove|mv|rename] <branch> <cluster>
+# Summary: Create/manage deploy targets.
+# Help: To find out about a specific subcommand:
+#
+#    p42 target help <command>
+#
+#
+target:
+
+  help: p42 target [add|rm|remove|mv|rename] <arguments...>
+
+  errors:
+
+    invalid-branch: invalid branch '{{branch}}'.
+
+    invalid-cluster: invalid cluster '{{cluster}}'.
+
+    invalid-config: invalid application configuration.
+
+    error-writing-config: |
+      unexpected error updating application configuration.
+
+target-add:
+
+  help: p42 target add <branch> <cluster>
+
+target-remove:
+
+  help: p42 target [remove|rm] <branch>
+
+target-rename:
+
+  help: p42 target [rename|mv] <branch> <branch>
+
+
+cluster-add:
+
+  help: |
+    Usage: p42 cluster add <name> [-n <size>]
+    Add a node to the cluster.
+
+    You can add multiple nodes using -n.
+    To add 3 nodes to the cluster named "red-ghost":
+
+        p42 cluster add red-ghost -n 3
+
+cluster-rm:
+
+  help: |
+    Usage: p42 cluster rm <name>
+    Stop a given cluster (Swarm) and remove the associated machines.
+
+cluster-ls:
+
+  help: |
+    Usage: p42 cluster ls
+    List the available clusters.
+
+cluster-ps:
+
+  help: |
+    Usage: p42 cluster ls <name>
+    List all the nodes in a given cluster.
+
+cluster-env:
+
+  help: |
+    Usage: p42 cluster env <name>
+    Set up your environment to use Docker with your cluster.
+
+        eval $(p42 cluster env red-ghost)
+
+cluster-get:
+
+  help: |
+    Usage: p42 cluster get <name> <property>
+    Get the value of a given property for the given cluster.
+
+        p42 cluster get red-host vpc
+
+dns:
+
+  elb-alias: Adding alias for subdomain [{{subdomain}}]
+
+
+# don't delete this -- it's used to test messages interface
+fubar: this is a test {{name}}

@@ -1,0 +1,14 @@
+- name: name
+  description: Application name
+  type: string
+  required: true
+
+- name: domain
+  description: Domain name
+  type: string
+  require: true
+
+- name: registry
+  description: Private registry domain
+  type: string
+  require: true

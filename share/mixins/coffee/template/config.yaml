@@ -1,0 +1,7 @@
+count: 2
+discovery:
+  - http
+port: 80
+include:
+  - src
+  - bin

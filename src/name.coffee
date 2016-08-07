@@ -1,17 +1,20 @@
-{join} = require "path"
-YAML = require "js-yaml"
-{call, read} = require "fairmont"
+{read} = require "panda-rw"
+{async, pluck} = require "fairmont"
 
-# This function selects and returns a random element from an input array.
-pluck = (list) ->
-  {random, round} = Math
-  index = round random() * (list.length - 1)
-  return list[index]
+[adjectives, nouns] = []
 
-# Get the path to the words file
-path = join process.env._P42_ROOT, "share", "words.yaml"
+_exports = do async ->
 
-# Generate a name from our list of adjectives and nouns.
-call ->
-  {adjectives, nouns} = YAML.safeLoad yield read path
-  console.log "#{pluck adjectives}-#{pluck nouns}"
+  shared = yield require "./shared"
+  {adjectives, nouns} = yield read shared.words
+
+  Name =
+
+    # Generate a name from our list of adjectives and nouns.
+    generate: ->
+      if shared.settings.dryRun
+        "violent-aftermath"
+      else
+        "#{pluck adjectives}-#{pluck nouns}"
+
+module.exports = _exports

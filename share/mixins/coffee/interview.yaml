@@ -1,0 +1,23 @@
+- name: port
+  description: Port
+  type: string
+  require: true
+
+- name: count
+  description: Number of containers to run
+  type: number
+  require: true
+
+# TODO: array support is broken in prompt
+# - requires CTRL-C to end input!?
+# - can't handle array default...
+#
+# - name: discovery
+#   description: Protocols
+#   type: array
+#   required: true
+#
+# - name: include
+#   description: Directories to include
+#   type: array
+#   required: true

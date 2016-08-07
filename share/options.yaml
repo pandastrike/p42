@@ -1,0 +1,184 @@
+help:
+  type: word
+  key: command
+  default: help
+
+dryRun:
+  type: switch
+  flags:
+    - dry-run
+  help: >-
+    Show the commands that would be run, but don't actually run them.
+  default: false
+
+verbose:
+  type: switch
+  flags:
+    - verbose
+    - v
+  help: >-
+    Log debug statements to the console.
+  default: false
+
+build:
+  type: word
+  key: command
+  options:
+    mixins: &mixins
+      type: list
+      subtype:
+        type: parameter
+      optional: true
+
+run:
+  type: word
+  key: command
+  options:
+    mixins: *mixins
+
+start:
+  type: word
+  key: command
+  options:
+    mixins: *mixins
+
+stop:
+  type: word
+  key: command
+  options:
+    mixins: *mixins
+
+init:
+  type: word
+  key: command
+
+target:
+
+  type: word
+  key: command
+
+  options:
+
+    add:
+
+      type: word
+      key: subcommand
+
+      options:
+
+        branch:
+          type: parameter
+
+        cluster:
+          type: parameter
+
+    remove: &target-remove
+
+      type: word
+      key: subcommand
+      # fix the value so we can create rm alias
+      value: remove
+
+      options:
+
+        target:
+          type: parameter
+
+    rm: *target-remove
+
+    rename: &target-rename
+
+      type: word
+      key: subcommand
+      # fix the value so we can create mv alias
+      value: rename
+
+      options:
+
+        before:
+          type: parameter
+
+        after:
+          type: parameter
+
+    mv: *target-rename
+
+
+cluster:
+
+  type: word
+  key: command
+
+  options:
+
+    create:
+      type: word
+      key: subcommand
+
+    expand:
+      type: word
+      key: subcommand
+      options:
+        cluster: &cluster
+          type: parameter
+          optional: true
+        count:
+          type: option
+          flags:
+            - count
+            - n
+          default: 1
+
+    contract:
+      type: word
+      key: subcommand
+
+    ls:
+      type: word
+      key: subcommand
+
+    rm:
+      type: word
+      key: subcommand
+      options:
+        cluster: *cluster
+
+    ps:
+      type: word
+      key: subcommand
+      options:
+        cluster: *cluster
+
+    env:
+      type: word
+      key: subcommand
+      options:
+        cluster: *cluster
+
+    get:
+      type: word
+      key: subcommand
+      options:
+        cluster: *cluster
+        property:
+          optional: true
+          type: parameter
+
+mixin:
+  type: word
+  key: command
+  options:
+    add:
+      type: word
+      key: subcommand
+      options:
+        mixin:
+          type: parameter
+        name:
+          type: parameter
+    rm:
+      type: word
+      key: subcommand
+      options:
+        mixin:
+          type: parameter

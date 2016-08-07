@@ -1,0 +1,5 @@
+name: blurb9
+domain: blurb9.com
+registry: 123456789.registry.test.com
+clusters:
+  master: violent-aftermath
