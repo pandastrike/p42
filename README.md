@@ -1,3 +1,11 @@
+# IMPORTANT
+
+> This project is no longer under active development.
+> Based on what we've learned building this,
+> we recommend looking at [Convox][] instead.
+
+[Convox]:https://github.com/convox/rack
+
 # p42
 
 A CLI for simplifying the use of AWS with Docker Swarm.
